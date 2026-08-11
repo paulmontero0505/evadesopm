@@ -1107,6 +1107,7 @@ function DeliveryReports({
                       <span>Código</span>
                       <span>Modelo / IMEI</span>
                       <span>Asignado a</span>
+                      <span>Cargo</span>
                       <span>Ubicación</span>
                       <span>Estado</span>
                     </div>
@@ -1119,6 +1120,7 @@ function DeliveryReports({
                         <span>
                           {radio.collaborator_name || radio.assigned_puesto}
                         </span>
+                        <span>{radio.collaborator_puesto || "—"}</span>
                         <span>
                           {radio.location || "TOOLROOM"}
                           {radio.nave ? ` · ${radio.nave}` : ""}
