@@ -29,7 +29,7 @@ export default function RadiosCatalogo() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return q ? radios.filter((r) => `${r.code} ${r.imei} ${r.model} ${r.location || ''} ${r.last_location || ''}`.toLowerCase().includes(q)) : radios
+    return q ? radios.filter((radio) => String(radio.code).toLowerCase().includes(q)) : radios
   }, [radios, search])
   const locations = useMemo(() => [...new Set(radios.flatMap((radio) => [radio.location, radio.last_location]).filter(Boolean))].sort(), [radios])
   const metrics = useMemo(() => ({
@@ -111,7 +111,7 @@ export default function RadiosCatalogo() {
       <section>
         <div className="home-assignments-heading"><div><h2>Inventario de radios</h2><p>Busque, edite, elimine o consulte la última ubicación.</p></div><span className="shift-selection-count"><Radio size={14} />{filtered.length}</span></div>
         <div className="catalog-tools">
-          <div className="search-box"><Search className="search-icon" size={18} /><input className="input" placeholder="Buscar por código, IMEI, modelo o ubicación" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+          <div className="search-box"><Search className="search-icon" size={18} /><input className="input" placeholder="Buscar solo por código de radio" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           <button className="btn secondary" disabled={downloading} onClick={() => setShowReport(!showReport)}><FileSpreadsheet size={16} /> Reporte de ubicaciones</button>
         </div>
         {showReport && <section className="card radio-location-report"><h3>Reporte de ubicaciones</h3><p className="muted assignment-copy">Descargue el listado actualizado de radios y su última ubicación registrada.</p><button className="btn" disabled={downloading} onClick={downloadReport}><Download size={16} /> {downloading ? 'Descargando...' : 'Descargar reporte Excel'}</button></section>}

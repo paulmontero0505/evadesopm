@@ -174,7 +174,7 @@ export default function Opms() {
 
         <section className="opm-role-summary" aria-labelledby="opm-role-summary-title">
           <div className="home-assignments-heading"><div><h2 id="opm-role-summary-title">Personal activo por cargo</h2><p>Distribución actual del catálogo de colaboradores.</p></div><span className="shift-selection-count">{opms.filter((opm) => Number(opm.active)).length}</span></div>
-          <div className="opm-role-indicators">{cargoCounts.map(([cargo, count]) => <div key={cargo}><strong>{count}</strong><span>{cargo}</span></div>)}</div>
+          <div className="opm-role-table-wrap"><table className="opm-role-table"><thead><tr><th>Cargo</th><th>Personas activas</th></tr></thead><tbody>{cargoCounts.map(([cargo, count]) => <tr key={cargo}><td>{cargo}</td><td>{count}</td></tr>)}</tbody></table></div>
         </section>
 
         <div className="search-box">
