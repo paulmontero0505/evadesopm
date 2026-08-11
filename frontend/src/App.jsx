@@ -55,7 +55,7 @@ export default function App() {
         <Route path="/users" element={<Protected roles={['admin']}><Users /></Protected>} />
         <Route path="/asignaciones" element={<Protected roles={['admin']}><Asignaciones /></Protected>} />
         <Route path="/asignaciones-supervisores" element={<Protected roles={['admin']}><AsignacionesSupervisores /></Protected>} />
-        <Route path="/radios" element={<Protected roles={['admin','coordinator']}><ControlRadios /></Protected>} />
+        <Route path="/radios" element={<Protected roles={['admin','supervisor','coordinator']}><ControlRadios /></Protected>} />
         <Route path="/registrar-radios" element={<Protected roles={['admin']}><RadiosCatalogo /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -24,6 +24,7 @@ export default function Home() {
         ]
       : [
           { to: '/evaluacion-opm', i: ClipboardCheck, t: 'Supervisar OPM', d: 'Registrar evaluaciones del turno', c: '#0060A9' },
+          { to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Consultar y gestionar relevo de radios', c: '#EF7D00' },
           { to: '/control', i: Users, t: t.modControl, d: t.modControlD, c: '#002E6D' },
           { to: '/evaluar', i: Award, t: t.modEvaluar, d: t.modEvaluarD, c: '#EF7D00' },
         ]
