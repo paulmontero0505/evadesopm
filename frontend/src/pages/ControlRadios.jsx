@@ -900,7 +900,13 @@ function DeliveryReports({
   );
   function printReport(key) {
     setPrintGroup(key);
-    setTimeout(() => window.print(), 0);
+    setTimeout(() => {
+      try {
+        window.print();
+      } finally {
+        setPrintGroup("");
+      }
+    }, 0);
   }
   const indicators = useMemo(
     () => ({
