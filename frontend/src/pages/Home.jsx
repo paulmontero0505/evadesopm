@@ -15,7 +15,13 @@ export default function Home() {
   const items = user.role === 'coordinator'
     ? [{ to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Registrar y consultar entregas del turno', c: '#EF7D00' }]
     : user.role === 'admin'
-      ? [{ to: '/admin', i: ShieldCheck, t: t.modAdmin, d: 'Gestionar colaboradores, usuarios y catálogo de radios', c: '#7A5195' }]
+      ? [
+          { to: '/evaluacion-opm', i: ClipboardCheck, t: t.modEval, d: t.modEvalD, c: '#0060A9' },
+          { to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Registrar y consultar entregas del turno', c: '#EF7D00' },
+          { to: '/control', i: Users, t: t.modControl, d: t.modControlD, c: '#002E6D' },
+          { to: '/evaluar', i: Award, t: t.modEvaluar, d: t.modEvaluarD, c: '#EF7D00' },
+          { to: '/admin', i: ShieldCheck, t: t.modAdmin, d: t.modAdminD, c: '#7A5195' },
+        ]
       : [
           { to: '/evaluacion-opm', i: ClipboardCheck, t: 'Supervisar OPM', d: 'Registrar evaluaciones del turno', c: '#0060A9' },
           { to: '/control', i: Users, t: t.modControl, d: t.modControlD, c: '#002E6D' },
