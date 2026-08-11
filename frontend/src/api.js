@@ -163,6 +163,7 @@ export const api = {
   importSupervisorAssignments: (file, turno, date) => { const fd = new FormData(); fd.append('file', file); fd.append('turno', turno); fd.append('date', date); return upload('/supervisor-assignments/import', fd) },
   downloadSupervisorAssignmentsTemplate: () => downloadFile('/supervisor-assignments/template', 'plantilla_asignacion_supervisores.xlsx'),
   createSupervisorAssignmentIndividual: (payload) => request('/supervisor-assignments/individual', { method: 'POST', body: payload }),
+  deleteSupervisorAssignment: (id) => request(`/supervisor-assignments/${id}`, { method: 'DELETE' }),
   radioContext: (date, turno) => request(`/radios?date=${date}&turno=${turno}`),
   radioReports: (from, to) => request(`/radios/reports?from=${from}&to=${to}`),
   radioDailyReport: (date, turno) => request(`/radios/reports/daily?date=${date}&turno=${turno}`),

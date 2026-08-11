@@ -59,6 +59,13 @@ function handle_supervisor_assignment_create_individual(): void {
     db()->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)')->execute([$userId,$date,$turno,$values['funcion_1'],$values['funcion_2'],$values['zona_1'],$values['puesto'],$values['nave'],$values['nave_2'],$me['id']]);
     json_response(['ok'=>true]);
 }
+function handle_supervisor_assignment_delete(int $id): void {
+    require_role(['admin']);
+    $stmt = db()->prepare('DELETE FROM supervisor_assignments WHERE id=?');
+    $stmt->execute([$id]);
+    if (!$stmt->rowCount()) json_error('No se encontró la asignación.', 404);
+    json_response(['ok' => true]);
+}
 
 function handle_radios_catalog_list(): void {
     require_role(['admin']);
