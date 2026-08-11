@@ -46,11 +46,11 @@ function handle_me(): void
     ]]);
 }
 
-/** POST /auth/change-password (supervisor con clave asignada por administración) */
+/** POST /auth/change-password (personal con clave asignada por administración) */
 function handle_change_password(): void
 {
     $user = require_auth();
-    if ($user['role'] !== 'supervisor' || empty($user['password_change_required'])) {
+    if (!in_array($user['role'], ['supervisor', 'coordinator'], true) || empty($user['password_change_required'])) {
         json_error('El cambio de contraseña no está disponible para esta cuenta', 403);
     }
 
