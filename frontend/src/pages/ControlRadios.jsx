@@ -1531,6 +1531,9 @@ function DailyRadioReport({ date, turno }) {
       devuelto: records.filter(
         (record) => record.movement === "Devuelto a Tool Room",
       ).length,
+      pendienteDevolucion: records.filter(
+        (record) => record.movement !== "Devuelto a Tool Room",
+      ).length,
       reasignado: records.filter((record) => record.movement === "Reasignado")
         .length,
     }),
@@ -1615,9 +1618,13 @@ function DailyRadioReport({ date, turno }) {
           <strong>{stats.reasignado}</strong>
           <span>Reasignados</span>
         </div>
-        <div>
+        <div className="radio-indicator-return">
           <strong>{stats.devuelto}</strong>
-          <span>Devueltos a Tool Room</span>
+          <span>Devueltas</span>
+        </div>
+        <div className="radio-indicator-pending">
+          <strong>{stats.pendienteDevolucion}</strong>
+          <span>Pendiente devolución</span>
         </div>
       </section>
       <section className="trace-report">

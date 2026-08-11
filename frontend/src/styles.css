@@ -574,6 +574,12 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-indicators > div { display: grid; gap: 3px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
 .radio-indicators strong { color: var(--blue); font-size: 20px; }
 .radio-indicators span { color: var(--muted); font-size: 11px; }
+.radio-indicators .radio-indicator-return { border-color: #b9dfc4; background: #f0f8f2; }
+.radio-indicators .radio-indicator-return strong { color: var(--green); }
+.radio-indicators .radio-indicator-return span { color: #27643a; }
+.radio-indicators .radio-indicator-pending { border-color: #f0c7c2; background: #fff5f4; }
+.radio-indicators .radio-indicator-pending strong { color: var(--red); }
+.radio-indicators .radio-indicator-pending span { color: #8d332b; }
 .radio-module-icon.report { color: #6d28d9; background: #f1e7ff; }
 .radio-module-card.active .radio-module-icon.report { color: #fff; background: #6d28d9; }
 .report-actions { display: flex; gap: 8px; margin: 12px 0 16px; }
