@@ -1,5 +1,7 @@
 deployment:
   tasks:
     - export DEPLOY_PATH=/home/portally/evadesopm.site
-    - /bin/cp -R assets backend database frontend img OPM index.html .htaccess $DEPLOY_PATH
+    - /bin/cp -R assets database frontend img OPM index.html .htaccess $DEPLOY_PATH
+    - /bin/cp -R backend/api backend/lib backend/index.php $DEPLOY_PATH/backend
+    - /bin/cp backend/config/config.php backend/config/config.local.example.php $DEPLOY_PATH/backend/config
     - echo "Despliegue completado en $(date)" >> $DEPLOY_PATH/deploy.log
