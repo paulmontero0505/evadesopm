@@ -134,7 +134,7 @@ function handle_radio_context(): void {
     $locations = db()->query("SELECT DISTINCT location FROM (SELECT location FROM radios WHERE location IS NOT NULL AND location<>'' UNION SELECT location FROM radio_assignments WHERE location IS NOT NULL AND location<>'') locations ORDER BY location")->fetchAll(PDO::FETCH_COLUMN);
     $nextDate = $turno === 'noche' ? date('Y-m-d', strtotime($date . ' +1 day')) : $date; $nextTurno = $turno === 'noche' ? 'dia' : 'noche';
     $next=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, u.full_name"); $next->execute([$nextDate,$nextTurno]);
-    json_response(['radios'=>db()->query('SELECT id,code,imei,model,location FROM radios WHERE active=1 ORDER BY code')->fetchAll(), 'opms'=>$opm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
+    json_response(['radios'=>db()->query("SELECT r.id,r.code,r.imei,r.model,r.location, CASE WHEN EXISTS (SELECT 1 FROM radio_assignments ra WHERE ra.radio_id=r.id AND ra.returned_at IS NULL) THEN 0 ELSE 1 END AS available FROM radios r WHERE r.active=1 ORDER BY r.code")->fetchAll(), 'opms'=>$opm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
 }
 function handle_radio_assignment_create(): void {
     $me=require_role(['admin','supervisor','coordinator']); $b=radio_payload();
@@ -143,6 +143,7 @@ function handle_radio_assignment_create(): void {
     $opmIds=array_values(array_unique(array_filter(array_map('intval', is_array($b['opm_ids']??null)?$b['opm_ids']:[]))));
     if(!$radioId || !$supervisorId || !radio_shift_is_valid($date,$turno) || !in_array($condition,RADIO_CONDITIONS,true)) json_error('Complete radio, responsable, fecha, turno y estado.',422);
     $radio=db()->prepare('SELECT id FROM radios WHERE id=? AND active=1'); $radio->execute([$radioId]); if(!$radio->fetchColumn()) json_error('El radio seleccionado no está disponible.',422);
+    $pending = db()->prepare('SELECT 1 FROM radio_assignments WHERE radio_id=? AND returned_at IS NULL LIMIT 1'); $pending->execute([$radioId]); if ($pending->fetchColumn()) json_error('El radio seleccionado sigue asignado y debe devolverse antes de una nueva entrega.', 409);
     $supervisor=db()->prepare("SELECT 1 FROM supervisor_assignments WHERE user_id=? AND work_date=? AND turno=?"); $supervisor->execute([$supervisorId,$date,$turno]); if(!$supervisor->fetchColumn()) json_error('El responsable no está asignado a este turno.',422);
     if($opmIds){ $marks=implode(',',array_fill(0,count($opmIds),'?')); $valid=db()->prepare("SELECT COUNT(*) FROM opm_assignments WHERE opm_id IN ($marks) AND work_date=? AND turno=?"); $valid->execute([...$opmIds,$date,$turno]); if((int)$valid->fetchColumn()!==count($opmIds)) json_error('Uno de los colaboradores no pertenece a este turno.',422); }
     $photo=save_radio_photo(); $pdo=db(); $pdo->beginTransaction();
@@ -167,9 +168,16 @@ function handle_radio_batch_assignment_create(): void {
     $statuses = is_array($b['condition_statuses'] ?? null) ? $b['condition_statuses'] : [];
     if (!$radioIds || !$supervisorId || !radio_shift_is_valid($date, $turno)) json_error('Seleccione radios, responsable, fecha y turno.', 422);
     if (count($radioIds) !== count($puestos)) json_error('La cantidad de radios debe coincidir con el total asignado entre los puestos.', 422);
+    foreach (array_unique($puestos) as $puesto) {
+        $registered = db()->prepare('SELECT 1 FROM opms WHERE active=1 AND puesto=? UNION SELECT 1 FROM opm_assignments WHERE work_date=? AND turno=? AND (puesto=? OR funcion_1=?) LIMIT 1');
+        $registered->execute([$puesto, $date, $turno, $puesto, $puesto]);
+        if (!$registered->fetchColumn()) json_error('Seleccione únicamente puestos registrados.', 422);
+    }
     $marks = implode(',', array_fill(0, count($radioIds), '?'));
     $radio = db()->prepare("SELECT COUNT(*) FROM radios WHERE id IN ($marks) AND active=1"); $radio->execute($radioIds);
     if ((int)$radio->fetchColumn() !== count($radioIds)) json_error('Uno de los radios seleccionados no está disponible.', 422);
+    $pending = db()->prepare("SELECT COUNT(DISTINCT radio_id) FROM radio_assignments WHERE radio_id IN ($marks) AND returned_at IS NULL"); $pending->execute($radioIds);
+    if ((int)$pending->fetchColumn()) json_error('Uno de los radios seleccionados sigue asignado y debe devolverse antes de una nueva entrega.', 409);
     $supervisor = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $supervisor->execute([$supervisorId]);
     if (!$supervisor->fetchColumn()) json_error('Seleccione un supervisor o coordinador activo.', 422);
     $conditions = [];

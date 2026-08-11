@@ -26,7 +26,6 @@ export default function ControlRadios() {
   const [radioIds, setRadioIds] = useState([])
   const [radioStatuses, setRadioStatuses] = useState({})
   const [puestoCounts, setPuestoCounts] = useState({})
-  const [manualPuesto, setManualPuesto] = useState('')
   const [photo, setPhoto] = useState(null)
   const [editingGroup, setEditingGroup] = useState(null)
   const [returnSupervisor, setReturnSupervisor] = useState('')
@@ -78,21 +77,15 @@ export default function ControlRadios() {
   const canCreate = user?.role === 'admin' || user?.role === 'coordinator'
 
   function clearDeliveryForm() {
-    setForm(EMPTY); setLocationChoice('TOOLROOM'); setCustomLocation(''); setRadioIds([]); setRadioStatuses({}); setPuestoCounts({}); setManualPuesto(''); setPhoto(null); setEditingGroup(null)
+    setForm(EMPTY); setLocationChoice('TOOLROOM'); setCustomLocation(''); setRadioIds([]); setRadioStatuses({}); setPuestoCounts({}); setPhoto(null); setEditingGroup(null)
   }
-  function togglePuesto(puesto) {
-    setPuestoCounts((current) => current[puesto]
-      ? Object.fromEntries(Object.entries(current).filter(([key]) => key !== puesto))
-      : { ...current, [puesto]: 1 })
-  }
+  function addPuesto(puesto) { if (puesto) setPuestoCounts((current) => current[puesto] ? current : { ...current, [puesto]: 1 }) }
   function changePuestoCount(puesto, amount) {
-    setPuestoCounts((current) => ({ ...current, [puesto]: Math.max(1, Math.min(puestoAvailability[puesto] || radioIds.length, radioIds.length, (Number(current[puesto]) || 1) + amount)) }))
-  }
-  function addManualPuesto() {
-    const puesto = manualPuesto.trim()
-    if (!puesto) return
-    setPuestoCounts((current) => current[puesto] ? current : { ...current, [puesto]: 1 })
-    setManualPuesto('')
+    setPuestoCounts((current) => {
+      const count = Number(current[puesto]) || 1
+      if (amount < 0 && count === 1) return Object.fromEntries(Object.entries(current).filter(([key]) => key !== puesto))
+      return { ...current, [puesto]: Math.min(puestoAvailability[puesto] || radioIds.length, radioIds.length, count + amount) }
+    })
   }
   function changeRadioStatus(radioId, status) { setRadioStatuses((current) => ({ ...current, [radioId]: status })) }
   function locationValue() { return locationChoice === 'OTROS' ? customLocation.trim() : locationChoice }
@@ -163,9 +156,9 @@ export default function ControlRadios() {
           {editingGroup ? <div className="radio-edit-radios">{selectedRadios.map((radio) => <span className="radio-token" key={radio.id}>{radio.code}</span>)}</div> : <RadioMultiPicker radios={data.radios} selectedIds={radioIds} onChange={setRadioIds} />}
           {selectedRadios.length > 0 && <div className="radio-state-list">{selectedRadios.map((radio) => <div className="radio-state-row" key={radio.id}><div><strong>{radio.code}</strong><span>IMEI: {radio.imei} · {radio.model}</span></div><label><span>Estado</span><select className="input" value={radioStatuses[radio.id] || 'Excelente Estado'} onChange={(event) => changeRadioStatus(radio.id, event.target.value)}>{CONDITIONS.map((condition) => <option key={condition}>{condition}</option>)}</select></label></div>)}</div>}
         </Picker>
-        <Picker title="Puestos que recibirán radios" description="Seleccione los puestos registrados para colaboradores o agregue uno manualmente. Use − / + para indicar cuántas radios recibirá." count={totalPuestos}>
-          <div className="row manual-puesto-add"><input className="input" value={manualPuesto} maxLength="150" onChange={(event) => setManualPuesto(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addManualPuesto() } }} placeholder="Agregar puesto manual" /><button className="btn secondary" type="button" onClick={addManualPuesto} disabled={!manualPuesto.trim()}>Agregar puesto</button></div>
-          <div className="radio-pick-list">{allPuestos.map((puesto) => { const selected = Number(puestoCounts[puesto]) > 0; const atRadioLimit = totalPuestos >= radioIds.length; const atPuestoLimit = Number(puestoCounts[puesto]) >= (puestoAvailability[puesto] || radioIds.length); const isInTurn = Boolean(puestoAvailability[puesto]); const isRegistered = (data.puestos || []).includes(puesto); return <div className="radio-pick radio-pick-quantity" key={puesto}><label><input type="checkbox" checked={selected} disabled={!selected && atRadioLimit} onChange={() => togglePuesto(puesto)} /><span><strong>{puesto}</strong><small>{isInTurn ? `${puestoAvailability[puesto]} colaborador${puestoAvailability[puesto] === 1 ? '' : 'es'} asignado${puestoAvailability[puesto] === 1 ? '' : 's'} a este turno` : isRegistered ? 'Puesto registrado en colaboradores' : 'Puesto agregado manualmente'}</small></span></label>{selected && <div className="quantity-stepper" aria-label={`Cantidad de radios para ${puesto}`}><button type="button" onClick={() => changePuestoCount(puesto, -1)} aria-label={`Disminuir radios para ${puesto}`}><Minus size={15} /></button><output>{puestoCounts[puesto]}</output><button type="button" disabled={atRadioLimit || atPuestoLimit} onClick={() => changePuestoCount(puesto, 1)} aria-label={`Aumentar radios para ${puesto}`}><Plus size={15} /></button></div>}</div> })}</div>
+        <Picker title="Puestos que recibirán radios" description="Busque y seleccione puestos registrados. Use − / + para indicar cuántas radios recibirá cada puesto." count={totalPuestos}>
+          <div className="puesto-search"><SearchSelect value="" onChange={addPuesto} options={allPuestos.filter((puesto) => !puestoCounts[puesto]).map((puesto) => ({ value: puesto, label: puesto }))} placeholder="Buscar y seleccionar puesto" emptyLabel="Buscar y seleccionar puesto" /></div>
+          {selectedPuestos.length ? <div className="radio-pick-list">{selectedPuestos.map(([puesto]) => { const atRadioLimit = totalPuestos >= radioIds.length; const atPuestoLimit = Number(puestoCounts[puesto]) >= (puestoAvailability[puesto] || radioIds.length); const isInTurn = Boolean(puestoAvailability[puesto]); return <div className="radio-pick radio-pick-quantity" key={puesto}><div><strong>{puesto}</strong><small>{isInTurn ? `${puestoAvailability[puesto]} colaborador${puestoAvailability[puesto] === 1 ? '' : 'es'} asignado${puestoAvailability[puesto] === 1 ? '' : 's'} a este turno` : 'Puesto registrado en colaboradores'}</small></div><div className="quantity-stepper" aria-label={`Cantidad de radios para ${puesto}`}><button type="button" onClick={() => changePuestoCount(puesto, -1)} aria-label={`Disminuir radios para ${puesto}`}><Minus size={15} /></button><output>{puestoCounts[puesto]}</output><button type="button" disabled={atRadioLimit || atPuestoLimit} onClick={() => changePuestoCount(puesto, 1)} aria-label={`Aumentar radios para ${puesto}`}><Plus size={15} /></button></div></div> })}</div> : <div className="search-picker-empty puesto-empty">Busque un puesto registrado para agregarlo a la entrega.</div>}
         </Picker>
         <div className="radio-final-fields"><label>Comentarios adicionales</label><textarea className="input radio-textarea" maxLength="1000" value={form.comments} onChange={(event) => setForm({ ...form, comments: event.target.value })} placeholder="Detalle de la entrega, incidencia o indicación adicional" /><label><Camera size={14} /> Foto de entrega (opcional)</label><input className="input" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setPhoto(event.target.files?.[0] || null)} />{photo && <span className="file-note">{photo.name}</span>}</div>
         {radioIds.length !== totalPuestos && <div className="warn-box">Seleccione la misma cantidad de radios que el total asignado entre los puestos.</div>}
@@ -184,7 +177,7 @@ function RadioMultiPicker({ radios, selectedIds, onChange }) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const selected = radios.filter((radio) => selectedIds.includes(radio.id))
-  const matches = query.trim() ? radios.filter((radio) => !selectedIds.includes(radio.id) && `${radio.code} ${radio.imei} ${radio.model}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 20) : []
+  const matches = query.trim() ? radios.filter((radio) => Number(radio.available) && !selectedIds.includes(radio.id) && `${radio.code} ${radio.imei} ${radio.model}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 20) : []
   function addRadio(id) { onChange([...selectedIds, id]); setQuery(''); setOpen(false) }
   function removeRadio(id) { onChange(selectedIds.filter((selectedId) => selectedId !== id)) }
   return <div className="radio-multi-picker"><div className="radio-multi-control">{selected.map((radio) => <span className="radio-token" key={radio.id}>{radio.code}<button type="button" aria-label={`Quitar radio ${radio.code}`} onClick={() => removeRadio(radio.id)}>×</button></span>)}<div className="radio-multi-input"><Search size={16} /><input value={query} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 120)} onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }} onChange={(event) => { setQuery(event.target.value); setOpen(true) }} placeholder={selected.length ? 'Buscar y agregar otro radio…' : 'Buscar y agregar radios…'} aria-label="Buscar radio" /></div></div>{open && <div className="radio-multi-menu">{!query.trim() ? <div className="search-picker-empty">Escriba un código, IMEI o modelo para buscar.</div> : matches.length ? matches.map((radio) => <button type="button" key={radio.id} onMouseDown={(event) => event.preventDefault()} onClick={() => addRadio(radio.id)}><strong>{radio.code}</strong><span>IMEI: {radio.imei} · {radio.model}</span></button>) : <div className="search-picker-empty">No se encontraron radios disponibles.</div>}</div>}</div>

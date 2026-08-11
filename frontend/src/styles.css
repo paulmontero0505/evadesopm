@@ -480,8 +480,8 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-pick small { color: var(--muted); font-size: 11px; }
 .radio-pick-quantity { justify-content: space-between; gap: 12px; }
 .radio-pick-quantity > label:first-child { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; cursor: pointer; }
-.manual-puesto-add { margin: 10px 0; }
-.manual-puesto-add .btn { flex: 0 0 auto; width: auto; padding-inline: 14px; }
+.puesto-search { margin-top: 10px; }
+.puesto-empty { margin-top: 10px; border: 1px dashed #cbd5e1; border-radius: 12px; }
 .quantity-stepper { display: inline-grid; grid-template-columns: 32px 42px 32px; align-items: center; min-height: 36px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; flex: 0 0 auto; }
 .quantity-stepper button { display: grid; place-items: center; width: 32px; height: 34px; padding: 0; border: 0; background: #f4f7fb; color: var(--blue); cursor: pointer; }
 .quantity-stepper button:hover, .quantity-stepper button:focus-visible { background: var(--blue-tint); outline: none; }
