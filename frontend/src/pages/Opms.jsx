@@ -35,6 +35,11 @@ export default function Opms() {
     return opms.filter((o) =>
       [o.code, o.full_name, o.puesto, o.dni, o.telefono, o.email_personal, o.team].some((v) => (v || '').toLowerCase().includes(term)))
   }, [opms, q])
+  const cargoCounts = useMemo(() => Object.entries(opms.filter((opm) => Number(opm.active)).reduce((counts, opm) => {
+    const cargo = opm.puesto?.trim() || 'Sin cargo registrado'
+    counts[cargo] = (counts[cargo] || 0) + 1
+    return counts
+  }, {})).sort(([a], [b]) => a.localeCompare(b)), [opms])
 
   async function create(e) {
     e.preventDefault(); setBusy(true); setErr(''); setMsg('')
@@ -166,6 +171,11 @@ export default function Opms() {
             <button className="btn" disabled={busy}>{busy ? t.creando : t.crearColaborador}</button>
           </form>
         )}
+
+        <section className="opm-role-summary" aria-labelledby="opm-role-summary-title">
+          <div className="home-assignments-heading"><div><h2 id="opm-role-summary-title">Personal activo por cargo</h2><p>Distribución actual del catálogo de colaboradores.</p></div><span className="shift-selection-count">{opms.filter((opm) => Number(opm.active)).length}</span></div>
+          <div className="opm-role-indicators">{cargoCounts.map(([cargo, count]) => <div key={cargo}><strong>{count}</strong><span>{cargo}</span></div>)}</div>
+        </section>
 
         <div className="search-box">
           <Search size={16} className="search-icon" />

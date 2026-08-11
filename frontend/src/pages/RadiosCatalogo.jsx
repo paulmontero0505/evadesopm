@@ -31,6 +31,7 @@ export default function RadiosCatalogo() {
     const q = search.trim().toLowerCase()
     return q ? radios.filter((r) => `${r.code} ${r.imei} ${r.model} ${r.location || ''} ${r.last_location || ''}`.toLowerCase().includes(q)) : radios
   }, [radios, search])
+  const locations = useMemo(() => [...new Set(radios.flatMap((radio) => [radio.location, radio.last_location]).filter(Boolean))].sort(), [radios])
   const metrics = useMemo(() => ({
     total: radios.length,
     toolroom: radios.filter((r) => (r.last_location || r.location || '').toUpperCase() === 'TOOLROOM').length,
@@ -95,7 +96,7 @@ export default function RadiosCatalogo() {
             <div><label>Código de radio</label><input className="input" required value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></div>
             <div><label>IMEI</label><input className="input" required value={form.imei} onChange={(e) => setForm({ ...form, imei: e.target.value })} /></div>
             <div><label>Modelo</label><input className="input" required value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} /></div>
-            <div><label><MapPin size={14} /> Ubicación base</label><input className="input" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+            <div><label><MapPin size={14} /> Ubicación base</label><input className="input" list="radio-locations" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Seleccione o escriba una ubicación" /><datalist id="radio-locations">{locations.map((location) => <option key={location} value={location} />)}</datalist></div>
             <div><label>Estado</label><select className="input" value={form.condition_status} onChange={(e) => setForm({ ...form, condition_status: e.target.value })}>{CONDITIONS.map((condition) => <option key={condition}>{condition}</option>)}</select></div>
           </div>
           <div className="radio-form-actions"><button className="btn secondary" type="button" onClick={() => { setShowForm(false); setEditing(null); setForm(EMPTY) }}>Cancelar</button><button className="btn" disabled={saving}>{saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Registrar radio'}</button></div>

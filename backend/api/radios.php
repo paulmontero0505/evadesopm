@@ -69,7 +69,7 @@ function handle_supervisor_assignment_delete(int $id): void {
 
 function handle_radios_catalog_list(): void {
     require_role(['admin']);
-    $sql = "SELECT r.*, last_assignment.location AS last_location, last_assignment.nave AS last_nave, last_assignment.work_date AS last_work_date, last_assignment.turno AS last_turno FROM radios r LEFT JOIN radio_assignments last_assignment ON last_assignment.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) ORDER BY r.active DESC, r.code";
+    $sql = "SELECT r.*, last_assignment.location AS last_location, last_assignment.nave AS last_nave, last_assignment.work_date AS last_work_date, last_assignment.turno AS last_turno FROM radios r LEFT JOIN radio_assignments last_assignment ON last_assignment.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) ORDER BY r.active DESC, CAST(r.code AS UNSIGNED), r.code";
     json_response(['radios' => db()->query($sql)->fetchAll()]);
 }
 function handle_radios_catalog_template(): void {
@@ -78,7 +78,7 @@ function handle_radios_catalog_template(): void {
 }
 function handle_radios_catalog_report(): void {
     require_role(['admin']);
-    $sql = "SELECT r.*, last_assignment.location AS last_location, last_assignment.nave AS last_nave FROM radios r LEFT JOIN radio_assignments last_assignment ON last_assignment.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) ORDER BY r.code";
+    $sql = "SELECT r.*, last_assignment.location AS last_location, last_assignment.nave AS last_nave FROM radios r LEFT JOIN radio_assignments last_assignment ON last_assignment.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) ORDER BY CAST(r.code AS UNSIGNED), r.code";
     $bytes = xlsx_build_radio_locations_report(db()->query($sql)->fetchAll());
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition: attachment; filename="reporte_ubicaciones_radios.xlsx"'); echo $bytes; exit;
 }
@@ -135,7 +135,7 @@ function handle_radio_context(): void {
     $locations = db()->query("SELECT DISTINCT location FROM (SELECT location FROM radios WHERE location IS NOT NULL AND location<>'' UNION SELECT location FROM radio_assignments WHERE location IS NOT NULL AND location<>'') locations ORDER BY location")->fetchAll(PDO::FETCH_COLUMN);
     $nextDate = $turno === 'noche' ? date('Y-m-d', strtotime($date . ' +1 day')) : $date; $nextTurno = $turno === 'noche' ? 'dia' : 'noche';
     $next=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, u.full_name"); $next->execute([$nextDate,$nextTurno]);
-    json_response(['radios'=>db()->query("SELECT r.id,r.code,r.imei,r.model,r.location, CASE WHEN EXISTS (SELECT 1 FROM radio_assignments ra WHERE ra.radio_id=r.id AND ra.returned_at IS NULL) THEN 0 ELSE 1 END AS available FROM radios r WHERE r.active=1 ORDER BY r.code")->fetchAll(), 'opms'=>$opm->fetchAll(), 'all_opms'=>$allOpm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
+    json_response(['radios'=>db()->query("SELECT r.id,r.code,r.imei,r.model,r.location, CASE WHEN EXISTS (SELECT 1 FROM radio_assignments ra WHERE ra.radio_id=r.id AND ra.returned_at IS NULL) THEN 0 ELSE 1 END AS available FROM radios r WHERE r.active=1 ORDER BY CAST(r.code AS UNSIGNED), r.code")->fetchAll(), 'opms'=>$opm->fetchAll(), 'all_opms'=>$allOpm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
 }
 function handle_radio_assignment_create(): void {
     $me=require_role(['admin','supervisor','coordinator']); $b=radio_payload();

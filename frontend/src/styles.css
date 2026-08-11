@@ -651,6 +651,12 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
   background: var(--card); border: 1px solid var(--border); border-radius: 14px;
   margin-bottom: 8px; box-shadow: var(--shadow-sm); overflow: hidden;
 }
+.opm-role-summary { margin: 0 0 16px; }
+.opm-role-summary .home-assignments-heading { margin-bottom: 10px; }
+.opm-role-indicators { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; }
+.opm-role-indicators > div { display: grid; gap: 3px; min-height: 72px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
+.opm-role-indicators strong { color: var(--blue); font-size: 20px; }
+.opm-role-indicators span { color: var(--muted); font-size: 11px; line-height: 1.3; }
 .opm-expand {
   background: #eef2f8; border: none; color: var(--muted); border-radius: 8px;
   width: 30px; height: 30px; flex-shrink: 0; cursor: pointer;
