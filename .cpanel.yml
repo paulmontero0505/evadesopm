@@ -1,6 +1,5 @@
 deployment:
   tasks:
     - export DEPLOY_PATH=/home/portally/evadesopm.site
-    - /usr/bin/git -C $DEPLOY_PATH reset --hard
-    - /usr/bin/git -C $DEPLOY_PATH pull origin main
+    - /bin/cp -R assets backend database frontend img OPM index.html .htaccess $DEPLOY_PATH
     - echo "Despliegue completado en $(date)" >> $DEPLOY_PATH/deploy.log
