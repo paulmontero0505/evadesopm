@@ -119,6 +119,7 @@ function handle_radio_context(): void {
     $columns = db()->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='radio_assignments' AND COLUMN_NAME IN ('delivery_group','current_supervisor_id','current_work_date','current_turno')")->fetchAll(PDO::FETCH_COLUMN);
     if (count($columns) < 4) json_error('Actualizacion pendiente: importe migration_grupos_entrega_radios.sql y migration_custodia_radios.sql en phpMyAdmin.', 422);
     $opm=db()->prepare('SELECT a.id, o.id AS opm_id, o.code, o.full_name, a.funcion_1, a.puesto, a.zona_1, a.nave, a.nave_2 FROM opm_assignments a JOIN opms o ON o.id=a.opm_id WHERE a.work_date=? AND a.turno=? ORDER BY o.full_name'); $opm->execute([$date,$turno]);
+    $puestos = db()->query("SELECT DISTINCT puesto FROM opms WHERE active=1 AND puesto IS NOT NULL AND TRIM(puesto)<>'' ORDER BY puesto")->fetchAll(PDO::FETCH_COLUMN);
     $team=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, a.funcion_1, a.puesto, a.nave, a.nave_2, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, u.full_name"); $team->execute([$date,$turno]);
     $recordSql = radio_records_sql();
     $records=db()->prepare($recordSql . 'WHERE ra.work_date=? AND ra.turno=? ORDER BY ra.created_at DESC, ra.id DESC'); $records->execute([$date,$turno]);
@@ -126,7 +127,7 @@ function handle_radio_context(): void {
     $locations = db()->query("SELECT DISTINCT location FROM (SELECT location FROM radios WHERE location IS NOT NULL AND location<>'' UNION SELECT location FROM radio_assignments WHERE location IS NOT NULL AND location<>'') locations ORDER BY location")->fetchAll(PDO::FETCH_COLUMN);
     $nextDate = $turno === 'noche' ? date('Y-m-d', strtotime($date . ' +1 day')) : $date; $nextTurno = $turno === 'noche' ? 'dia' : 'noche';
     $next=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, u.full_name"); $next->execute([$nextDate,$nextTurno]);
-    json_response(['radios'=>db()->query('SELECT id,code,imei,model,location FROM radios WHERE active=1 ORDER BY code')->fetchAll(), 'opms'=>$opm->fetchAll(), 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
+    json_response(['radios'=>db()->query('SELECT id,code,imei,model,location FROM radios WHERE active=1 ORDER BY code')->fetchAll(), 'opms'=>$opm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
 }
 function handle_radio_assignment_create(): void {
     $me=require_role(['admin','supervisor','coordinator']); $b=radio_payload();
