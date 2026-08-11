@@ -16,8 +16,6 @@ import Opms from './pages/Opms.jsx'
 import Users from './pages/Users.jsx'
 import EvaluacionOpm from './pages/EvaluacionOpm.jsx'
 import CambiarClave from './pages/CambiarClave.jsx'
-import Asignaciones from './pages/Asignaciones.jsx'
-import AsignacionesSupervisores from './pages/AsignacionesSupervisores.jsx'
 import ControlRadios from './pages/ControlRadios.jsx'
 import RadiosCatalogo from './pages/RadiosCatalogo.jsx'
 import AppErrorBoundary from './components/AppErrorBoundary.jsx'
@@ -41,21 +39,21 @@ export default function App() {
         <Route path="/cambiar-clave" element={<Protected needShift={false}><CambiarClave /></Protected>} />
         <Route path="/turno" element={<Protected needShift={false}><SeleccionarTurno /></Protected>} />
         <Route path="/" element={<Protected><Home /></Protected>} />
-        <Route path="/evaluacion-opm" element={<Protected><EvaluacionOpm /></Protected>} />
-        <Route path="/ficha" element={<Protected><Ficha /></Protected>} />
-        <Route path="/imprimir/:id" element={<Protected needShift={false}><FichaImprimir /></Protected>} />
-        <Route path="/compromiso" element={<Protected><Compromiso /></Protected>} />
-        <Route path="/imprimir-compromiso/:id" element={<Protected needShift={false}><CompromisoImprimir /></Protected>} />
-        <Route path="/control" element={<Protected><Control /></Protected>} />
-        <Route path="/evaluar" element={<Protected><Evaluacion /></Protected>} />
-        <Route path="/evaluar/:opmId" element={<Protected><Evaluacion /></Protected>} />
-        <Route path="/evaluar/imprimir/:opmId" element={<Protected needShift={false}><EvaluacionImprimir /></Protected>} />
+        <Route path="/evaluacion-opm" element={<Protected roles={['supervisor']}><EvaluacionOpm /></Protected>} />
+        <Route path="/ficha" element={<Protected roles={['supervisor']}><Ficha /></Protected>} />
+        <Route path="/imprimir/:id" element={<Protected roles={['supervisor']} needShift={false}><FichaImprimir /></Protected>} />
+        <Route path="/compromiso" element={<Protected roles={['supervisor']}><Compromiso /></Protected>} />
+        <Route path="/imprimir-compromiso/:id" element={<Protected roles={['supervisor']} needShift={false}><CompromisoImprimir /></Protected>} />
+        <Route path="/control" element={<Protected roles={['supervisor']}><Control /></Protected>} />
+        <Route path="/evaluar" element={<Protected roles={['supervisor']}><Evaluacion /></Protected>} />
+        <Route path="/evaluar/:opmId" element={<Protected roles={['supervisor']}><Evaluacion /></Protected>} />
+        <Route path="/evaluar/imprimir/:opmId" element={<Protected roles={['supervisor']} needShift={false}><EvaluacionImprimir /></Protected>} />
         <Route path="/admin" element={<Protected roles={['admin']}><Admin /></Protected>} />
         <Route path="/opms" element={<Protected roles={['admin']}><Opms /></Protected>} />
         <Route path="/users" element={<Protected roles={['admin']}><Users /></Protected>} />
-        <Route path="/asignaciones" element={<Protected roles={['admin']}><Asignaciones /></Protected>} />
-        <Route path="/asignaciones-supervisores" element={<Protected roles={['admin']}><AsignacionesSupervisores /></Protected>} />
-        <Route path="/radios" element={<Protected roles={['admin','supervisor','coordinator']}><ControlRadios /></Protected>} />
+        <Route path="/asignaciones" element={<Navigate to="/admin" replace />} />
+        <Route path="/asignaciones-supervisores" element={<Navigate to="/admin" replace />} />
+        <Route path="/radios" element={<Protected roles={['admin','coordinator']}><ControlRadios /></Protected>} />
         <Route path="/registrar-radios" element={<Protected roles={['admin']}><RadiosCatalogo /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

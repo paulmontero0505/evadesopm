@@ -137,7 +137,7 @@ export default function ControlRadios() {
     setDeletingId(records[0].id); setError(''); setMessage('')
     try { await Promise.all(records.map((record) => api.deleteRadioAssignment(record.id))); setMessage(`Se eliminó la entrega y sus ${total} radio${total === 1 ? '' : 's'}.`); await load() } catch (err) { setError(err.message) } finally { setDeletingId(null) }
   }
-  function canManageRecord(record) { return user?.role === 'admin' || (user?.role === 'coordinator' && Number(record.registered_by) === Number(user.id)) }
+  function canManageRecord() { return user?.role === 'admin' || user?.role === 'coordinator' }
 
   return <><TopBar title="Trazabilidad de equipos / radios" to="/" onBack={module ? () => { setModule(null); setError(''); setMessage('') } : undefined} /><main className="content">
     {error && <div className="error" role="alert">{error}</div>}

@@ -242,7 +242,7 @@ function handle_radio_assignment_collaborator(int $id): void {
 function radio_assignment_for_update(int $id, array $me): array {
     $stmt = db()->prepare('SELECT * FROM radio_assignments WHERE id=?'); $stmt->execute([$id]); $record = $stmt->fetch();
     if (!$record) json_error('No se encontró la entrega de radio.', 404);
-    if ($me['role'] !== 'admin' && !($me['role'] === 'coordinator' && (int)$record['registered_by'] === (int)$me['id'])) json_error('Solo el coordinador que registró esta entrega puede modificarla.', 403);
+    if (!in_array($me['role'], ['admin', 'coordinator'], true)) json_error('Solo administradores y coordinadores pueden modificar esta entrega.', 403);
     return $record;
 }
 function radio_assignment_update_values(array $b, array $record): array {
