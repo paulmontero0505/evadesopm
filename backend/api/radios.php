@@ -282,23 +282,39 @@ function handle_radio_assignment_group_update(): void {
     $stmt = db()->prepare('SELECT * FROM radio_assignments WHERE delivery_group=? ORDER BY id'); $stmt->execute([$group]); $records = $stmt->fetchAll();
     if (!$records) json_error('No se encontró la entrega agrupada.', 404);
     foreach ($records as $record) radio_assignment_for_update((int)$record['id'], $me);
-    $storedRadioIds = array_map('intval', array_column($records, 'radio_id')); sort($storedRadioIds); $requestedRadioIds = $radioIds; sort($requestedRadioIds);
-    if ($storedRadioIds !== $requestedRadioIds) json_error('Los radios de una entrega registrada no se pueden agregar ni retirar al editar.', 422);
+    $recordsByRadio = [];
+    foreach ($records as $record) $recordsByRadio[(int)$record['radio_id']] = $record;
+    $storedRadioIds = array_keys($recordsByRadio); $requestedRadioIds = $radioIds;
+    $addedRadioIds = array_values(array_diff($requestedRadioIds, $storedRadioIds));
+    $removedRadioIds = array_values(array_diff($storedRadioIds, $requestedRadioIds));
+    if (($addedRadioIds || $removedRadioIds) && array_filter($records, fn($record) => $record['returned_at'])) json_error('No se pueden agregar o quitar radios de una entrega que ya tiene devoluciones registradas.', 409);
     $supervisor = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $supervisor->execute([$supervisorId]);
     if (!$supervisor->fetchColumn()) json_error('Seleccione un supervisor o coordinador activo.', 422);
     foreach ($radioIds as $radioId) if (!in_array($statuses[(string)$radioId] ?? $statuses[$radioId] ?? '', RADIO_CONDITIONS, true)) json_error('Seleccione un estado válido para cada radio.', 422);
+    if ($addedRadioIds) {
+        $marks = implode(',', array_fill(0, count($addedRadioIds), '?'));
+        $available = db()->prepare("SELECT COUNT(*) FROM radios WHERE id IN ($marks) AND active=1"); $available->execute($addedRadioIds);
+        if ((int)$available->fetchColumn() !== count($addedRadioIds)) json_error('Uno de los radios agregados no está disponible.', 422);
+        $pending = db()->prepare("SELECT COUNT(DISTINCT radio_id) FROM radio_assignments WHERE radio_id IN ($marks) AND returned_at IS NULL AND COALESCE(delivery_group, '')<>?"); $pending->execute([...$addedRadioIds, $group]);
+        if ((int)$pending->fetchColumn()) json_error('Uno de los radios agregados sigue asignado y debe devolverse antes de agregarlo.', 409);
+    }
     $photo = save_radio_photo(); $oldPhotos = array_values(array_unique(array_filter(array_column($records, 'photo_path')))); $pdo = db(); $pdo->beginTransaction();
     try {
         $update = $pdo->prepare('UPDATE radio_assignments SET supervisor_id=?, current_supervisor_id=CASE WHEN current_supervisor_id=? THEN ? ELSE current_supervisor_id END, nave=?, location=?, assigned_puesto=?, condition_status=?, comments=?, photo_path=? WHERE id=?');
+        $insert = $pdo->prepare('INSERT INTO radio_assignments (delivery_group,radio_id,supervisor_id,current_supervisor_id,work_date,current_work_date,turno,current_turno,nave,location,assigned_puesto,condition_status,comments,photo_path,registered_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        if ($removedRadioIds) { $marks = implode(',', array_fill(0, count($removedRadioIds), '?')); $delete = $pdo->prepare("DELETE FROM radio_assignments WHERE delivery_group=? AND radio_id IN ($marks)"); $delete->execute([$group, ...$removedRadioIds]); }
         foreach ($radioIds as $index => $radioId) {
-            $record = current(array_filter($records, fn($item) => (int)$item['radio_id'] === $radioId));
-            $photoPath = $photo ?: $record['photo_path'];
-            $update->execute([$supervisorId, $record['supervisor_id'], $supervisorId, $nave, $location, $puestos[$index], $statuses[(string)$radioId] ?? $statuses[$radioId], $comments, $photoPath, $record['id']]);
+            $record = $recordsByRadio[$radioId] ?? null;
+            $condition = $statuses[(string)$radioId] ?? $statuses[$radioId];
+            if ($record) {
+                $photoPath = $photo ?: $record['photo_path'];
+                $update->execute([$supervisorId, $record['supervisor_id'], $supervisorId, $nave, $location, $puestos[$index], $condition, $comments, $photoPath, $record['id']]);
+            } else $insert->execute([$group, $radioId, $supervisorId, $supervisorId, $date, $date, $turno, $turno, $nave, $location, $puestos[$index], $condition, $comments, $photo, $me['id']]);
         }
         $pdo->commit();
     } catch (Throwable $e) { $pdo->rollBack(); if ($photo && is_file(__DIR__ . '/../../' . $photo)) @unlink(__DIR__ . '/../../' . $photo); throw $e; }
     if ($photo) foreach ($oldPhotos as $oldPhoto) if ($oldPhoto !== $photo && is_file(__DIR__ . '/../../' . $oldPhoto)) @unlink(__DIR__ . '/../../' . $oldPhoto);
-    json_response(['ok' => true, 'updated' => count($records)]);
+    json_response(['ok' => true, 'updated' => count($radioIds)]);
 }
 function handle_radio_assignment_delete(int $id): void {
     $me = require_role(['admin', 'coordinator']); $record = radio_assignment_for_update($id, $me);
