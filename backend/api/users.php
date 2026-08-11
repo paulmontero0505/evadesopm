@@ -222,7 +222,7 @@ function handle_user_delete(int $id): void
     }
 
     $used = db()->prepare(
-        '(SELECT COUNT(*) FROM shift_records WHERE supervisor_id = ?)
+        'SELECT (SELECT COUNT(*) FROM shift_records WHERE supervisor_id = ?)
        + (SELECT COUNT(*) FROM evaluations   WHERE evaluated_by = ?)'
     );
     $used->execute([$id, $id]);
