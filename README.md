@@ -137,3 +137,5 @@ Vite escucha por defecto en el puerto `5174`. Para publicar cambios en Apache, e
 - No publicar `backend/config/config.local.php` ni credenciales de base de datos.
 - Usar HTTPS y restringir CORS antes de exponer la aplicacion fuera de una red controlada; la configuracion actual permite cualquier origen.
 - Respaldar la base de datos y `uploads/`, ya que ambos contienen trazabilidad operativa.
+#   e v a d e s o p m  
+ 
