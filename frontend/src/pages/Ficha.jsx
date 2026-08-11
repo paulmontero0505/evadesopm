@@ -76,21 +76,17 @@ export default function Ficha() {
   useEffect(() => {
     setLoading(true)
     setErr('')
-    Promise.all([api.rules(), api.assignments(shift.date, shift.turno), fetchRecords()])
-      .then(([r, assignments]) => {
+    Promise.all([api.rules(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords()])
+      .then(([r, team]) => {
         if (!r?.rules || !Array.isArray(r.rules.cargas) || !Array.isArray(r.rules.bloques) || !r.rules.objetivos) {
           throw new Error(t.errorFichaDatos)
         }
         setRules(r.rules)
-        const assigned = assignments.assignments || []
-        const selected = Array.isArray(shift?.selectedOpms) ? new Set(shift.selectedOpms.map(Number)) : null
-        setOpms(assigned
-          .filter((a) => !selected || selected.has(Number(a.id)))
-          .map((a) => ({ id: a.opm_id, code: a.opm_code, full_name: a.opm_name, active: 1 })))
+        setOpms((team.members || []).map((member) => ({ id: member.person_id, code: member.code, full_name: member.full_name, active: 1, in_turn: Number(member.in_turn) })))
       })
       .catch((e) => { setRules(null); setErr(e.message || t.errorFichaCarga) })
       .finally(() => setLoading(false))
-  }, [loadAttempt])
+  }, [loadAttempt, shift.date, shift.turno])
 
   const visibles = useMemo(() => {
     if (!rules || !carga) return []
@@ -308,8 +304,8 @@ export default function Ficha() {
             <div className="card">
               <label>{t.operario}</label>
               <SearchSelect value={opmId} onChange={setOpmId} placeholder={t.seleccione}
-                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name}` }))} />
-              {opms.length === 0 && <div className="warn-box">{t.sinOpmEnTurno}</div>}
+                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name} · ${o.in_turn ? 'En turno' : 'Fuera de turno'}` }))} />
+              {opms.length === 0 && <div className="warn-box">No hay colaboradores activos registrados.</div>}
 
               <label>{t.tipoCarga}</label>
               <div className="choice-grid">

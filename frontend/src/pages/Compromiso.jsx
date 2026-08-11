@@ -70,18 +70,14 @@ export default function Compromiso() {
   }
 
   useEffect(() => {
-    Promise.all([api.compromisoRules(), api.assignments(shift.date, shift.turno), fetchRecords()])
-      .then(([r, assignments]) => {
+    Promise.all([api.compromisoRules(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords()])
+      .then(([r, team]) => {
         setRules(r.rules)
-        const assigned = assignments.assignments || []
-        const selected = Array.isArray(shift?.selectedOpms) ? new Set(shift.selectedOpms.map(Number)) : null
-        setOpms(assigned
-          .filter((a) => !selected || selected.has(Number(a.id)))
-          .map((a) => ({ id: a.opm_id, code: a.opm_code, full_name: a.opm_name, active: 1 })))
+        setOpms((team.members || []).map((member) => ({ id: member.person_id, code: member.code, full_name: member.full_name, active: 1, in_turn: Number(member.in_turn) })))
       })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [shift.date, shift.turno])
 
   const prom = useMemo(() => {
     if (!rules) return {}
@@ -268,8 +264,8 @@ export default function Compromiso() {
             <div className="card">
               <label>{t.operario}</label>
               <SearchSelect value={opmId} onChange={setOpmId} placeholder={t.seleccione}
-                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name}` }))} />
-              {opms.length === 0 && <div className="warn-box">{t.sinOpmEnTurno}</div>}
+                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name} · ${o.in_turn ? 'En turno' : 'Fuera de turno'}` }))} />
+              {opms.length === 0 && <div className="warn-box">No hay colaboradores activos registrados.</div>}
             </div>
 
             {cuotaTotalExcedida && (
