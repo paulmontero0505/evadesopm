@@ -821,10 +821,26 @@ body.login-bg, body.login-bg .app { background: #fff; }
   body, .app { background: #fff !important; }
   .app { max-width: none !important; margin: 0 !important; }
   .print-sheet { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+  body:has(.delivery-report.print-selected) .topbar, body:has(.delivery-report.print-selected) .topbar-accent { display: none !important; }
+  body:has(.delivery-report.print-selected) .content > *:not(.assignment-list) { display: none !important; }
   .delivery-report { display: none !important; box-shadow: none !important; page-break-inside: avoid; }
-  .delivery-report.print-selected { display: block !important; }
+  .delivery-report.print-selected { display: block !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; color: #111 !important; font-size: 9pt; }
+  .delivery-report.print-selected::before, body.trace-printing .trace-report::before { content: "COSCO SHIPPING   |   REPORTE DE MOVIMIENTO OPERATIVO"; display: block; padding: 7px 10px; border-bottom: 2px solid #a51d25; color: #06275d; font-size: 13pt; font-weight: 800; text-align: center; }
+  .delivery-report.print-selected .radio-record-head { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 10px; border-bottom: 1px solid #9aa5b5; }
+  .delivery-report.print-selected .radio-record-head strong { color: #06275d; font-size: 10pt; }
+  .delivery-report.print-selected .delivery-report-meta { grid-template-columns: repeat(2, 1fr); gap: 0; margin: 0; border-bottom: 1px solid #9aa5b5; }
+  .delivery-report.print-selected .delivery-report-meta span { min-height: 38px; padding: 5px 9px; border-right: 1px solid #c5ccd6; color: #111; }
+  .delivery-report.print-selected .delivery-report-meta b { color: #06275d; font-size: 8pt; text-transform: uppercase; }
+  .delivery-report.print-selected .delivery-report-radios { margin: 10px 0 0; border: 1px solid #8290a4; }
+  .delivery-report.print-selected .delivery-report-radios::before { content: "CÓDIGO                                      DETALLE DEL RADIO, PUESTO Y ESTADO"; display: block; padding: 5px 8px; background: #06275d; color: #fff; font-size: 8pt; font-weight: 700; letter-spacing: .02em; }
+  .delivery-report.print-selected .delivery-report-radios > div { grid-template-columns: 90px minmax(0, 1fr); gap: 0; padding: 0; border: 0; }
+  .delivery-report.print-selected .delivery-report-radios > div:nth-child(even) { background: #e9f0f8; }
+  .delivery-report.print-selected .delivery-report-radios > div > * { padding: 5px 7px; border-right: 1px solid #c5ccd6; color: #111; }
+  .delivery-report.print-selected .delivery-report-radios > div + div { border-top: 1px solid #c5ccd6; }
+  .delivery-report.print-selected .delivery-report-return { margin: 10px 0 0; border: 1px solid #8290a4; border-radius: 0; background: #f4f7fa; }
+  .delivery-report.print-selected::after, body.trace-printing .trace-report::after { content: "Firma del responsable de entrega                                      Firma del responsable que recibe"; display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid #111; font-size: 8.5pt; text-align: center; white-space: pre; }
   tr, .ph-obs, .ph-alert { break-inside: avoid; }
-  @page { size: A4; margin: 12mm; }
+  @page { size: A4 landscape; margin: 10mm; }
 }
 
 @media print {
@@ -832,7 +848,15 @@ body.login-bg, body.login-bg .app { background: #fff; }
   body.trace-printing .content > *:not(.trace-report-sheet) { display: none !important; }
   body.trace-printing .trace-report-sheet { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
   body.trace-printing .trace-report-sheet .no-print { display: none !important; }
-  body.trace-printing .trace-report { box-shadow: none !important; border: none !important; }
-  body.trace-printing .trace-table th { background: #f0f0f0 !important; }
-  body.trace-printing .trace-table td { border-top: 1px solid #ccc !important; }
+  body.trace-printing .trace-report { box-shadow: none !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
+  body.trace-printing .trace-report-header { padding: 7px 10px; border: 1px solid #9aa5b5; border-top: 0; }
+  body.trace-printing .trace-report-header h2 { color: #06275d; font-size: 10pt; }
+  body.trace-printing .trace-report-header p { color: #111; font-size: 8.5pt; }
+  body.trace-printing .trace-table-wrap { overflow: visible; border: 1px solid #8290a4; border-top: 0; }
+  body.trace-printing .trace-table { font-size: 7.5pt; }
+  body.trace-printing .trace-table th { padding: 5px 4px; background: #06275d !important; color: #fff !important; border-right: 1px solid #6d7f9a; font-size: 6.8pt; white-space: normal; }
+  body.trace-printing .trace-table td { padding: 5px 4px; border-top: 1px solid #c5ccd6 !important; border-right: 1px solid #c5ccd6; }
+  body.trace-printing .trace-table tbody tr:nth-child(even) { background: #e9f0f8 !important; }
+  body.trace-printing .trace-table td > small, body.trace-printing .trace-model { font-size: 6.8pt; color: #334155; }
+  body.trace-printing .movement-badge, body.trace-printing .trace-condition { color: #111; background: transparent; padding: 0; font-size: 7pt; font-weight: 700; }
 }
