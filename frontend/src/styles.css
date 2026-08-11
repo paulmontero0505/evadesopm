@@ -520,9 +520,19 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .delivery-report-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin-top: 14px; }
 .delivery-report-meta span { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
 .delivery-report-meta b { color: var(--text); font-size: 11px; }
-.delivery-report-radios { margin-top: 14px; border-top: 1px solid var(--border); }
-.delivery-report-radios > div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px; padding: 9px 0; font-size: 12px; }
-.delivery-report-radios > div + div { border-top: 1px solid var(--border); }
+.delivery-report-toggle { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; flex: 1; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.delivery-report-toggle strong { color: var(--navy); font-size: 14px; }
+.delivery-report-toggle span { color: var(--muted); font-size: 12px; }
+.delivery-report-toggle svg { grid-row: span 2; align-self: center; color: var(--blue); transition: transform .18s var(--ease); }
+.delivery-report-toggle svg.rot { transform: rotate(180deg); }
+.delivery-report-radios { margin-top: 14px; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+.delivery-report-radio-head, .delivery-report-radio-row { display: grid; grid-template-columns: 72px minmax(160px, 1.25fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(140px, 1fr); min-width: 720px; }
+.delivery-report-radio-head { background: #f4f7fb; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.delivery-report-radio-head span, .delivery-report-radio-row > * { padding: 8px 9px; }
+.delivery-report-radio-row { color: var(--muted); font-size: 12px; }
+.delivery-report-radio-row + .delivery-report-radio-row { border-top: 1px solid var(--border); }
+.delivery-report-radio-row strong { color: var(--navy); }
+.delivery-report-radio-row:nth-child(odd) { background: #f8fbff; }
 .delivery-report-radios strong { color: var(--navy); }
 .delivery-report-radios span { color: var(--muted); }
 .delivery-report-return { margin-top: 14px; padding: 12px 14px; background: #F0F7F2; border: 1px solid #C9E3D2; border-radius: var(--radius); }
@@ -620,7 +630,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
   .radio-module-cards { grid-template-columns: 1fr; }
   .radio-indicators { grid-template-columns: 1fr; }
   .delivery-report-meta { grid-template-columns: 1fr; }
-  .delivery-report-radios > div { grid-template-columns: 1fr; gap: 3px; }
+  .delivery-report-radios { margin-inline: -2px; }
   .catalog-tools { grid-template-columns: 1fr; }
    .catalog-tools .btn, .radio-catalog-status { width: 100%; }
    .radio-catalog-row { grid-template-columns: 1fr; }
@@ -837,16 +847,20 @@ body.login-bg, body.login-bg .app { background: #fff; }
   .delivery-report.print-selected { display: block !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; color: #111 !important; font-size: 9pt; }
   .delivery-report.print-selected::before, body.trace-printing .trace-report::before { content: "COSCO SHIPPING   |   REPORTE DE MOVIMIENTO OPERATIVO"; display: block; padding: 7px 10px; border-bottom: 2px solid #a51d25; color: #06275d; font-size: 13pt; font-weight: 800; text-align: center; }
   .delivery-report.print-selected .radio-record-head { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 10px; border-bottom: 1px solid #9aa5b5; }
-  .delivery-report.print-selected .radio-record-head strong { color: #06275d; font-size: 10pt; }
+  .delivery-report.print-selected .delivery-report-toggle { cursor: default; }
+  .delivery-report.print-selected .delivery-report-toggle strong { color: #06275d; font-size: 10pt; }
+  .delivery-report.print-selected .delivery-report-toggle svg { display: none; }
   .delivery-report.print-selected .delivery-report-meta { grid-template-columns: repeat(2, 1fr); gap: 0; margin: 0; border-bottom: 1px solid #9aa5b5; }
   .delivery-report.print-selected .delivery-report-meta span { min-height: 38px; padding: 5px 9px; border-right: 1px solid #c5ccd6; color: #111; }
   .delivery-report.print-selected .delivery-report-meta b { color: #06275d; font-size: 8pt; text-transform: uppercase; }
-  .delivery-report.print-selected .delivery-report-radios { margin: 10px 0 0; border: 1px solid #8290a4; }
-  .delivery-report.print-selected .delivery-report-radios::before { content: "CÓDIGO                                      DETALLE DEL RADIO, PUESTO Y ESTADO"; display: block; padding: 5px 8px; background: #06275d; color: #fff; font-size: 8pt; font-weight: 700; letter-spacing: .02em; }
-  .delivery-report.print-selected .delivery-report-radios > div { grid-template-columns: 90px minmax(0, 1fr); gap: 0; padding: 0; border: 0; }
-  .delivery-report.print-selected .delivery-report-radios > div:nth-child(even) { background: #e9f0f8; }
-  .delivery-report.print-selected .delivery-report-radios > div > * { padding: 5px 7px; border-right: 1px solid #c5ccd6; color: #111; }
-  .delivery-report.print-selected .delivery-report-radios > div + div { border-top: 1px solid #c5ccd6; }
+  .delivery-report.print-selected .delivery-report-radios { margin: 10px 0 0; border: 1px solid #8290a4; border-radius: 0; overflow: visible; }
+  .delivery-report.print-selected .delivery-report-radio-head, .delivery-report.print-selected .delivery-report-radio-row { grid-template-columns: 55px minmax(125px, 1.1fr) minmax(115px, 1fr) minmax(105px, .9fr) minmax(115px, 1fr); min-width: 0; }
+  .delivery-report.print-selected .delivery-report-radio-head { background: #06275d; color: #fff; font-size: 7pt; }
+  .delivery-report.print-selected .delivery-report-radio-head span, .delivery-report.print-selected .delivery-report-radio-row > * { padding: 5px; border-right: 1px solid #c5ccd6; }
+  .delivery-report.print-selected .delivery-report-radio-row { color: #111; font-size: 7.5pt; }
+  .delivery-report.print-selected .delivery-report-radio-row strong { color: #06275d; }
+  .delivery-report.print-selected .delivery-report-radio-row:nth-child(odd) { background: #e9f0f8; }
+  .delivery-report.print-selected .delivery-report-radio-row + .delivery-report-radio-row { border-top: 1px solid #c5ccd6; }
   .delivery-report.print-selected .delivery-report-return { margin: 10px 0 0; border: 1px solid #8290a4; border-radius: 0; background: #f4f7fa; }
   .delivery-report.print-selected::after, body.trace-printing .trace-report::after { content: "Firma del responsable de entrega                                      Firma del responsable que recibe"; display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid #111; font-size: 8.5pt; text-align: center; white-space: pre; }
   tr, .ph-obs, .ph-alert { break-inside: avoid; }
