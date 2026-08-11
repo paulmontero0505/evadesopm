@@ -1,0 +1,185 @@
+import { Fragment, useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Printer, ChevronLeft, Languages } from 'lucide-react'
+import { api, SITE_BASE } from '../api.js'
+import { nivel5 } from '../rulesCompromiso.js'
+import { T, useLang, objName, actName, turnoText, nivelText } from '../i18n.js'
+
+const fmtDate = (d) => { if (!d) return ''; const [y, m, day] = d.split('-'); return `${day}/${m}/${y}` }
+const ESCALA = [1, 2, 3, 4, 5]
+
+export default function CompromisoImprimir() {
+  const { id } = useParams()
+  const [lang, , toggleLang] = useLang()
+  const nav = useNavigate()
+  const [rules, setRules] = useState(null)
+  const [record, setRecord] = useState(null)
+  const [err, setErr] = useState('')
+  const t = T[lang]
+
+  useEffect(() => {
+    Promise.all([api.compromisoRules(), api.compromisoRecord(id)])
+      .then(([r, s]) => { setRules(r.rules); setRecord(s.compromiso_record) })
+      .catch((e) => setErr(e.message || 'No se pudo cargar la ficha'))
+  }, [id])
+
+  if (err) return <div className="empty">{err}</div>
+  if (!rules || !record) return <div className="empty">{t.cargando}</div>
+
+  const ratingMap = {}
+  record.ratings.forEach((r) => { ratingMap[r.activity_code] = r })
+
+  const observaciones = []
+  rules.actividades.forEach((a) => {
+    const c = ratingMap[a.id]?.comment
+    if (c) observaciones.push(`${actName(a, lang)}: ${c}`)
+  })
+  if (record.conducta_comment) observaciones.push(`${t.conductaK}: ${record.conducta_comment}`)
+
+  // Las conductas marcadas "No aplica" (rating NULL) no entran en el divisor.
+  const tareasPorObjetivo = {}
+  record.ratings.forEach((r) => {
+    if (r.rating == null) return
+    tareasPorObjetivo[r.objective] = (tareasPorObjetivo[r.objective] || 0) + 1
+  })
+
+  const handleBack = () => {
+    window.close()
+    setTimeout(() => {
+      if (window.history.length > 1) {
+        nav(-1)
+      } else {
+        nav('/compromiso')
+      }
+    }, 100)
+  }
+
+  return (
+    <>
+      <div className="topbar no-print">
+        <button className="backbtn" onClick={handleBack} aria-label={t.volver}><ChevronLeft size={22} /></button>
+        <div style={{ flex: 1 }}><h1 style={{ fontSize: 15 }}>{t.view}</h1></div>
+        <button className="btn secondary small" onClick={toggleLang} title={t.switchTo}>
+          <Languages size={14} /> {lang === 'es' ? 'EN' : 'ES'}
+        </button>
+        <button className="btn secondary small" onClick={() => window.print()}>
+          <Printer size={14} /> {t.imprimir}
+        </button>
+      </div>
+
+      <div className="print-sheet">
+        <div className="ph-brand">COSCO SHIPPING PORTS CHANCAY PERU S.A. (CSPCP)</div>
+        <div className="ph-title">{t.compPrintTitulo}</div>
+
+        <table className="ph-meta">
+          <tbody>
+            <tr>
+              <td className="k">{t.fecha}</td><td className="v">{fmtDate(record.work_date)}</td>
+              <td className="k">{t.turnoK}</td><td className="v">{turnoText(record.turno, lang)}</td>
+            </tr>
+            <tr>
+              <td className="k">{t.code}</td><td className="v">{record.opm_code}</td>
+              <td className="k"></td><td className="v"></td>
+            </tr>
+            <tr>
+              <td className="k">{t.name}</td><td className="v" colSpan={3}>{record.opm_name}</td>
+            </tr>
+            <tr>
+              <td className="k">{t.supervisorK}</td><td className="v" colSpan={3}>{record.supervisor_name}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="ph-table">
+          <thead>
+            <tr>
+              <th className="c-obj">{t.objK}</th>
+              <th className="c-act">{t.actividadK}</th>
+              {ESCALA.map((v) => <th key={v} className="c-scale">{v}</th>)}
+              <th className="c-scale">{t.ptsK}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.keys(rules.objetivos).map((o) => (
+              <Fragment key={o}>
+                <tr>
+                  <td colSpan={8} className="ph-block-head">{(lang === 'en' ? (rules.objetivos[o].en || rules.objetivos[o].t) : rules.objetivos[o].t).toUpperCase()}</td>
+                </tr>
+                {rules.actividades.filter((a) => a.o === o).map((a) => {
+                  const rr = ratingMap[a.id]
+                  const pts = rr && rr.rating != null ? Number(rr.rating) : null
+                  return (
+                    <tr key={a.id}>
+                      <td className="c-obj"><span className="obj-chip" style={{ background: rules.objetivos[a.o].c }}>{a.o}</span></td>
+                      <td className="c-act">{actName(a, lang)}</td>
+                      {ESCALA.map((v) => <td key={v} className="c-scale">{pts === v ? '✕' : ''}</td>)}
+                      <td className="c-scale strong">{rr ? (pts ?? 'N/A') : ''}</td>
+                    </tr>
+                  )
+                })}
+              </Fragment>
+            ))}
+            <tr>
+              <td colSpan={8} className="ph-block-head orange">{t.conductaK}</td>
+            </tr>
+            <tr>
+              <td className="c-obj"><span className="obj-chip" style={{ background: rules.objetivos[rules.conducta_critica.o].c }}>{rules.conducta_critica.o}</span></td>
+              <td className="c-act">{actName(rules.conducta_critica, lang)}</td>
+              <td className="c-scale strong" colSpan={3}>{Number(record.conducta_critica) === 1 ? `${t.siLbl} ✕` : t.siLbl}</td>
+              <td className="c-scale strong" colSpan={3}>{Number(record.conducta_critica) === 1 ? t.noLbl : `${t.noLbl} ✕`}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="ph-table" style={{ marginTop: 14 }}>
+          <thead>
+            <tr><th colSpan={5} className="ph-subtitle">{t.promObjTitulo}</th></tr>
+            <tr>
+              <th className="c-obj">{t.objK}</th><th className="c-act">{t.objetivo}</th>
+              <th className="c-scale">{t.tareasCalif}</th><th className="c-scale">{t.promedio}</th><th className="c-scale" style={{ width: 100 }}>{t.nivelCspcp}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.keys(rules.objetivos).map((o) => {
+              const v = record[`obj_${o.toLowerCase()}`]
+              const num = v == null ? null : Number(v)
+              return (
+                <tr key={o}>
+                  <td className="c-obj"><span className="obj-chip" style={{ background: rules.objetivos[o].c }}>{o}</span></td>
+                  <td className="c-act">{objName(rules.objetivos[o], lang)}</td>
+                  <td className="c-scale">{tareasPorObjetivo[o] || 0}</td>
+                  <td className="c-scale strong">{num == null ? '—' : num.toFixed(2)}</td>
+                  <td className="c-scale" style={{ width: 100 }}>{num == null ? '—' : nivelText(nivel5(num, rules.params), lang)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+
+        {Number(record.conducta_critica) === 1 && (
+          <div className="ph-alert">{t.alertaCritica(objName(rules.objetivos[rules.conducta_critica.o], lang), rules.conducta_critica.o)}</div>
+        )}
+        <div className="ph-note">{t.notaPrintComp(rules.params.minimo)}</div>
+
+        <div className="ph-obs">
+          <div className="ph-obs-title">{t.obsTurno}</div>
+          {observaciones.length === 0 ? (
+            <div className="ph-obs-line muted">{t.sinObs}</div>
+          ) : observaciones.map((o, i) => <div key={i} className="ph-obs-line">{o}</div>)}
+        </div>
+
+        {record.conducta_photo && (
+          <div className="ph-obs">
+            <div className="ph-obs-title">{t.fotoConducta}</div>
+            <img className="ph-photo" src={SITE_BASE + record.conducta_photo} alt={t.fotoAlt} />
+          </div>
+        )}
+
+        <div className="ph-sign">
+          <div>{t.firmaSuper(record.supervisor_name)}</div>
+          <div>{t.fechaFirma(fmtDate(record.work_date))}</div>
+        </div>
+      </div>
+    </>
+  )
+}

@@ -1,0 +1,39 @@
+{"kind":"deck","id":"pr/2f0ho5","name":"Deck"}
+{"kind":"layout","layoutId":"afb37cd7-88f0-485d-a574-e355c7d7807f","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"c089ec11-0b8e-4957-919a-8833126afaeb","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/49wqzo","slide":1,"title":"COSCO SHIPPING PORTS CHANCAY  |  OPM PERFORMANCE SYSTEM","textShapes":21}
+{"kind":"textbox","id":"sh/e5cn2pcv","slide":1,"name":"eyebrow","text":"COSCO SHIPPING PORTS CHANCAY  |  OPM PERFORMANCE SYSTEM","textPreview":"COSCO SHIPPING PORTS CHANCAY  |  OPM PERFORMANCE SYSTEM","textChars":55,"textLines":1,"bbox":[56,42,760,22]}
+{"kind":"textbox","id":"sh/183md4b6","slide":1,"name":"title","text":"A complete shift-to-performance workflow","textPreview":"A complete shift-to-performance workflow","textChars":40,"textLines":1,"bbox":[56,75,945,58]}
+{"kind":"textbox","id":"sh/07u54zul","slide":1,"name":"subtitle","text":"The system connects daily observations with validated quarterly performance results.","textPreview":"The system connects daily observations with validated quarterly performance results.","textChars":84,"textLines":1,"bbox":[56,137,810,30]}
+{"kind":"shape","id":"sh/qhsnypcj","slide":1,"name":"workflow-line","bbox":[117,294,1046,3]}
+{"kind":"shape","id":"sh/dkjm9kba","slide":1,"name":"phase-1","bbox":[56,232,202,300]}
+{"kind":"shape","id":"sh/sja50fup","slide":1,"name":"dot-1","bbox":[134,268,46,46]}
+{"kind":"textbox","id":"sh/3e143at8","slide":1,"name":"num-1","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[134,279,46,23]}
+{"kind":"textbox","id":"sh/idsnu5cn","slide":1,"name":"phase-title-1","text":"Sign in","textPreview":"Sign in","textChars":7,"textLines":1,"bbox":[74,337,166,34]}
+{"kind":"textbox","id":"sh/svelgnix","slide":1,"name":"phase-body-1","text":"Enter employee credentials to access the OPM Performance System.","textPreview":"Enter employee credentials to access the OPM Performance System.","textChars":64,"textLines":1,"bbox":[73,384,168,118]}
+{"kind":"shape","id":"sh/dwn2p8ji","slide":1,"name":"phase-2","bbox":[292,232,202,300]}
+{"kind":"shape","id":"sh/qtw3ed07","slide":1,"name":"dot-2","bbox":[370,268,46,46]}
+{"kind":"textbox","id":"sh/ru5kni1c","slide":1,"name":"num-2","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[370,279,46,23]}
+{"kind":"textbox","id":"sh/4relc321","slide":1,"name":"phase-title-2","text":"Set the shift","textPreview":"Set the shift","textChars":13,"textLines":1,"bbox":[310,337,166,34]}
+{"kind":"textbox","id":"sh/5sn2l8jm","slide":1,"name":"phase-body-2","text":"Choose the work date and Day or Night shift before recording activity.","textPreview":"Choose the work date and Day or Night shift before recording activity.","textChars":70,"textLines":1,"bbox":[309,384,168,118]}
+{"kind":"shape","id":"sh/ipc3atkv","slide":1,"name":"phase-3","bbox":[528,232,202,300]}
+{"kind":"shape","id":"sh/3q5kjy1g","slide":1,"name":"dot-3","bbox":[606,268,46,46]}
+{"kind":"textbox","id":"sh/onylo7i5","slide":1,"name":"num-3","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[606,279,46,23]}
+{"kind":"textbox","id":"sh/po7mxsjq","slide":1,"name":"phase-title-3","text":"Record executions","textPreview":"Record executions","textChars":17,"textLines":1,"bbox":[546,337,166,34]}
+{"kind":"textbox","id":"sh/xkn21sbu","slide":1,"name":"phase-body-3","text":"Select the OPM, operation type and rate every required activity. Add notes or evidence when needed.","textPreview":"Select the OPM, operation type and rate every required activity. Add notes or evidence when needed.","textChars":99,"textLines":1,"bbox":[545,384,168,118]}
+{"kind":"shape","id":"sh/wjul8na9","slide":1,"name":"phase-4","bbox":[764,232,202,300]}
+{"kind":"shape","id":"sh/bilkz2to","slide":1,"name":"dot-4","bbox":[842,268,46,46]}
+{"kind":"textbox","id":"sh/ahc36xsj","slide":1,"name":"num-4","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[842,279,46,23]}
+{"kind":"textbox","id":"sh/9g32xsby","slide":1,"name":"phase-title-4","text":"Track coverage","textPreview":"Track coverage","textChars":14,"textLines":1,"bbox":[782,337,166,34]}
+{"kind":"textbox","id":"sh/oful4nad","slide":1,"name":"phase-body-4","text":"Review daily, weekly and quarterly records, including safety events and critical behaviors.","textPreview":"Review daily, weekly and quarterly records, including safety events and critical behaviors.","textChars":91,"textLines":1,"bbox":[781,384,168,118]}
+{"kind":"shape","id":"sh/nelkvits","slide":1,"name":"phase-5","bbox":[1000,232,202,300]}
+{"kind":"shape","id":"sh/mdc32ds7","slide":1,"name":"dot-5","bbox":[1078,268,46,46]}
+{"kind":"textbox","id":"sh/1cj2t8bm","slide":1,"name":"num-5","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1078,279,46,23]}
+{"kind":"textbox","id":"sh/0bal03a1","slide":1,"name":"phase-title-5","text":"Evaluate performance","textPreview":"Evaluate performance","textChars":20,"textLines":1,"bbox":[1018,337,166,34]}
+{"kind":"textbox","id":"sh/qh8za98z","slide":1,"name":"phase-body-5","text":"Combine objective results (70%) and corporate behaviors (30%) for the quarterly outcome.","textPreview":"Combine objective results (70%) and corporate behaviors (30%) for the quarterly outcome.","textChars":88,"textLines":1,"bbox":[1017,384,168,118]}
+{"kind":"shape","id":"sh/rih03e9k","slide":1,"name":"outcome","bbox":[56,578,1160,88]}
+{"kind":"textbox","id":"sh/cjqhcjq5","slide":1,"name":"outcome-label","text":"ADMIN VIEW","textPreview":"ADMIN VIEW","textChars":10,"textLines":1,"bbox":[82,600,130,20]}
+{"kind":"textbox","id":"sh/dkzi5orq","slide":1,"name":"outcome-copy","text":"Manage OPM and user accounts, then monitor complete evidence and final evaluation readiness in one place.","textPreview":"Manage OPM and user accounts, then monitor complete evidence and final evaluation readiness in one place.","textChars":105,"textLines":1,"bbox":[222,596,890,34]}
+{"kind":"textbox","id":"sh/2toz6983","slide":1,"name":"footer","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[1194,681,18,16]}
+{"kind":"image","id":"im/epgrqtgn","slide":1,"name":"","alt":"COSCO Shipping Ports Chancay logo","bbox":[1048,39,165,78]}
+{"kind":"notes","id":"nt/49wqzo","slide":1,"text":""}

@@ -1,0 +1,30 @@
+{"kind":"deck","id":"pr/2xprat","name":"Deck"}
+{"kind":"layout","layoutId":"faf05f16-6877-4883-8ede-3076b6340429","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"8196ba5e-37fc-4b3b-85d1-3a5fc753a3a1","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/vvaj5b","slide":1,"title":"SCORING DURING THE SHIFT","textShapes":13}
+{"kind":"shape","id":"sh/edwbmdkr","slide":1,"name":"top-rule","bbox":[0,0,1280,7]}
+{"kind":"textbox","id":"sh/1gnuh83i","slide":1,"name":"eyebrow","text":"SCORING DURING THE SHIFT","textPreview":"SCORING DURING THE SHIFT","textChars":24,"textLines":1,"bbox":[61,61,460,22]}
+{"kind":"textbox","id":"sh/0feton2x","slide":1,"name":"title","text":"When the supervisor can assign a score","textPreview":"When the supervisor can assign a score","textChars":38,"textLines":1,"bbox":[61,103,1100,54]}
+{"kind":"shape","id":"sh/ra5cbylg","slide":1,"name":"screenshot-frame","bbox":[67,199,519,448]}
+{"kind":"shape","id":"sh/dcnud83m","slide":1,"name":"screen-label","bbox":[85,215,210,31]}
+{"kind":"textbox","id":"sh/cbetk321","slide":1,"name":"screen-label-text","text":"TASK RUBRIC IN THE SYSTEM","textPreview":"TASK RUBRIC IN THE SYSTEM","textChars":25,"textLines":1,"bbox":[96,223,190,15]}
+{"kind":"shape","id":"sh/b6pcn2lk","slide":1,"name":"callout-1","bbox":[624,199,584,104]}
+{"kind":"shape","id":"sh/a5gvuxkz","slide":1,"name":"accent-1","bbox":[648,222,10,57]}
+{"kind":"textbox","id":"sh/wze5gr69","slide":1,"name":"callout-title-1","text":"Only for applicable work","textPreview":"Only for applicable work","textChars":24,"textLines":1,"bbox":[683,220,490,27]}
+{"kind":"textbox","id":"sh/x0n69wnu","slide":1,"name":"callout-body-1","text":"After the shift, choose the cargo type and score only the tasks that were performed and observed.","textPreview":"After the shift, choose the cargo type and score only the tasks that were performed and observed.","textChars":97,"textLines":1,"bbox":[683,254,485,35]}
+{"kind":"shape","id":"sh/adwnehoj","slide":1,"name":"callout-2","bbox":[624,319,584,104]}
+{"kind":"shape","id":"sh/vy5o7m5o","slide":1,"name":"accent-2","bbox":[648,342,10,57]}
+{"kind":"textbox","id":"sh/8be5cr6d","slide":1,"name":"callout-title-2","text":"Based on the task rubric","textPreview":"Based on the task rubric","textChars":24,"textLines":1,"bbox":[683,340,490,27]}
+{"kind":"textbox","id":"sh/9cn65cny","slide":1,"name":"callout-body-2","text":"Select 1-5 only after comparing the observed performance with the description for that task.","textPreview":"Select 1-5 only after comparing the observed performance with the description for that task.","textChars":92,"textLines":1,"bbox":[683,374,485,35]}
+{"kind":"shape","id":"sh/m9cnaho7","slide":1,"name":"callout-3","bbox":[624,439,584,104]}
+{"kind":"shape","id":"sh/na5o3m5s","slide":1,"name":"accent-3","bbox":[648,462,10,57]}
+{"kind":"textbox","id":"sh/07u58761","slide":1,"name":"callout-title-3","text":"Because every score is evidence","textPreview":"Because every score is evidence","textChars":31,"textLines":1,"bbox":[683,460,490,27]}
+{"kind":"textbox","id":"sh/l8361cnm","slide":1,"name":"callout-body-3","text":"Each rating feeds its O1-O4 objective and creates traceable input for the quarterly appraisal.","textPreview":"Each rating feeds its O1-O4 objective and creates traceable input for the quarterly appraisal.","textChars":94,"textLines":1,"bbox":[683,494,485,35]}
+{"kind":"shape","id":"sh/hsbup4be","slide":1,"name":"callout-4","bbox":[624,559,584,104]}
+{"kind":"shape","id":"sh/gr2dgzut","slide":1,"name":"accent-4","bbox":[648,582,10,57]}
+{"kind":"textbox","id":"sh/fqtcnut8","slide":1,"name":"callout-title-4","text":"Use N/A when it was not performed","textPreview":"Use N/A when it was not performed","textChars":33,"textLines":1,"bbox":[683,580,490,27]}
+{"kind":"textbox","id":"sh/upkve9cn","slide":1,"name":"callout-body-4","text":"N/A keeps a task out of the average; a safety event records Safety and Productivity below expectations.","textPreview":"N/A keeps a task out of the average; a safety event records Safety and Productivity below expectations.","textChars":103,"textLines":1,"bbox":[683,614,485,35]}
+{"kind":"textbox","id":"sh/tobul4v2","slide":1,"name":"footer","text":"OPM Performance Appraisal System","textPreview":"OPM Performance Appraisal System","textChars":32,"textLines":1,"bbox":[61,680,320,16]}
+{"kind":"textbox","id":"sh/sn2dczuh","slide":1,"name":"number","text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1172,679,44,16]}
+{"kind":"image","id":"im/7m18bylk","slide":1,"name":"","geometry":"roundRect","alt":"OPM task-rating screen showing score criteria and 1 to 5 options","bbox":[79,211,495,424]}
+{"kind":"notes","id":"nt/vvaj5b","slide":1,"text":""}

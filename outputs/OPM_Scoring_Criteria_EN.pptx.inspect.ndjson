@@ -1,0 +1,34 @@
+{"kind":"deck","id":"pr/oogyi2","name":"Deck"}
+{"kind":"layout","layoutId":"94520e94-f101-491f-a4ad-aabc39d66a96","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"7e3f28d7-15a5-4f71-9966-8ef1c92af303","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/bik521","slide":1,"title":"The prototype — scoring criteria","textShapes":18}
+{"kind":"shape","id":"sh/ixorelov","slide":1,"name":"top-rule","bbox":[0,0,1280,7]}
+{"kind":"textbox","id":"sh/50za90nm","slide":1,"name":"title","text":"The prototype — scoring criteria","textPreview":"The prototype — scoring criteria","textChars":32,"textLines":1,"bbox":[72,46,880,54]}
+{"kind":"shape","id":"sh/kzq9gv61","slide":1,"name":"title-underline","bbox":[74,108,212,7]}
+{"kind":"shape","id":"sh/vuxs3q5k","slide":1,"name":"screen-frame","bbox":[82,145,494,458]}
+{"kind":"textbox","id":"sh/xwfa5gnq","slide":1,"name":"right-heading","text":"The score is explained before it is assigned","textPreview":"The score is explained before it is assigned","textChars":44,"textLines":1,"bbox":[650,150,490,58]}
+{"kind":"textbox","id":"sh/wv69cv65","slide":1,"name":"right-copy","text":"For each task, the supervisor can open the scoring rubric and compare the observed performance with the five defined levels.","textPreview":"For each task, the supervisor can open the scoring rubric and compare the observed performance with the five defined levels.","textChars":124,"textLines":1,"bbox":[650,222,490,64]}
+{"kind":"shape","id":"sh/fqhsfa5o","slide":1,"name":"level-box-1","bbox":[650,310,37,31]}
+{"kind":"textbox","id":"sh/up8bm5o3","slide":1,"name":"level-number-1","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[650,316,37,18]}
+{"kind":"textbox","id":"sh/gfi50jex","slide":1,"name":"level-label-1","text":"Unsatisfactory","textPreview":"Unsatisfactory","textChars":14,"textLines":1,"bbox":[707,315,250,22]}
+{"kind":"shape","id":"sh/hgr6tov2","slide":1,"name":"level-box-2","bbox":[650,357,37,31]}
+{"kind":"textbox","id":"sh/ut0ny9wr","slide":1,"name":"level-number-2","text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[650,363,37,18]}
+{"kind":"textbox","id":"sh/ve9oredc","slide":1,"name":"level-label-2","text":"Fair","textPreview":"Fair","textChars":4,"textLines":1,"bbox":[707,362,250,22]}
+{"kind":"shape","id":"sh/8ry5wjel","slide":1,"name":"level-box-3","bbox":[650,404,37,31]}
+{"kind":"textbox","id":"sh/tsr6pov6","slide":1,"name":"level-number-3","text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[650,410,37,18]}
+{"kind":"textbox","id":"sh/6pgnu9wf","slide":1,"name":"level-label-3","text":"Acceptable","textPreview":"Acceptable","textChars":10,"textLines":1,"bbox":[707,409,250,22]}
+{"kind":"shape","id":"sh/7qponed0","slide":1,"name":"level-box-4","bbox":[650,451,37,31]}
+{"kind":"textbox","id":"sh/kny5szep","slide":1,"name":"level-number-4","text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[650,457,37,18]}
+{"kind":"textbox","id":"sh/lo76l4va","slide":1,"name":"level-label-4","text":"Good","textPreview":"Good","textChars":4,"textLines":1,"bbox":[707,456,250,22]}
+{"kind":"shape","id":"sh/18fu9w3m","slide":1,"name":"level-box-5","bbox":[650,498,37,31]}
+{"kind":"textbox","id":"sh/076d0r21","slide":1,"name":"level-number-5","text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[650,504,37,18]}
+{"kind":"textbox","id":"sh/z6xc7mlg","slide":1,"name":"level-label-5","text":"Excellent","textPreview":"Excellent","textChars":9,"textLines":1,"bbox":[707,503,250,22]}
+{"kind":"shape","id":"sh/e5ovy1kb","slide":1,"name":"na-callout","bbox":[650,560,494,53]}
+{"kind":"textbox","id":"sh/d4fu5w3q","slide":1,"name":"na-title","text":"N/A","textPreview":"N/A","textChars":3,"textLines":1,"bbox":[669,575,55,18]}
+{"kind":"textbox","id":"sh/c36dwr25","slide":1,"name":"na-copy","text":"Use it when the task was not performed; it is not included in the average.","textPreview":"Use it when the task was not performed; it is not included in the average.","textChars":74,"textLines":1,"bbox":[737,574,384,20]}
+{"kind":"shape","id":"sh/r2dc3mlk","slide":1,"name":"badge","bbox":[82,630,50,50]}
+{"kind":"textbox","id":"sh/q14vuhkz","slide":1,"name":"badge-text","text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[82,644,50,21]}
+{"kind":"textbox","id":"sh/x0zehgju","slide":1,"name":"caption","text":"Visible scoring categories for every evaluation","textPreview":"Visible scoring categories for every evaluation","textChars":47,"textLines":1,"bbox":[148,646,670,24]}
+{"kind":"textbox","id":"sh/wzqd8b29","slide":1,"name":"page","text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1172,680,40,15]}
+{"kind":"image","id":"im/vitg3e1s","slide":1,"name":"","geometry":"roundRect","alt":"OPM rating rubric showing the five scoring categories","bbox":[93,155,472,438]}
+{"kind":"notes","id":"nt/bik521","slide":1,"text":""}

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "port": 5174
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "C:/xampp/php/php.exe",
+      "runtimeArgs": ["-S", "127.0.0.1:8098", "-t", "backend"],
+      "port": 8098
+    }
+  ]
+}

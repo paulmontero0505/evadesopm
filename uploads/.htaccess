@@ -1,0 +1,6 @@
+# Evita que archivos subidos se ejecuten como scripts.
+<FilesMatch "\.(php|phtml|php\d)$">
+    Require all denied
+</FilesMatch>
+Options -ExecCGI
+AddHandler cgi-script .php .phtml .php3 .php4 .php5 .php7

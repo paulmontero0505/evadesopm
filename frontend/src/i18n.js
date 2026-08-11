@@ -1,0 +1,510 @@
+// ============================================================
+//  Idioma de toda la aplicación (español / inglés).
+//  La preferencia se guarda en localStorage, así el idioma elegido en una
+//  pantalla se mantiene en las demás y en las vistas de impresión.
+//  Los nombres de objetivos, bloques, actividades y rúbricas vienen del
+//  servidor en ambos idiomas ('n'/'en', 'n_en', 'd_en'); aquí solo viven
+//  los rótulos de interfaz.
+// ============================================================
+
+import { useEffect, useState } from 'react'
+
+const KEY = 'opm.lang'
+
+export function useLang() {
+  const [lang, setLang] = useState(() => (localStorage.getItem(KEY) === 'en' ? 'en' : 'es'))
+  useEffect(() => { localStorage.setItem(KEY, lang) }, [lang])
+  return [lang, setLang, () => setLang(lang === 'es' ? 'en' : 'es')]
+}
+
+/** Nombre del objetivo según idioma, con respaldo al español si falta la traducción. */
+export function objName(meta, lang) {
+  return lang === 'en' ? (meta.en || meta.n) : meta.n
+}
+
+/** Nombre de bloque, actividad o descriptores de rúbrica (campos 't_en' / 'n_en' / 'd_en'). */
+export const blockTitle = (b, lang) => (lang === 'en' ? (b.t_en || b.t) : b.t)
+export const actName = (a, lang) => (lang === 'en' ? (a.n_en || a.n) : a.n)
+export const actDesc = (a, lang) => ((lang === 'en' ? a.d_en : a.d) || a.d || [])
+export const scaleLabel = (e, lang) => (lang === 'en' ? (e.l_en || e.l) : e.l)
+/** Tipo de carga: en base siempre se guarda el español; 'cargas_en' solo traduce la etiqueta. */
+export const cargaLabel = (c, lang, rules) => (lang === 'en' ? (rules?.cargas_en?.[c] || c) : c)
+export const turnoText = (v, lang) =>
+  lang === 'en' ? (v === 'dia' ? 'Day' : v === 'noche' ? 'Night' : v) : (v === 'dia' ? 'Día' : v === 'noche' ? 'Noche' : v)
+
+/** Estados de evidencia: el servidor los envía en español. */
+const ESTADOS_EN = {
+  'SIN FICHAS': 'NO RECORDS',
+  'EVIDENCIA INSUFICIENTE': 'INSUFFICIENT EVIDENCE',
+  'BAJO % MUESTREO': 'LOW SAMPLING %',
+  'POCOS EVALUADORES': 'FEW EVALUATORS',
+  'VÁLIDA': 'VALID',
+}
+export function estadoLabel(t, lang) {
+  if (!t) return ''
+  return lang === 'en' ? (ESTADOS_EN[t] || t) : t
+}
+
+const NIVELES = {
+  es: { Sobre: 'Sobre las Expectativas', Cumple: 'Cumple las Expectativas', 'Por Debajo': 'Por Debajo de las Expectativas' },
+  en: { Sobre: 'Above Expectations', Cumple: 'Meets Expectations', 'Por Debajo': 'Below Expectations' },
+}
+export function nivelText(n, lang) {
+  if (!n) return '—'
+  return NIVELES[lang][n] || n
+}
+
+export const T = {
+  es: {
+    // --- Pantalla de evaluación ---
+    tituloEval: 'Evaluación de desempeño',
+    fichasTrimestre: 'Fichas del trimestre', fichasCompletadas: 'Fichas completadas', fichasSeguridad: 'Fichas de seguridad',
+    trimestres: ['T1 · Ene-Mar', 'T2 · Abr-Jun', 'T3 · Jul-Sep', 'T4 · Oct-Dic'],
+    elijaOperario: (q, y) => `Elija el operario a evaluar (trimestre T${q} ${y}):`,
+    buscar: 'Buscar por código o nombre…',
+    sinResultados: (q) => `Sin resultados para "${q}".`,
+    fichasResumen: (a, b) => `${a} fichas Desenvolvimiento · ${b} fichas Compromiso`,
+    puesto: 'Operario de Puerto Multipropósito',
+    evidenciaIncompleta: (a, b) =>
+      `Evidencia incompleta: Desenvolvimiento está ${a}, Compromiso está ${b}. El promedio y el resultado de abajo son parciales; se puede guardar e imprimir igual, pero se recomienda completar ambos en estado VÁLIDA para un resultado definitivo.`,
+    secA: 'A. LOGRO DE OBJETIVOS', secB: 'B. CONDUCTAS CORPORATIVAS', secC: 'C. RESULTADO FINAL',
+    modeloB: 'Modelo de Liderazgo Institucional CSPCP · viene de las fichas de Evaluación de Compromiso',
+    promedioPond: 'PROMEDIO PONDERADO (1-5)',
+    faltanFichas: 'Faltan fichas por calificar en uno de los dos módulos.',
+    nivelObj: 'Nivel objetivos (70%)', nivelCond: 'Nivel conductas (30%)', comb: 'Score combinado (1-5)',
+    reglaBloqueo: 'Regla CSPCP: un "Por Debajo" en conductas impide un "Sobre" final.',
+    nivelFinal: 'NIVEL FINAL',
+    evidLabel: 'D. Evidencias y comentarios (opcional)',
+    evidPlaceholder: 'Observaciones relevantes del trimestre…',
+    guardar: 'Guardar evaluación', guardando: 'Guardando…', guardado: 'Evaluación guardada ✓',
+    imprimir: 'Imprimir / PDF',
+    cargando: 'Cargando…',
+    // --- Reporte impreso ---
+    view: 'Vista de impresión',
+    tituloReporte: 'EVALUACIÓN DE DESEMPEÑO · OPM',
+    code: 'OPM (código)', name: 'Nombre', puestoLbl: 'Categoría / puesto',
+    quarter: 'Trimestre', quarterFmt: (q, y) => `T${q} ${y}`, evaluador: 'Evaluador (jefe directo)',
+    secAr: 'A. LOGRO DE OBJETIVOS (70%)',
+    secBr: 'B. CONDUCTAS CORPORATIVAS (30%) · Modelo de Liderazgo Institucional CSPCP',
+    secDr: 'D. EVIDENCIAS Y COMENTARIOS',
+    objetivo: 'Objetivo', peso: 'Peso', promedio: 'Promedio 1-5',
+    totalA: 'PUNTAJE OBJETIVOS (70%) · promedio 1-5', totalB: 'PUNTAJE CONDUCTAS (30%) · escala 1-5',
+    combR: 'Score combinado (70/30, escala 1-5)',
+    evidencia: (a, sa, b, sb) =>
+      `Evidencia considerada: ${a} fichas de Desenvolvimiento (${sa} supervisores) · ${b} fichas de Compromiso (${sb} supervisores).`,
+    sinComentarios: 'Sin comentarios registrados.',
+    firmaOpm: 'Firma del OPM', firmaRrhh: 'Firma de Recursos Humanos', firmaJefe: 'Firma del jefe directo',
+    noSaved: 'Esta evaluación aún no ha sido guardada.',
+    switchTo: 'Switch to English',
+    // --- Ficha de Desenvolvimiento ---
+    fichaTitulo: 'Evaluación de Rendimiento Operativo (OPM)',
+    fichaSub: (fecha, turno) => `${fecha} · Turno ${turno}`,
+    tabNuevo: 'Nuevo registro', tabEditar: (id) => `Editar #${id}`, tabRegistrados: 'Registrados',
+    operario: 'Operario (OPM)', seleccione: 'Seleccione…',
+    tipoCarga: 'Tipo de carga operada',
+    naveOpcional: 'Nave (opcional)', navePlaceholder: 'Nombre de la nave / operación',
+    amarreSi: 'Participó en amarre', amarrePregunta: '¿Participó en amarre?',
+    elijaCarga: 'Elija el tipo de carga para ver las actividades del turno.',
+    cuotaTotal: (n) => `Este OPM ya alcanzó el máximo de ${n} fichas este trimestre. No se pueden registrar más.`,
+    cuotaSuper: 'Ya evaluó a este OPM 3 veces este trimestre. No puede registrar otra ficha para él.',
+    cuotaCarga: (n, c) => `Ya se completó esta actividad: ${n} de ${n} fichas con carga "${c}" este trimestre. Elija otro tipo de carga.`,
+    eventoTitulo: 'Evento de seguridad en el turno',
+    eventoOn: 'Seguridad y Productividad quedan por debajo de lo esperado.',
+    eventoOff: 'Marque si hubo incidente u observación.',
+    eventoComentario: 'Comentario del evento (opcional)',
+    eventoPlaceholder: 'Describa brevemente lo ocurrido…',
+    fotoOpcional: 'Foto (opcional)', subirFoto: 'Subir foto',
+    promediosTurno: 'Promedios de este turno',
+    btnMaxFichas: 'Máximo de fichas alcanzado', btnCuota: 'Cuota de evaluaciones alcanzada',
+    btnActividadCompleta: 'Ya se completó esta actividad',
+    btnFaltan: (n) => `Faltan ${n} actividad${n > 1 ? 'es' : ''}`,
+    btnGuardando: 'Guardando…', btnGuardarCambios: 'Guardar cambios', btnGuardarFicha: 'Guardar ficha',
+    btnCancelarEdicion: 'Cancelar edición',
+    fichasDel: (f) => `Fichas del ${f}`, fichasSemana: 'Fichas de la semana', fichasTrim: 'Fichas del trimestre',
+    evaluaciones: 'Evaluaciones', colaboradores: 'Colaboradores', eventosSeguridad: 'Eventos seguridad',
+    rangoTodos: 'Todos', rangoSemanal: 'Semanal', rangoTrimestral: 'Trimestral',
+    todosOpm: 'Todos los OPM', todosSupervisores: 'Todos los supervisores', todasCargas: 'Todas las cargas',
+    sinRegistros: 'Sin registros para los filtros elegidos.',
+    turnoLbl: (t) => `Turno ${t}`, amarreChip: 'Amarre', naveChip: (n) => `Nave: ${n}`,
+    evaluadoPor: (s) => `Evaluado por ${s}`, eventoChip: 'Evento',
+    confirmarBorrar: (code, name, turno) =>
+      `¿Eliminar la ficha de ${code} · ${name} (turno ${turno})?\n\nSe quitará también del control trimestral y la evaluación.`,
+    naAviso: 'No aplica: no se considera en el promedio de este objetivo.',
+    verCriterios: 'Ver criterios de puntuación',
+    naTitulo: 'No aplica: la actividad no se realizó en el turno. No cuenta para el promedio.',
+    comentarioOpcional: 'Comentario (opcional)…',
+    toastActualizado: 'Actualizado con éxito', toastEnviado: 'Enviado con éxito',
+    fotoGrande: 'La foto es demasiado grande (máx. 8 MB).',
+    quitarFoto: 'Quitar foto', imprimirFicha: 'Imprimir ficha', editarFicha: 'Editar ficha',
+    eliminarFicha: 'Eliminar ficha', cerrar: 'Cerrar', fotoAlt: 'Foto adjunta',
+    // --- Ficha de Compromiso ---
+    compTitulo: 'Evaluación de Conductas y Buenas Prácticas (OPM)',
+    elijaOpmConductas: 'Elija un OPM para ver las actividades de conducta del turno.',
+    cuotaTotalComp: (n) => `Este OPM ya alcanzó el máximo de ${n} fichas este trimestre. No se pueden registrar más.`,
+    cuotaSuperComp: 'Ya evaluó a este OPM 2 veces este mes. No puede registrar otra ficha para él.',
+    criticaOn: (obj, o) => `${obj} (${o}) queda por debajo de lo esperado.`,
+    criticaOff: 'Marque si ocurrió esta conducta crítica en el turno.',
+    comentarioSolo: 'Comentario (opcional)',
+    conductasCriticas: 'Conductas críticas', conductaChip: 'Conducta',
+    confirmarBorrarComp: (code, name, turno) =>
+      `¿Eliminar la ficha de ${code} · ${name} (turno ${turno})?\n\nSe quitará también del historial de compromiso.`,
+
+    // --- Inicio / navegación ---
+    appTitulo: 'PortTrack Performance',
+    rolAdmin: 'Administrador', rolSupervisor: 'Supervisor', rolCoordinador: 'Coordinador',
+    turnoBadge: (t, f) => `Turno ${t} (${f})`,
+    salir: 'Salir', volver: 'Volver', volverTurno: 'Volver a turno',
+    modEval: 'Evaluación (OPM)', modEvalD: 'Evaluación de desenvolvimiento y compromiso',
+    modControl: 'Control trimestral', modControlD: 'Fichas acumuladas, cobertura y validez',
+    modEvaluar: 'Evaluar desempeño', modEvaluarD: 'Objetivos 70% + conductas 30%',
+    modAdmin: 'Administrador', modAdminD: 'Registrar colaboradores y gestión de usuarios',
+    modFicha: 'Evaluación de Rendimiento Operativo (OPM)', modFichaD: 'Califica el Desempeño Operativo en el turno al OPM',
+    modCompromiso: 'Evaluación de Conductas y Buenas Prácticas (OPM)', modCompromisoD: 'Califica el compromiso y conducta en el turno al OPM',
+    modOpms: 'Registrar Colaborador (OPM)', modOpmsD: 'Alta y baja del catálogo de operarios',
+    modUsers: 'Usuarios', modUsersD: 'Cuentas de administradores y supervisores',
+    modAsignaciones: 'Asignación de funciones OPM', modAsignacionesD: 'Importar y consultar personal por turno',
+
+    // --- Turno de trabajo ---
+    turnoTitulo: 'Seleccionar turno de trabajo',
+    fecha: 'Fecha', turnoTrabajo: 'Turno de trabajo',
+    turnoDia: 'Día · 07:00 – 19:00', turnoNoche: 'Noche · 19:00 – 07:00',
+    confirmar: 'Confirmar',
+    confirmarYEvaluar: (n) => `Confirmar y evaluar ${n} colaborador${n === 1 ? '' : 'es'}`,
+    continuarSinColaboradores: 'Continuar sin colaboradores',
+    seleccioneColaborador: 'Seleccione al menos un colaborador',
+    opmsDelTurno: 'Listado de OPM', opmsDelTurnoD: 'Colaboradores activos disponibles para el turno.', sinOpmsActivos: 'No hay colaboradores OPM activos.',
+
+    // --- Login ---
+    sistema: 'Evaluación y seguimiento del desempeño portuario',
+    numEmpleado: 'Número de empleado', numEmpleadoPh: 'Ingrese número de empleado',
+    contrasena: 'Contraseña', contrasenaPh: 'Ingrese contraseña',
+    iniciarSesion: 'Iniciar sesión', ingresando: 'Ingresando…',
+    errorFichaTitulo: 'No se pudo cargar el módulo de desempeño',
+    errorFichaCarga: 'Verifique su conexión e intente nuevamente.',
+    errorFichaDatos: 'La información del módulo llegó incompleta. Intente nuevamente.',
+    reintentar: 'Reintentar',
+    cambiarClaveTitulo: 'Actualiza tu contraseña',
+    cambiarClaveDescripcion: 'El administrador asignó tu clave actual. Puedes definir una personal ahora; esta opción volverá a aparecer mientras no la cambies.',
+    confirmarContrasena: 'Confirmar nueva contraseña',
+    clavesNoCoinciden: 'Las contraseñas no coinciden.',
+    guardarNuevaClave: 'Guardar nueva contraseña', guardandoClave: 'Guardando…',
+    cambiarLuego: 'Cambiar más tarde', errorCambiarClave: 'No se pudo cambiar la contraseña.',
+
+    // --- Control trimestral ---
+    controlTitulo: 'Control trimestral',
+    porDesempeno: 'Por Desempeño', porCompromiso: 'Por Compromiso',
+    resumenEstados: 'Resumen de estado de las evaluaciones',
+    iniciados: 'Iniciados', noIniciados: 'No iniciados', completos: 'Completos',
+    sinFichasTitulo: 'Aún no hay fichas',
+    sinFichasDesc: (tipo) => `Registre ${tipo} para construir la evidencia del trimestre.`,
+    tipoTurnos: 'turnos', tipoCompromiso: 'evaluaciones de compromiso',
+    reglaValidez: (piso, supers) => `La evaluación solo es válida con al menos ${piso} fichas, ${supers} supervisores distintos.`,
+    nFichas: (n) => `${n} ficha${n !== 1 ? 's' : ''}`,
+    nSupers: (n) => `${n} supervisor${n !== 1 ? 'es' : ''}`,
+    nEventos: (n) => `${n} evento${n > 1 ? 's' : ''}`,
+    nCriticas: (n) => `${n} conducta${n > 1 ? 's' : ''} crítica${n > 1 ? 's' : ''}`,
+    deFichasMin: (n, piso) => `${n} de ${piso} fichas mínimas`,
+    verDetalle: 'Ver detalle de fichas', sinFichasRegistradas: 'Sin fichas registradas.',
+    deN: (a, b) => `${a} de ${b}`,
+
+    // --- Colaboradores (OPM) ---
+    opmsTitulo: 'Colaboradores',
+    agregarColab: 'Agregar colaboradores',
+    agregarColabD: 'Importa tu plantilla Excel (.xlsx) con todos los colaboradores, o registra uno de forma individual.',
+    importarExcel: 'Importar Excel', importando: 'Importando…',
+    registroIndividual: 'Registro individual', ocultarRegistro: 'Ocultar registro',
+    exportarPlantilla: 'Exportar plantilla', descargando: 'Descargando…',
+    nuevoColaborador: 'Nuevo colaborador', editarOpm: 'Editar OPM', editarColaborador: 'Editar colaborador',
+    colCodigo: 'Código', colNombresCompletos: 'Nombres completos', colCargo: 'Cargo',
+    colDocumento: 'N° documento', fechaNacimiento: 'Fecha de nacimiento',
+    telefono: 'Teléfono', emailPersonal: 'Mail personal',
+    codigo: 'Código', nombreCompleto: 'Nombre completo', dni: 'DNI',
+    fechaIngreso: 'Fecha de ingreso', puestoCampo: 'Puesto', team: 'Team',
+    crearColaborador: 'Crear colaborador', creando: 'Creando…',
+    buscarColab: 'Buscar por código, nombre, DNI, puesto o team…',
+    deColaboradores: (a, b) => `${a} de ${b} colaboradores`,
+    sinColaboradores: (q) => `Sin colaboradores que coincidan con "${q}".`,
+    activo: 'Activo', inactivo: 'Inactivo', editar: 'Editar', eliminar: 'Eliminar',
+    cancelar: 'Cancelar', guardar: 'Guardar', guardandoBtn: 'Guardando…',
+    verDetalles: 'Ver detalles', limpiarBusqueda: 'Limpiar búsqueda',
+    confirmarBorrarOpm: (name, code) => `¿Eliminar a ${name} (${code})?\n\nSi ya tiene fichas o evaluaciones registradas, solo se desactivará.`,
+    opmCreado: 'Colaborador creado', opmActualizado: 'Colaborador actualizado',
+    opmDesactivado: 'Colaborador desactivado (tiene historial)', opmEliminado: 'Colaborador eliminado',
+    importCompleta: (c, u, tot, tipo, errTxt) => `Importación completa: ${c} nuevos, ${u} actualizados de ${tot} ${tipo}${errTxt}.`,
+    conError: (n) => ` · ${n} con error`,
+    tipoColaboradores: 'colaboradores', tipoSupervisores: 'supervisores',
+
+    // --- Usuarios ---
+    usersTitulo: 'Usuarios',
+    cargarSupers: 'Cargar supervisores en grupo',
+    cargarSupersD: 'Importa tu plantilla Excel (.xlsx) con todos los supervisores. El DNI de cada uno será su N° empleado (usuario) y su contraseña inicial.',
+    importUsersExtra: ' El DNI es el N° empleado y la contraseña inicial de cada uno.',
+    nuevoUsuario: 'Nuevo usuario', editarUsuario: 'Editar usuario',
+    numEmp: 'N° empleado', rol: 'Rol',
+    codigoCod: 'Código (COD)',
+    nuevaContrasena: 'Nueva contraseña (opcional)', dejarVacio: 'Dejar vacío para no cambiarla',
+    claveSupervisorAviso: 'Al iniciar sesión, el supervisor podrá reemplazar esta clave una sola vez.',
+    crearUsuario: 'Crear usuario',
+    buscarUsers: 'Buscar por N° empleado, nombre, código, DNI, puesto o team…',
+    deUsuarios: (a, b) => `${a} de ${b} usuarios`,
+    sinUsuarios: (q) => `Sin usuarios que coincidan con "${q}".`,
+    tu: ' · tú',
+    usuarioCreado: 'Usuario creado', usuarioActualizado: 'Usuario actualizado', usuarioEliminado: 'Usuario eliminado',
+    confirmarBorrarUser: (name, num) => `¿Eliminar a ${name} (${num})?\n\nEsta acción no se puede deshacer.`,
+
+    // --- Asignaciones OPM ---
+    asignacionesTitulo: 'Asignación de funciones OPM', cargarAsignaciones: 'Cargar asignaciones del turno',
+    cargarAsignacionesD: 'Importe el Excel con los datos de cada colaborador. La fecha y el turno seleccionados se aplicarán a todas las filas; una nueva importación reemplaza ese turno y fecha.',
+    importarAsignaciones: 'Importar Excel', asignacionImportada: (n) => `${n} asignaciones importadas.`,
+    asignacionFilasError: (n) => `${n} fila${n !== 1 ? 's' : ''} no se pudo asociar`,
+    asignadosTurno: 'Colaboradores asignados', misColaboradoresTurno: 'Mi equipo del turno',
+    sinAsignacionesTitulo: 'Aún no hay asignaciones', sinAsignacionesAdmin: 'Importe la plantilla para este turno.',
+    sinAsignacionesTurno: 'No hay colaboradores asignados para este turno.',
+    sinFuncion: 'Función sin asignar', sinZona: 'Zona sin asignar', sinPuesto: 'Puesto sin asignar',
+    sinOpmEnTurno: 'No hay OPM asignados a este turno. Solicite al administrador que importe la asignación antes de registrar una evaluación.',
+
+    // --- Impresión de fichas individuales ---
+    fichaPrintTitulo: 'FICHA DE OBSERVACIÓN OPERATIVA POR TURNO · OPM',
+    compPrintTitulo: 'FICHA DE EVALUACIÓN DE COMPROMISO · OPM',
+    turnoK: 'Turno', naveK: 'Nave / Operación', supervisorK: 'Supervisor de operaciones',
+    objK: 'OBJ', actividadK: 'ACTIVIDAD', ptsK: 'Pts',
+    seguridadK: 'SEGURIDAD', banderaK: 'Bandera de seguridad: incidente u observación en el turno',
+    promObjTitulo: 'PROMEDIOS POR OBJETIVO (promedio 1-5 de las tareas calificadas en este turno)',
+    tareasCalif: 'Tareas calif.', nivelCspcp: 'Nivel CSPCP',
+    alertaEvento: 'EVENTO DE SEGURIDAD EN EL TURNO · Seguridad (O1) y Productividad (O3) quedan por debajo de lo esperado, sin importar los puntajes marcados.',
+    notaPrint: (min) => `Nota: el promedio se calcula solo con las tareas calificadas en este turno (las marcadas "No aplica" no cuentan). Puntaje mínimo esperado: ${min} (Aceptable). Si la bandera de seguridad se marca SI, los objetivos O1 y O3 se topan por debajo del mínimo.`,
+    obsTurno: 'OBSERVACIONES DEL TURNO', sinObs: 'Sin observaciones registradas.',
+    fotoEvento: 'FOTO DEL EVENTO', fotoConducta: 'FOTO DE LA CONDUCTA',
+    firmaSuper: (n) => `Firma del supervisor: ${n}`, fechaFirma: (f) => `Fecha: ${f}`,
+    conductaK: 'CONDUCTA CRÍTICA',
+    alertaCritica: (obj, o) => `CONDUCTA CRÍTICA REGISTRADA · ${obj} (${o}) queda por debajo de lo esperado, sin importar los puntajes marcados.`,
+    notaPrintComp: (min) => `Nota: el promedio se calcula solo con las conductas calificadas en este turno (las marcadas "No aplica" no cuentan). Puntaje mínimo esperado: ${min} (Aceptable).`,
+    siLbl: 'SI', noLbl: 'NO',
+  },
+  en: {
+    // --- Evaluation screen ---
+    tituloEval: 'Performance evaluation',
+    fichasTrimestre: 'Records this quarter', fichasCompletadas: 'Completed records', fichasSeguridad: 'Safety records',
+    trimestres: ['Q1 · Jan-Mar', 'Q2 · Apr-Jun', 'Q3 · Jul-Sep', 'Q4 · Oct-Dec'],
+    elijaOperario: (q, y) => `Select the operator to evaluate (quarter Q${q} ${y}):`,
+    buscar: 'Search by code or name…',
+    sinResultados: (q) => `No results for "${q}".`,
+    fichasResumen: (a, b) => `${a} Performance records · ${b} Commitment records`,
+    puesto: 'Multipurpose Port Operator',
+    evidenciaIncompleta: (a, b) =>
+      `Incomplete evidence: Performance is ${a}, Commitment is ${b}. The average and result below are partial; you may still save and print, but completing both as VALID is recommended for a definitive result.`,
+    secA: 'A. ACHIEVEMENT OF OBJECTIVES', secB: 'B. CORPORATE BEHAVIORS', secC: 'C. FINAL RESULT',
+    modeloB: 'CSPCP Institutional Leadership Model · sourced from the Commitment evaluation records',
+    promedioPond: 'WEIGHTED AVERAGE (1-5)',
+    faltanFichas: 'Records are still missing in one of the two modules.',
+    nivelObj: 'Objectives level (70%)', nivelCond: 'Behaviors level (30%)', comb: 'Combined score (1-5)',
+    reglaBloqueo: 'CSPCP rule: a "Below Expectations" in behaviors prevents an "Above Expectations" final result.',
+    nivelFinal: 'FINAL LEVEL',
+    evidLabel: 'D. Evidence and comments (optional)',
+    evidPlaceholder: 'Relevant observations for the quarter…',
+    guardar: 'Save evaluation', guardando: 'Saving…', guardado: 'Evaluation saved ✓',
+    imprimir: 'Print / PDF',
+    cargando: 'Loading…',
+    // --- Printed report ---
+    view: 'Print preview',
+    tituloReporte: 'PERFORMANCE EVALUATION · OPM',
+    code: 'OPM (code)', name: 'Name', puestoLbl: 'Category / position',
+    quarter: 'Quarter', quarterFmt: (q, y) => `Q${q} ${y}`, evaluador: 'Evaluator (direct supervisor)',
+    secAr: 'A. ACHIEVEMENT OF OBJECTIVES (70%)',
+    secBr: 'B. CORPORATE BEHAVIORS (30%) · CSPCP Institutional Leadership Model',
+    secDr: 'D. EVIDENCE AND COMMENTS',
+    objetivo: 'Objective', peso: 'Weight', promedio: 'Average 1-5',
+    totalA: 'OBJECTIVES SCORE (70%) · average 1-5', totalB: 'BEHAVIORS SCORE (30%) · scale 1-5',
+    combR: 'Combined score (70/30, scale 1-5)',
+    evidencia: (a, sa, b, sb) =>
+      `Evidence considered: ${a} Performance records (${sa} supervisors) · ${b} Commitment records (${sb} supervisors).`,
+    sinComentarios: 'No comments recorded.',
+    firmaOpm: 'OPM signature', firmaRrhh: 'Human Resources signature', firmaJefe: 'Direct supervisor signature',
+    noSaved: 'This evaluation has not been saved yet.',
+    switchTo: 'Cambiar a español',
+    // --- Performance record (Desenvolvimiento) ---
+    fichaTitulo: 'Performance Observation Record (OPM)',
+    fichaSub: (fecha, turno) => `${fecha} · ${turno} shift`,
+    tabNuevo: 'New record', tabEditar: (id) => `Edit #${id}`, tabRegistrados: 'Recorded',
+    operario: 'Operator (OPM)', seleccione: 'Select…',
+    tipoCarga: 'Type of cargo handled',
+    naveOpcional: 'Vessel (optional)', navePlaceholder: 'Vessel / operation name',
+    amarreSi: 'Took part in mooring', amarrePregunta: 'Did they take part in mooring?',
+    elijaCarga: 'Choose the type of cargo to see the activities for the shift.',
+    cuotaTotal: (n) => `This OPM already reached the maximum of ${n} records this quarter. No more can be added.`,
+    cuotaSuper: 'You have already evaluated this OPM 3 times this quarter. You cannot add another record for them.',
+    cuotaCarga: (n, c) => `This activity is already complete: ${n} of ${n} records with "${c}" cargo this quarter. Choose another cargo type.`,
+    eventoTitulo: 'Safety event during the shift',
+    eventoOn: 'Safety and Productivity are capped below expectations.',
+    eventoOff: 'Tick if there was an incident or observation.',
+    eventoComentario: 'Event comment (optional)',
+    eventoPlaceholder: 'Briefly describe what happened…',
+    fotoOpcional: 'Photo (optional)', subirFoto: 'Upload photo',
+    promediosTurno: 'Averages for this shift',
+    btnMaxFichas: 'Maximum records reached', btnCuota: 'Evaluation quota reached',
+    btnActividadCompleta: 'This activity is already complete',
+    btnFaltan: (n) => `${n} ${n > 1 ? 'activities' : 'activity'} missing`,
+    btnGuardando: 'Saving…', btnGuardarCambios: 'Save changes', btnGuardarFicha: 'Save record',
+    btnCancelarEdicion: 'Cancel editing',
+    fichasDel: (f) => `Records for ${f}`, fichasSemana: 'Records for the week', fichasTrim: 'Records for the quarter',
+    evaluaciones: 'Evaluations', colaboradores: 'Workers', eventosSeguridad: 'Safety events',
+    rangoTodos: 'All', rangoSemanal: 'Weekly', rangoTrimestral: 'Quarterly',
+    todosOpm: 'All OPMs', todosSupervisores: 'All supervisors', todasCargas: 'All cargo types',
+    sinRegistros: 'No records for the selected filters.',
+    turnoLbl: (t) => `${t} shift`, amarreChip: 'Mooring', naveChip: (n) => `Vessel: ${n}`,
+    evaluadoPor: (s) => `Evaluated by ${s}`, eventoChip: 'Event',
+    confirmarBorrar: (code, name, turno) =>
+      `Delete the record for ${code} · ${name} (${turno} shift)?\n\nIt will also be removed from the quarterly control and the evaluation.`,
+    naAviso: 'Not applicable: it is not counted in this objective\'s average.',
+    verCriterios: 'View scoring criteria',
+    naTitulo: 'Not applicable: the activity was not performed during the shift. It does not count toward the average.',
+    comentarioOpcional: 'Comment (optional)…',
+    toastActualizado: 'Updated successfully', toastEnviado: 'Submitted successfully',
+    fotoGrande: 'The photo is too large (max. 8 MB).',
+    quitarFoto: 'Remove photo', imprimirFicha: 'Print record', editarFicha: 'Edit record',
+    eliminarFicha: 'Delete record', cerrar: 'Close', fotoAlt: 'Attached photo',
+    // --- Commitment record ---
+    compTitulo: 'Commitment Evaluation (OPM)',
+    elijaOpmConductas: 'Choose an OPM to see the behavior items for the shift.',
+    cuotaTotalComp: (n) => `This OPM already reached the maximum of ${n} records this quarter. No more can be added.`,
+    cuotaSuperComp: 'You have already evaluated this OPM twice this month. You cannot add another record for them.',
+    criticaOn: (obj, o) => `${obj} (${o}) is capped below expectations.`,
+    criticaOff: 'Tick if this critical behavior occurred during the shift.',
+    comentarioSolo: 'Comment (optional)',
+    conductasCriticas: 'Critical behaviors', conductaChip: 'Behavior',
+    confirmarBorrarComp: (code, name, turno) =>
+      `Delete the record for ${code} · ${name} (${turno} shift)?\n\nIt will also be removed from the commitment history.`,
+
+    // --- Home / navigation ---
+    appTitulo: 'PortTrack Performance',
+    rolAdmin: 'Administrator', rolSupervisor: 'Supervisor', rolCoordinador: 'Coordinator',
+    turnoBadge: (t, f) => `${t} shift (${f})`,
+    salir: 'Log out', volver: 'Back', volverTurno: 'Back to shift',
+    modEval: 'Evaluation (OPM)', modEvalD: 'Performance and commitment evaluation',
+    modControl: 'Quarterly control', modControlD: 'Accumulated records, coverage and validity',
+    modEvaluar: 'Evaluate performance', modEvaluarD: 'Objectives 70% + behaviors 30%',
+    modAdmin: 'Administration', modAdminD: 'Register workers and manage users',
+    modFicha: 'Performance Observation Record (OPM)', modFichaD: 'Rate an OPM at the end of the shift',
+    modCompromiso: 'Commitment Evaluation (OPM)', modCompromisoD: 'Rate an OPM\'s behavior at the end of the shift',
+    modOpms: 'Register Worker (OPM)', modOpmsD: 'Add and remove operators from the catalog',
+    modUsers: 'Users', modUsersD: 'Administrator and supervisor accounts',
+    modAsignaciones: 'OPM function assignments', modAsignacionesD: 'Import and check personnel by shift',
+
+    // --- Work shift ---
+    turnoTitulo: 'Select work shift',
+    fecha: 'Date', turnoTrabajo: 'Work shift',
+    turnoDia: 'Day · 07:00 – 19:00', turnoNoche: 'Night · 19:00 – 07:00',
+    confirmar: 'Confirm',
+    confirmarYEvaluar: (n) => `Confirm and evaluate ${n} worker${n === 1 ? '' : 's'}`,
+    continuarSinColaboradores: 'Continue without workers',
+    seleccioneColaborador: 'Select at least one worker',
+    opmsDelTurno: 'OPM list', opmsDelTurnoD: 'Active workers available for this shift.', sinOpmsActivos: 'There are no active OPM workers.',
+
+    // --- Login ---
+    sistema: 'Port performance evaluation and tracking',
+    numEmpleado: 'Employee number', numEmpleadoPh: 'Enter employee number',
+    contrasena: 'Password', contrasenaPh: 'Enter password',
+    iniciarSesion: 'Sign in', ingresando: 'Signing in…',
+    errorFichaTitulo: 'The performance module could not be loaded',
+    errorFichaCarga: 'Check your connection and try again.',
+    errorFichaDatos: 'The module data arrived incomplete. Please try again.',
+    reintentar: 'Try again',
+    cambiarClaveTitulo: 'Update your password',
+    cambiarClaveDescripcion: 'Your administrator assigned your current password. You can set a personal one now; this option will remain available until you change it.',
+    confirmarContrasena: 'Confirm new password',
+    clavesNoCoinciden: 'Passwords do not match.',
+    guardarNuevaClave: 'Save new password', guardandoClave: 'Saving…',
+    cambiarLuego: 'Change later', errorCambiarClave: 'Your password could not be changed.',
+
+    // --- Quarterly control ---
+    controlTitulo: 'Quarterly control',
+    porDesempeno: 'By Performance', porCompromiso: 'By Commitment',
+    resumenEstados: 'Evaluation status summary',
+    iniciados: 'In progress', noIniciados: 'Not started', completos: 'Completed',
+    sinFichasTitulo: 'No records yet',
+    sinFichasDesc: (tipo) => `Register ${tipo} to build the evidence for the quarter.`,
+    tipoTurnos: 'shifts', tipoCompromiso: 'commitment evaluations',
+    reglaValidez: (piso, supers) => `The evaluation is only valid with at least ${piso} records from ${supers} different supervisors.`,
+    nFichas: (n) => `${n} record${n !== 1 ? 's' : ''}`,
+    nSupers: (n) => `${n} supervisor${n !== 1 ? 's' : ''}`,
+    nEventos: (n) => `${n} event${n > 1 ? 's' : ''}`,
+    nCriticas: (n) => `${n} critical behavior${n > 1 ? 's' : ''}`,
+    deFichasMin: (n, piso) => `${n} of ${piso} minimum records`,
+    verDetalle: 'View record details', sinFichasRegistradas: 'No records logged.',
+    deN: (a, b) => `${a} of ${b}`,
+
+    // --- Workers (OPM) ---
+    opmsTitulo: 'Workers',
+    agregarColab: 'Add workers',
+    agregarColabD: 'Import your Excel template (.xlsx) with all workers, or register one individually.',
+    importarExcel: 'Import Excel', importando: 'Importing…',
+    registroIndividual: 'Individual registration', ocultarRegistro: 'Hide form',
+    exportarPlantilla: 'Export template', descargando: 'Downloading…',
+    nuevoColaborador: 'New worker', editarOpm: 'Edit OPM', editarColaborador: 'Edit worker',
+    colCodigo: 'Code', colNombresCompletos: 'Full names', colCargo: 'Position',
+    colDocumento: 'Document no.', fechaNacimiento: 'Date of birth',
+    telefono: 'Phone', emailPersonal: 'Personal email',
+    codigo: 'Code', nombreCompleto: 'Full name', dni: 'ID number',
+    fechaIngreso: 'Hire date', puestoCampo: 'Position', team: 'Team',
+    crearColaborador: 'Create worker', creando: 'Creating…',
+    buscarColab: 'Search by code, name, ID, position or team…',
+    deColaboradores: (a, b) => `${a} of ${b} workers`,
+    sinColaboradores: (q) => `No workers matching "${q}".`,
+    activo: 'Active', inactivo: 'Inactive', editar: 'Edit', eliminar: 'Delete',
+    cancelar: 'Cancel', guardar: 'Save', guardandoBtn: 'Saving…',
+    verDetalles: 'View details', limpiarBusqueda: 'Clear search',
+    confirmarBorrarOpm: (name, code) => `Delete ${name} (${code})?\n\nIf they already have records or evaluations, they will only be deactivated.`,
+    opmCreado: 'Worker created', opmActualizado: 'Worker updated',
+    opmDesactivado: 'Worker deactivated (has history)', opmEliminado: 'Worker deleted',
+    importCompleta: (c, u, tot, tipo, errTxt) => `Import complete: ${c} new, ${u} updated out of ${tot} ${tipo}${errTxt}.`,
+    conError: (n) => ` · ${n} with errors`,
+    tipoColaboradores: 'workers', tipoSupervisores: 'supervisors',
+
+    // --- Users ---
+    usersTitulo: 'Users',
+    cargarSupers: 'Bulk upload supervisors',
+    cargarSupersD: 'Import your Excel template (.xlsx) with all supervisors. Each ID number becomes their employee number (username) and initial password.',
+    importUsersExtra: ' The ID number is the employee number and the initial password for each of them.',
+    nuevoUsuario: 'New user', editarUsuario: 'Edit user',
+    numEmp: 'Employee no.', rol: 'Role',
+    codigoCod: 'Code (COD)',
+    nuevaContrasena: 'New password (optional)', dejarVacio: 'Leave blank to keep it',
+    claveSupervisorAviso: 'When signing in, the supervisor can replace this password once.',
+    crearUsuario: 'Create user',
+    buscarUsers: 'Search by employee no., name, code, ID, position or team…',
+    deUsuarios: (a, b) => `${a} of ${b} users`,
+    sinUsuarios: (q) => `No users matching "${q}".`,
+    tu: ' · you',
+    usuarioCreado: 'User created', usuarioActualizado: 'User updated', usuarioEliminado: 'User deleted',
+    confirmarBorrarUser: (name, num) => `Delete ${name} (${num})?\n\nThis action cannot be undone.`,
+
+    // --- OPM assignments ---
+    asignacionesTitulo: 'OPM function assignments', cargarAsignaciones: 'Upload shift assignments',
+    cargarAsignacionesD: 'Import the Excel file with each worker\'s details. The selected date and shift apply to every row; a new import replaces that shift and date.',
+    importarAsignaciones: 'Import Excel', asignacionImportada: (n) => `${n} assignments imported.`,
+    asignacionFilasError: (n) => `${n} row${n !== 1 ? 's' : ''} could not be matched`,
+    asignadosTurno: 'Assigned workers', misColaboradoresTurno: 'My shift team',
+    sinAsignacionesTitulo: 'No assignments yet', sinAsignacionesAdmin: 'Import the template for this shift.',
+    sinAsignacionesTurno: 'There are no workers assigned to this shift.',
+    sinFuncion: 'No function assigned', sinZona: 'No zone assigned', sinPuesto: 'No position assigned',
+    sinOpmEnTurno: 'There are no OPMs assigned to this shift. Ask an administrator to import the assignments before recording an evaluation.',
+
+    // --- Individual record printouts ---
+    fichaPrintTitulo: 'OPERATIONAL OBSERVATION RECORD BY SHIFT · OPM',
+    compPrintTitulo: 'COMMITMENT EVALUATION RECORD · OPM',
+    turnoK: 'Shift', naveK: 'Vessel / Operation', supervisorK: 'Operations supervisor',
+    objK: 'OBJ', actividadK: 'ACTIVITY', ptsK: 'Pts',
+    seguridadK: 'SAFETY', banderaK: 'Safety flag: incident or observation during the shift',
+    promObjTitulo: 'AVERAGES BY OBJECTIVE (1-5 average of the tasks rated during this shift)',
+    tareasCalif: 'Tasks rated', nivelCspcp: 'CSPCP level',
+    alertaEvento: 'SAFETY EVENT DURING THE SHIFT · Safety (O1) and Productivity (O3) are capped below expectations, regardless of the scores given.',
+    notaPrint: (min) => `Note: the average is calculated only with the tasks rated during this shift (items marked "N/A" do not count). Minimum expected score: ${min} (Acceptable). If the safety flag is marked YES, objectives O1 and O3 are capped below the minimum.`,
+    obsTurno: 'SHIFT OBSERVATIONS', sinObs: 'No observations recorded.',
+    fotoEvento: 'EVENT PHOTO', fotoConducta: 'BEHAVIOR PHOTO',
+    firmaSuper: (n) => `Supervisor signature: ${n}`, fechaFirma: (f) => `Date: ${f}`,
+    conductaK: 'CRITICAL BEHAVIOR',
+    alertaCritica: (obj, o) => `CRITICAL BEHAVIOR RECORDED · ${obj} (${o}) is capped below expectations, regardless of the scores given.`,
+    notaPrintComp: (min) => `Note: the average is calculated only with the behaviors rated during this shift (items marked "N/A" do not count). Minimum expected score: ${min} (Acceptable).`,
+    siLbl: 'YES', noLbl: 'NO',
+  },
+}

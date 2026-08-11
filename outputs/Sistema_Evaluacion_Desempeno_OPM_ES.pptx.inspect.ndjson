@@ -1,0 +1,71 @@
+{"kind":"deck","id":"pr/7cd0yp","name":"Deck"}
+{"kind":"layout","layoutId":"2849db56-6f71-4a65-9637-b693e7ce9b42","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"b68c9aa6-751c-4fb5-bdb7-fb0935b1e9aa","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/dkmyto","slide":1,"title":"Slide 1","textShapes":0}
+{"kind":"image","id":"im/d87ytgbq","slide":1,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/dkmyto","slide":1,"text":""}
+{"kind":"slide","id":"sl/gdoj3o","slide":2,"title":"Slide 2","textShapes":0}
+{"kind":"image","id":"im/zaxwnux8","slide":2,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/gdoj3o","slide":2,"text":""}
+{"kind":"slide","id":"sl/oynj8x","slide":3,"title":"Slide 3","textShapes":0}
+{"kind":"image","id":"im/jyl0729s","slide":3,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/oynj8x","slide":3,"text":""}
+{"kind":"slide","id":"sl/jxcmv9","slide":4,"title":"Slide 4","textShapes":0}
+{"kind":"image","id":"im/u9s7qtcj","slide":4,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/jxcmv9","slide":4,"text":""}
+{"kind":"slide","id":"sl/g17znz","slide":5,"title":"Slide 5","textShapes":0}
+{"kind":"image","id":"im/szix4rah","slide":5,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/g17znz","slide":5,"text":""}
+{"kind":"slide","id":"sl/6y2qqm","slide":6,"title":"Slide 6","textShapes":0}
+{"kind":"image","id":"im/pgfqxo7u","slide":6,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/6y2qqm","slide":6,"text":""}
+{"kind":"slide","id":"sl/a7z2lo","slide":7,"title":"Slide 7","textShapes":0}
+{"kind":"image","id":"im/ojq9cvul","slide":7,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/a7z2lo","slide":7,"text":""}
+{"kind":"slide","id":"sl/s2afwz","slide":8,"title":"Slide 8","textShapes":0}
+{"kind":"image","id":"im/ixkji94n","slide":8,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/s2afwz","slide":8,"text":""}
+{"kind":"slide","id":"sl/nxf4dq","slide":9,"title":"Slide 9","textShapes":0}
+{"kind":"image","id":"im/ut8z61k7","slide":9,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/nxf4dq","slide":9,"text":""}
+{"kind":"slide","id":"sl/w6x752","slide":10,"title":"Slide 10","textShapes":0}
+{"kind":"image","id":"im/6pora947","slide":10,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/w6x752","slide":10,"text":""}
+{"kind":"slide","id":"sl/nan8dv","slide":11,"title":"Slide 11","textShapes":0}
+{"kind":"image","id":"im/kf2xcbep","slide":11,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/nan8dv","slide":11,"text":""}
+{"kind":"slide","id":"sl/3efujf","slide":12,"title":"El prototipo — ingreso de datos","textShapes":3}
+{"kind":"shape","id":"sh/25kz6t4j","slide":12,"bbox":[0,6,1280,130]}
+{"kind":"textbox","id":"sh/n6t0fy54","slide":12,"text":"El prototipo — ingreso de datos","textPreview":"El prototipo — ingreso de datos","textChars":31,"textLines":1,"bbox":[72,45,930,54]}
+{"kind":"shape","id":"sh/cvmhcnml","slide":12,"bbox":[74,108,230,7]}
+{"kind":"textbox","id":"sh/xwvil8n6","slide":12,"text":"1  Inicio: formulario, OPM, supervisor y tipo de carga","textPreview":"1  Inicio: formulario, OPM, supervisor y tipo de carga","textChars":54,"textLines":1,"bbox":[78,632,500,28]}
+{"kind":"textbox","id":"sh/a94zad4v","slide":12,"text":"2  Nuevo turno de OPM, supervisor y tipo de carga","textPreview":"2  Nuevo turno de OPM, supervisor y tipo de carga","textChars":49,"textLines":1,"bbox":[660,632,520,28]}
+{"kind":"image","id":"im/k7i5072l","slide":12,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/3efujf","slide":12,"text":""}
+{"kind":"slide","id":"sl/r36adv","slide":13,"title":"El prototipo — calificación de actividades","textShapes":3}
+{"kind":"shape","id":"sh/d8vmdsji","slide":13,"bbox":[0,6,1280,130]}
+{"kind":"textbox","id":"sh/c7mlkn2d","slide":13,"text":"El prototipo — calificación de actividades","textPreview":"El prototipo — calificación de actividades","textChars":42,"textLines":1,"bbox":[72,45,930,54]}
+{"kind":"shape","id":"sh/zad4f21o","slide":13,"bbox":[74,108,230,7]}
+{"kind":"textbox","id":"sh/y943mxk3","slide":13,"text":"3  Actividades transversales, en todos los turnos","textPreview":"3  Actividades transversales, en todos los turnos","textChars":49,"textLines":1,"bbox":[98,628,500,28]}
+{"kind":"textbox","id":"sh/lcfmhsju","slide":13,"text":"4  Actividades según el tipo de carga operada","textPreview":"4  Actividades según el tipo de carga operada","textChars":45,"textLines":1,"bbox":[708,628,500,28]}
+{"kind":"image","id":"im/ry1g7yp0","slide":13,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/r36adv","slide":13,"text":""}
+{"kind":"slide","id":"sl/wjat4d","slide":14,"title":"Slide 14","textShapes":0}
+{"kind":"image","id":"im/7mhsb25o","slide":14,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/wjat4d","slide":14,"text":""}
+{"kind":"slide","id":"sl/88u1lm","slide":15,"title":"El prototipo — promedios y guardado de la ficha","textShapes":2}
+{"kind":"shape","id":"sh/yhgfylwf","slide":15,"bbox":[0,6,1280,130]}
+{"kind":"textbox","id":"sh/zipgrqx0","slide":15,"text":"El prototipo — promedios y guardado de la ficha","textPreview":"El prototipo — promedios y guardado de la ficha","textChars":47,"textLines":1,"bbox":[72,45,930,54]}
+{"kind":"shape","id":"sh/8nix4veh","slide":15,"bbox":[74,108,230,7]}
+{"kind":"textbox","id":"sh/9oryx0f2","slide":15,"text":"5  Promedios por objetivo, calculados en tiempo real — luego se guarda la ficha","textPreview":"5  Promedios por objetivo, calculados en tiempo real — luego se guarda la ficha","textChars":79,"textLines":1,"bbox":[82,628,900,28]}
+{"kind":"image","id":"im/8bm94rql","slide":15,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/88u1lm","slide":15,"text":""}
+{"kind":"slide","id":"sl/cx1jwa","slide":16,"title":"El prototipo — control trimestral","textShapes":1}
+{"kind":"shape","id":"sh/p83edwf6","slide":16,"bbox":[0,6,1280,130]}
+{"kind":"textbox","id":"sh/o7ux4rel","slide":16,"text":"El prototipo — control trimestral","textPreview":"El prototipo — control trimestral","textChars":33,"textLines":1,"bbox":[72,45,930,54]}
+{"kind":"shape","id":"sh/ba5gf6xw","slide":16,"bbox":[74,108,230,7]}
+{"kind":"image","id":"im/n6xgbulw","slide":16,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/cx1jwa","slide":16,"text":""}
+{"kind":"slide","id":"sl/d5lppd","slide":17,"title":"Slide 17","textShapes":0}
+{"kind":"image","id":"im/ylsjm5wf","slide":17,"name":"","alt":"Diapositiva del Sistema de Evaluación de Desempeño OPM","bbox":[0,0,1280,720]}
+{"kind":"notes","id":"nt/d5lppd","slide":17,"text":""}

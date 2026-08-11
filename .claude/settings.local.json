@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(\"C:/xampp/php/php.exe\" -S 127.0.0.1:8098 index.php)",
+      "Bash(curl -s -X POST http://127.0.0.1:8098/auth/login -H \"Content-Type: application/json\" -d '{\"employee_number\":\"0000001\",\"password\":\"admin123\"}')",
+      "Bash(curl -s http://127.0.0.1:8098/rules -H 'Authorization: Bearer 34e20ab1435bea98fa5a4e963cb1463c874be0cf550c1ab7aed49f03c28d1ae8')",
+      "Bash(curl -s -X POST http://127.0.0.1:8098/shift-records -H 'Authorization: Bearer 34e20ab1435bea98fa5a4e963cb1463c874be0cf550c1ab7aed49f03c28d1ae8' -H 'Content-Type: application/json' -d '{\"opm_id\":1,\"work_date\":\"__CMDSUB_OUTPUT__\",\"turno\":\"dia\",\"carga\":\"Contenedores\",\"amarre\":false,\"evento_seguridad\":false,\"ratings\":__TRACKED_VAR__}')"
+    ]
+  }
+}
