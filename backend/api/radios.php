@@ -126,6 +126,7 @@ function handle_radio_context(): void {
     $columns = db()->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='radio_assignments' AND COLUMN_NAME IN ('delivery_group','current_supervisor_id','current_work_date','current_turno')")->fetchAll(PDO::FETCH_COLUMN);
     if (count($columns) < 4) json_error('Actualizacion pendiente: importe migration_grupos_entrega_radios.sql y migration_custodia_radios.sql en phpMyAdmin.', 422);
     $opm=db()->prepare('SELECT a.id, o.id AS opm_id, o.code, o.full_name, a.funcion_1, a.puesto, a.zona_1, a.nave, a.nave_2 FROM opm_assignments a JOIN opms o ON o.id=a.opm_id WHERE a.work_date=? AND a.turno=? ORDER BY o.full_name'); $opm->execute([$date,$turno]);
+    $allOpm = db()->prepare('SELECT o.id AS opm_id, o.code, o.full_name, o.puesto, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM opms o LEFT JOIN opm_assignments a ON a.opm_id=o.id AND a.work_date=? AND a.turno=? WHERE o.active=1 ORDER BY o.full_name'); $allOpm->execute([$date, $turno]);
     $puestos = db()->query("SELECT DISTINCT puesto FROM opms WHERE active=1 AND puesto IS NOT NULL AND TRIM(puesto)<>'' ORDER BY puesto")->fetchAll(PDO::FETCH_COLUMN);
     $team=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, a.funcion_1, a.puesto, a.nave, a.nave_2, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, u.full_name"); $team->execute([$date,$turno]);
     $recordSql = radio_records_sql();
@@ -134,7 +135,7 @@ function handle_radio_context(): void {
     $locations = db()->query("SELECT DISTINCT location FROM (SELECT location FROM radios WHERE location IS NOT NULL AND location<>'' UNION SELECT location FROM radio_assignments WHERE location IS NOT NULL AND location<>'') locations ORDER BY location")->fetchAll(PDO::FETCH_COLUMN);
     $nextDate = $turno === 'noche' ? date('Y-m-d', strtotime($date . ' +1 day')) : $date; $nextTurno = $turno === 'noche' ? 'dia' : 'noche';
     $next=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY CASE WHEN a.id IS NULL THEN 1 ELSE 0 END, u.full_name"); $next->execute([$nextDate,$nextTurno]);
-    json_response(['radios'=>db()->query("SELECT r.id,r.code,r.imei,r.model,r.location, CASE WHEN EXISTS (SELECT 1 FROM radio_assignments ra WHERE ra.radio_id=r.id AND ra.returned_at IS NULL) THEN 0 ELSE 1 END AS available FROM radios r WHERE r.active=1 ORDER BY r.code")->fetchAll(), 'opms'=>$opm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
+    json_response(['radios'=>db()->query("SELECT r.id,r.code,r.imei,r.model,r.location, CASE WHEN EXISTS (SELECT 1 FROM radio_assignments ra WHERE ra.radio_id=r.id AND ra.returned_at IS NULL) THEN 0 ELSE 1 END AS available FROM radios r WHERE r.active=1 ORDER BY r.code")->fetchAll(), 'opms'=>$opm->fetchAll(), 'all_opms'=>$allOpm->fetchAll(), 'puestos'=>$puestos, 'supervisors'=>$team->fetchAll(), 'next_supervisors'=>$next->fetchAll(), 'next_shift'=>['date'=>$nextDate,'turno'=>$nextTurno], 'records'=>$records->fetchAll(), 'relief_records'=>$relief->fetchAll(), 'locations'=>$locations]);
 }
 function handle_radio_assignment_create(): void {
     $me=require_role(['admin','supervisor','coordinator']); $b=radio_payload();
@@ -215,13 +216,21 @@ function handle_radio_movements(): void {
 }
 
 function handle_radio_assignment_collaborator(int $id): void {
-    $me = require_role(['admin', 'supervisor', 'coordinator']); $b = json_body(); $opmId = (int)($b['opm_id'] ?? 0);
+    $me = require_role(['admin', 'supervisor', 'coordinator']); $b = json_body(); $opmId = (int)($b['opm_id'] ?? 0); $puesto = mb_substr(trim((string)($b['puesto'] ?? '')), 0, 150);
     $stmt = db()->prepare('SELECT * FROM radio_assignments WHERE id=?'); $stmt->execute([$id]); $record = $stmt->fetch();
     if (!$record) json_error('No se encontró la entrega del radio.', 404);
-    if ($me['role'] === 'supervisor' && (int)$record['supervisor_id'] !== (int)$me['id']) json_error('Solo puede asignar las radios entregadas a su turno.', 403);
-    if (!$opmId) json_error('Seleccione al colaborador que recibirá el radio.', 422);
-    $opm = db()->prepare('SELECT 1 FROM opm_assignments WHERE opm_id=? AND work_date=? AND turno=? AND puesto=?'); $opm->execute([$opmId, $record['work_date'], $record['turno'], $record['assigned_puesto']]);
-    if (!$opm->fetchColumn()) json_error('El colaborador debe pertenecer al puesto y turno de esta radio.', 422);
+    if ($me['role'] === 'supervisor' && (int)($record['current_supervisor_id'] ?: $record['supervisor_id']) !== (int)$me['id']) json_error('Solo puede gestionar radios bajo su responsabilidad.', 403);
+    $puesto = $puesto ?: $record['assigned_puesto'];
+    if (!$opmId && $puesto === $record['assigned_puesto']) json_error('Seleccione un puesto o colaborador para actualizar.', 422);
+    $validPuesto = db()->prepare('SELECT 1 FROM opms WHERE active=1 AND puesto=? LIMIT 1'); $validPuesto->execute([$puesto]);
+    if (!$validPuesto->fetchColumn()) json_error('Seleccione un puesto registrado.', 422);
+    if ($puesto !== $record['assigned_puesto']) {
+        db()->prepare('UPDATE radio_assignments SET assigned_puesto=? WHERE id=?')->execute([$puesto, $id]);
+        db()->prepare('DELETE FROM radio_assignment_collaborators WHERE radio_assignment_id=?')->execute([$id]);
+    }
+    if (!$opmId) { json_response(['ok' => true]); return; }
+    $opm = db()->prepare('SELECT 1 FROM opms WHERE id=? AND active=1 AND puesto=?'); $opm->execute([$opmId, $puesto]);
+    if (!$opm->fetchColumn()) json_error('El colaborador debe pertenecer al puesto seleccionado.', 422);
     $group = $record['delivery_group'] ?: ('legacy-' . $record['id']);
     $used = db()->prepare("SELECT 1 FROM radio_assignment_collaborators rac JOIN radio_assignments ra ON ra.id=rac.radio_assignment_id WHERE COALESCE(ra.delivery_group, CONCAT('legacy-',ra.id))=? AND rac.opm_id=? AND rac.radio_assignment_id<>?"); $used->execute([$group, $opmId, $id]);
     if ($used->fetchColumn()) json_error('Este colaborador ya recibió otra radio de esta entrega.', 422);

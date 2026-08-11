@@ -187,7 +187,7 @@ export const api = {
     return upload('/radios/assignments/group', fd)
   },
   deleteRadioAssignment: (id) => request(`/radios/assignments/${id}`, { method: 'DELETE' }),
-  assignRadioCollaborator: (id, opm_id) => request(`/radios/assignments/${id}/collaborator`, { method: 'POST', body: { opm_id } }),
+  assignRadioCollaborator: (id, opm_id, puesto = '') => request(`/radios/assignments/${id}/collaborator`, { method: 'POST', body: { opm_id, puesto } }),
   moveRadioAssignments: (payload, photo) => { const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); if (photo) fd.append('movement_photo', photo); return upload('/radios/movements', fd) },
   returnRadioAssignments: (payload, photo) => {
     const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); if (photo) fd.append('return_photo', photo)
