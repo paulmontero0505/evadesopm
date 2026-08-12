@@ -102,13 +102,13 @@ function radio_location_records(string $query, string $status, string $operation
     return $stmt->fetchAll();
 }
 function handle_radio_locations(): void {
-    require_role(['admin']);
+    require_role(['admin', 'coordinator']);
     [$query, $status, $operational] = radio_location_filters();
     $records = radio_location_records($query, $status, $operational);
     json_response(['records' => $records, 'metrics' => ['total' => count($records), 'in_operations' => count(array_filter($records, fn($record) => (bool)$record['in_operations'])), 'observations' => count(array_filter($records, fn($record) => $record['condition_status'] !== 'Excelente Estado'))]]);
 }
 function handle_radios_catalog_report(): void {
-    require_role(['admin']);
+    require_role(['admin', 'coordinator']);
     [$query, $status, $operational] = radio_location_filters();
     $bytes = xlsx_build_radio_locations_report(radio_location_records($query, $status, $operational));
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition: attachment; filename="reporte_ubicaciones_radios.xlsx"'); echo $bytes; exit;

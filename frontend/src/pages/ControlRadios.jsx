@@ -500,7 +500,7 @@ export default function ControlRadios() {
                 </span>
               </button>
             )}
-            {user?.role === "admin" && (
+            {canCreate && (
               <button
                 className="radio-module-card"
                 onClick={() => setModule("locations")}
