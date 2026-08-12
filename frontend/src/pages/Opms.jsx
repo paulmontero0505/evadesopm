@@ -22,6 +22,7 @@ export default function Opms() {
   const [expanded, setExpanded] = useState(null)
   const [q, setQ] = useState('')
   const [exporting, setExporting] = useState(false)
+  const [exportingRecords, setExportingRecords] = useState(false)
   const [status, setStatus] = useState('active')
   const [users, setUsers] = useState([])
   const fileRef = useRef(null)
@@ -63,6 +64,10 @@ export default function Opms() {
     try {
       await api.downloadOpmsTemplate()
     } catch (e) { setErr(e.message) } finally { setExporting(false) }
+  }
+  async function exportRecords() {
+    setExportingRecords(true); setErr(''); setMsg('')
+    try { await api.exportOpms() } catch (e) { setErr(e.message) } finally { setExportingRecords(false) }
   }
 
   async function onFile(e) {
@@ -132,9 +137,7 @@ export default function Opms() {
               <UserPlus size={16} /> {showForm ? t.ocultarRegistro : t.registroIndividual}
             </button>
           </div>
-          <button className="btn secondary" style={{ marginTop: 8 }} disabled={exporting} onClick={exportTemplate}>
-            <Download size={16} /> {exporting ? t.descargando : t.exportarPlantilla}
-          </button>
+          <div className="row opm-export-actions"><button className="btn secondary" disabled={exporting} onClick={exportTemplate}><Download size={16} /> {exporting ? t.descargando : t.exportarPlantilla}</button><button className="btn secondary" disabled={exportingRecords} onClick={exportRecords}><Download size={16} /> {exportingRecords ? t.descargando : 'Exportar registros'}</button></div>
           <input ref={fileRef} type="file" accept=".xlsx" style={{ display: 'none' }} onChange={onFile} />
         </div>
 

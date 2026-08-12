@@ -30,7 +30,13 @@ export default function SeleccionarTurno() {
     setLoading(true); setError(''); setFilterText(''); setPuesto(''); setOnlyInTurn(false); setOnlyBirthday(false)
     api.shiftTeam(date, turno).then((data) => {
       if (!active) return
-      const roster = (data.members || []).map((member) => ({ ...member, in_turn: Number(member.in_turn) === 1, worked_previous_turn: Number(member.worked_previous_turn) === 1 }))
+      const seen = new Set()
+      const roster = (data.members || []).map((member) => ({ ...member, in_turn: Number(member.in_turn) === 1, worked_previous_turn: Number(member.worked_previous_turn) === 1 })).filter((member) => {
+        const identity = member.dni ? `${member.full_name.trim().toUpperCase()}|${member.dni.trim()}` : `${member.person_type}:${member.person_id}`
+        if (seen.has(identity)) return false
+        seen.add(identity)
+        return true
+      })
       setMembers(roster)
       setSelected(new Set(roster.filter((member) => member.in_turn && !member.worked_previous_turn).map((member) => `${member.person_type}:${member.person_id}`)))
     }).catch((err) => { if (active) { setMembers([]); setError(err.message) } }).finally(() => { if (active) setLoading(false) })

@@ -14,6 +14,19 @@ function handle_opms_template(): void
     exit;
 }
 
+/** GET /opms/export (admin) — descarga los registros actuales con su estado. */
+function handle_opms_export(): void
+{
+    require_role(['admin']);
+    $opms = db()->query('SELECT code, full_name, dni, fecha_ingreso, fecha_nacimiento, telefono, email_personal, puesto, team, active FROM opms ORDER BY code')->fetchAll();
+    $bytes = xlsx_build_opms_export($opms);
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="registros_colaboradores.xlsx"');
+    header('Content-Length: ' . strlen($bytes));
+    echo $bytes;
+    exit;
+}
+
 /** POST /opms/import  (admin) — carga masiva desde una plantilla Excel (.xlsx).
  *  Campo de archivo: "file". Inserta nuevos y actualiza el nombre de los existentes. */
 function handle_opms_import(): void
@@ -44,13 +57,15 @@ function handle_opms_import(): void
     }
 
     $pdo = db();
-    $stmt = $pdo->prepare(
-        'INSERT INTO opms (code, full_name, dni, fecha_ingreso, fecha_nacimiento, telefono, email_personal, puesto, team) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), dni = VALUES(dni),
-           fecha_ingreso = VALUES(fecha_ingreso), fecha_nacimiento = VALUES(fecha_nacimiento),
-           telefono = VALUES(telefono), email_personal = VALUES(email_personal),
-           puesto = VALUES(puesto), team = VALUES(team), active = 1'
-    );
+    $existingRows = $pdo->query('SELECT id, full_name, dni FROM opms')->fetchAll();
+    $existingByIdentity = [];
+    foreach ($existingRows as $existing) {
+        $key = mb_strtoupper(trim(preg_replace('/\s+/u', ' ', $existing['full_name']))) . '|' . trim($existing['dni'] ?? '');
+        $existingByIdentity[$key] = (int)$existing['id'];
+    }
+    $insert = $pdo->prepare('INSERT INTO opms (code, full_name, dni, fecha_ingreso, fecha_nacimiento, telefono, email_personal, puesto, team, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)');
+    // Las actualizaciones no modifican active: Activo/Cesado solo cambia desde Editar colaborador.
+    $update = $pdo->prepare('UPDATE opms SET code=?, full_name=?, dni=?, fecha_ingreso=?, fecha_nacimiento=?, telefono=?, email_personal=?, puesto=?, team=? WHERE id=?');
 
     $created = 0; $updated = 0; $errors = [];
     $seen = [];
@@ -59,10 +74,11 @@ function handle_opms_import(): void
         foreach ($rows as $r) {
             $code = mb_substr(trim($r['code']), 0, 50);
             $name = mb_substr(trim($r['name']), 0, 150);
-            if ($code === '' || $name === '') continue;
-            if (isset($seen[$code])) continue;   // evita duplicados dentro del mismo archivo
-            $seen[$code] = true;
-            $dni    = mb_substr(trim($r['dni'] ?? ''), 0, 20) ?: null;
+            $dni    = mb_substr(trim($r['dni'] ?? ''), 0, 20);
+            if ($code === '' || $name === '' || $dni === '') { $errors[] = $code ?: $name; continue; }
+            $identity = mb_strtoupper(trim(preg_replace('/\s+/u', ' ', $name))) . '|' . $dni;
+            if (isset($seen[$identity])) continue;
+            $seen[$identity] = true;
             $ingreso = $r['fecha_ingreso'] ?? null;
             $nacimiento = $r['fecha_nacimiento'] ?? null;
             $telefono = mb_substr(trim($r['telefono'] ?? ''), 0, 30) ?: null;
@@ -70,9 +86,13 @@ function handle_opms_import(): void
             $puesto = mb_substr(trim($r['puesto'] ?? ''), 0, 150) ?: null;
             $team   = mb_substr(trim($r['team'] ?? ''), 0, 100) ?: null;
             try {
-                $stmt->execute([$code, $name, $dni, $ingreso, $nacimiento, $telefono, $email, $puesto, $team]);
-                // MySQL: rowCount() == 1 si insertó, == 2 si actualizó por ON DUPLICATE KEY.
-                if ($stmt->rowCount() === 1) $created++; else $updated++;
+                if (isset($existingByIdentity[$identity])) {
+                    $update->execute([$code, $name, $dni, $ingreso, $nacimiento, $telefono, $email, $puesto, $team, $existingByIdentity[$identity]]);
+                    $updated++;
+                } else {
+                    $insert->execute([$code, $name, $dni, $ingreso, $nacimiento, $telefono, $email, $puesto, $team]);
+                    $created++;
+                }
             } catch (Throwable $e) {
                 $errors[] = $code;
             }
@@ -127,6 +147,11 @@ function handle_opm_create(): void
     $email = trim($b['email_personal'] ?? '') ?: null;
     $puesto = trim($b['puesto'] ?? '') ?: null;
     $team   = trim($b['team'] ?? '') ?: null;
+    if ($dni !== null) {
+        $same = db()->prepare('SELECT 1 FROM opms WHERE full_name = ? AND dni = ? LIMIT 1');
+        $same->execute([$name, $dni]);
+        if ($same->fetchColumn()) json_error('Ya existe un colaborador con ese nombre y DNI.', 409);
+    }
     try {
         $stmt = db()->prepare(
             'INSERT INTO opms (code, full_name, dni, fecha_ingreso, fecha_nacimiento, telefono, email_personal, puesto, team) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -147,6 +172,15 @@ function handle_opm_update(int $id): void
     require_role(['admin']);
     $b = json_body();
     $sets = []; $params = [];
+    if (isset($b['full_name']) || isset($b['dni'])) {
+        $current = db()->prepare('SELECT full_name, dni FROM opms WHERE id = ?'); $current->execute([$id]); $current = $current->fetch();
+        if (!$current) json_error('OPM no encontrado', 404);
+        $name = trim($b['full_name'] ?? $current['full_name']); $dni = trim($b['dni'] ?? $current['dni'] ?? '');
+        if ($dni !== '') {
+            $same = db()->prepare('SELECT 1 FROM opms WHERE full_name = ? AND dni = ? AND id <> ? LIMIT 1'); $same->execute([$name, $dni, $id]);
+            if ($same->fetchColumn()) json_error('Ya existe un colaborador con ese nombre y DNI.', 409);
+        }
+    }
     if (isset($b['code'])) {
         $code = trim($b['code']);
         if ($code === '') json_error('El código no puede quedar vacío', 422);

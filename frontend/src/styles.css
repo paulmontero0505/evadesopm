@@ -695,6 +695,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
   margin-bottom: 8px; box-shadow: var(--shadow-sm); overflow: hidden;
 }
 .opm-role-summary { margin: 0 0 16px; }
+.opm-export-actions { margin-top: 8px; }
 .opm-role-summary .home-assignments-heading { margin-bottom: 10px; }
 .opm-role-table-wrap { overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
 .opm-role-table { width: 100%; border-collapse: collapse; font-size: 13px; }

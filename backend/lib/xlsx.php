@@ -19,7 +19,7 @@ function xlsx_esc(string $s): string
  */
 function xlsx_build_template(string $sheetName, array $headers, array $example, ?array $rows = null): string
 {
-    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
     $cellsXml = function (array $vals, int $rowNum) use ($cols): string {
         $cells = '';
@@ -91,6 +91,19 @@ function xlsx_build_opms_template(): string
         ['CODIGO', 'NOMBRES COMPLETOS', 'CARGO', 'FECHA DE INGRESO', 'N° DOCUMENTO', 'FECHA DE NACIMIENTO', 'TELEFONO', 'MAIL PERSONAL', 'TEAM'],
         [16, 34, 34, 19, 18, 22, 16, 32, 18]
     );
+}
+
+/** Exporta el catálogo actual de colaboradores, incluido su estado laboral. */
+function xlsx_build_opms_export(array $opms): string
+{
+    $headers = ['CODIGO', 'NOMBRES COMPLETOS', 'CARGO', 'FECHA DE INGRESO', 'N° DOCUMENTO', 'FECHA DE NACIMIENTO', 'TELEFONO', 'MAIL PERSONAL', 'TEAM', 'STATUS'];
+    $rows = array_map(fn($opm) => [
+        $opm['code'], $opm['full_name'], $opm['puesto'] ?? '', $opm['fecha_ingreso'] ?? '', $opm['dni'] ?? '',
+        $opm['fecha_nacimiento'] ?? '', $opm['telefono'] ?? '', $opm['email_personal'] ?? '', $opm['team'] ?? '',
+        !empty($opm['active']) ? 'ACTIVO' : 'CESADO',
+    ], $opms);
+    if (!$rows) $rows = [array_fill(0, count($headers), '')];
+    return xlsx_build_template('COLABORADORES', $headers, $rows[0], $rows);
 }
 
 function xlsx_build_supervisors_template(): string

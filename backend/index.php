@@ -58,6 +58,7 @@ switch ($r0) {
 
     case 'opms':
         if ($r1 === 'template' && $method === 'GET') return handle_opms_template();
+        if ($r1 === 'export' && $method === 'GET') return handle_opms_export();
         if ($r1 === 'import' && $method === 'POST') return handle_opms_import();
         if ($r1 === '' && $method === 'GET')    return handle_opms_list();
         if ($r1 === '' && $method === 'POST')   return handle_opm_create();

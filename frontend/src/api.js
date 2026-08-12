@@ -92,6 +92,7 @@ export const api = {
 
   opms: () => request('/opms'),
   downloadOpmsTemplate: () => downloadFile('/opms/template', 'plantilla_colaboradores.xlsx'),
+  exportOpms: () => downloadFile('/opms/export', 'registros_colaboradores.xlsx'),
   createOpm: (payload) => request('/opms', { method: 'POST', body: payload }),
   importOpms: (file) => { const fd = new FormData(); fd.append('file', file); return upload('/opms/import', fd) },
   updateOpm: (id, payload) => request(`/opms/${id}`, { method: 'PUT', body: payload }),
