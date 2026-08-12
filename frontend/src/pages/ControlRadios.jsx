@@ -133,7 +133,14 @@ export default function ControlRadios() {
     setLoading(true);
     setError("");
     try {
-      setData(await api.radioContext(shift.date, shift.turno));
+      const [context, overview] = await Promise.all([
+        api.radioContext(shift.date, shift.turno),
+        api.radioOverview(),
+      ]);
+      setData({
+        ...context,
+        relief_records: (overview.records || []).filter((record) => !record.returned_at),
+      });
     } catch (err) {
       setError(err.message);
     } finally {
