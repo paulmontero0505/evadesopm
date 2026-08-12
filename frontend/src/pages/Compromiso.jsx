@@ -70,10 +70,13 @@ export default function Compromiso() {
   }
 
   useEffect(() => {
-    Promise.all([api.compromisoRules(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords()])
-      .then(([r, team]) => {
+    Promise.all([api.compromisoRules(), api.opms(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords()])
+      .then(([r, opmData, team]) => {
         setRules(r.rules)
-        setOpms((team.members || []).map((member) => ({ id: member.person_id, code: member.code, full_name: member.full_name, active: 1, in_turn: Number(member.in_turn) })))
+        const inTurnById = new Map((team.members || []).map((member) => [Number(member.person_id), Number(member.in_turn) === 1]))
+        setOpms((opmData.opms || [])
+          .filter((opm) => opm.active && isMultipurposeOperator(opm.puesto))
+          .map((opm) => ({ ...opm, in_turn: inTurnById.get(Number(opm.id)) === true })))
       })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false))
@@ -264,7 +267,7 @@ export default function Compromiso() {
             <div className="card">
               <label>{t.operario}</label>
               <SearchSelect value={opmId} onChange={setOpmId} placeholder={t.seleccione}
-                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name} · ${o.in_turn ? 'En turno' : 'Fuera de turno'}` }))} />
+                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name} · ${o.in_turn ? 'IN TURN' : 'OFF TURN'}` }))} />
               {opms.length === 0 && <div className="warn-box">No hay colaboradores activos registrados.</div>}
             </div>
 
@@ -463,4 +466,9 @@ export default function Compromiso() {
       </div>
     </>
   )
+}
+
+function isMultipurposeOperator(puesto) {
+  const normalized = (puesto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+  return normalized.includes('OPERARIO') && normalized.includes('MULTIPROPOSITO')
 }
