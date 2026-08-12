@@ -1708,7 +1708,15 @@ function DailyRadioReport({ date, turno }) {
                     </td>
                     <td>{fmt(record.movement_at)}</td>
                     <td>{record.previous_supervisor_name || "Tool Room"}</td>
-                    <td>{record.current_supervisor_name || "Tool Room"}</td>
+                    <td>
+                      {record.current_supervisor_name || "Tool Room"}
+                      {record.current_supervisor_name &&
+                      record.current_supervisor_name !== "Tool Room" ? (
+                        <small>
+                          Turno: {turnoLabel(record.current_turno || record.turno)}
+                        </small>
+                      ) : null}
+                    </td>
                     <td>{record.final_location || "TOOLROOM"}</td>
                     <td>
                       {record.movement_comments || (
