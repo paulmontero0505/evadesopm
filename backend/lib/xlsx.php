@@ -88,8 +88,8 @@ function xlsx_build_opms_template(): string
 {
     return xlsx_build_assignments_template(
         'COLABORADORES',
-        ['CODIGO', 'NOMBRES COMPLETOS', 'CARGO', 'FECHA DE INGRESO', 'N° DOCUMENTO', 'FECHA DE NACIMIENTO', 'TELEFONO', 'MAIL PERSONAL', 'TEAM'],
-        [16, 34, 34, 19, 18, 22, 16, 32, 18]
+        ['CODIGO', 'NOMBRES COMPLETOS', 'CARGO', 'FECHA DE INGRESO', 'N° DOCUMENTO', 'FECHA DE NACIMIENTO', 'TELEFONO', 'MAIL PERSONAL', 'TEAM', 'STATUS'],
+        [16, 34, 34, 19, 18, 22, 16, 32, 18, 14]
     );
 }
 
@@ -102,8 +102,7 @@ function xlsx_build_opms_export(array $opms): string
         $opm['fecha_nacimiento'] ?? '', $opm['telefono'] ?? '', $opm['email_personal'] ?? '', $opm['team'] ?? '',
         !empty($opm['active']) ? 'ACTIVO' : 'CESADO',
     ], $opms);
-    if (!$rows) $rows = [array_fill(0, count($headers), '')];
-    return xlsx_build_template('COLABORADORES', $headers, $rows[0], $rows);
+    return xlsx_build_assignments_template('COLABORADORES', $headers, [16, 34, 34, 19, 18, 22, 16, 32, 18, 14], $rows);
 }
 
 function xlsx_build_supervisors_template(): string
@@ -126,11 +125,11 @@ function xlsx_build_assignments_template_legacy(): string
 }
 
 /** Plantilla de asignaciÃ³n con encabezados y filtros listos para completar. */
-function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?array $customHeaders = null, ?array $customWidths = null): string
+function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?array $customHeaders = null, ?array $customWidths = null, ?array $dataRows = null): string
 {
     $headers = ['APELLIDOS Y NOMBRES', 'FUNCIÓN 1', 'FUNCIÓN 2', 'ZONA 1', 'PUESTO', 'NAVE', 'NAVE 2'];
     $headers = $customHeaders ?: $headers;
-    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     $widths = $customWidths ?: [31, 24, 24, 20, 22, 20, 20];
 
     $headerCells = '';
@@ -144,12 +143,22 @@ function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?arra
         $columnsXml .= '<col min="' . $position . '" max="' . $position . '" width="' . $width . '" customWidth="1"/>';
     }
 
+    $dataCells = '';
+    foreach ($dataRows ?? [] as $rowIndex => $row) {
+        $cells = '';
+        foreach ($headers as $columnIndex => $_header) {
+            $value = $row[$columnIndex] ?? '';
+            $cells .= '<c r="' . $cols[$columnIndex] . ($rowIndex + 2) . '" t="inlineStr"><is><t>' . xlsx_esc((string)$value) . '</t></is></c>';
+        }
+        $dataCells .= '<row r="' . ($rowIndex + 2) . '">' . $cells . '</row>';
+    }
+
     $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
         . '<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews>'
         . '<sheetFormatPr defaultRowHeight="15"/>'
         . '<cols>' . $columnsXml . '</cols>'
-        . '<sheetData><row r="1" ht="21" customHeight="1">' . $headerCells . '</row></sheetData>'
+        . '<sheetData><row r="1" ht="21" customHeight="1">' . $headerCells . '</row>' . $dataCells . '</sheetData>'
         . '<autoFilter ref="A1:' . $cols[count($headers) - 1] . '1000"/>'
         . '</worksheet>';
 
