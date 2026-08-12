@@ -125,7 +125,7 @@ function xlsx_build_assignments_template_legacy(): string
 }
 
 /** Plantilla de asignaciÃ³n con encabezados y filtros listos para completar. */
-function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?array $customHeaders = null, ?array $customWidths = null, ?array $dataRows = null): string
+function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?array $customHeaders = null, ?array $customWidths = null, ?array $dataRows = null, bool $tableRows = false): string
 {
     $headers = ['APELLIDOS Y NOMBRES', 'FUNCIÓN 1', 'FUNCIÓN 2', 'ZONA 1', 'PUESTO', 'NAVE', 'NAVE 2'];
     $headers = $customHeaders ?: $headers;
@@ -148,7 +148,8 @@ function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?arra
         $cells = '';
         foreach ($headers as $columnIndex => $_header) {
             $value = $row[$columnIndex] ?? '';
-            $cells .= '<c r="' . $cols[$columnIndex] . ($rowIndex + 2) . '" t="inlineStr"><is><t>' . xlsx_esc((string)$value) . '</t></is></c>';
+            $style = $tableRows ? ' s="' . ($rowIndex % 2 === 0 ? '2' : '3') . '"' : '';
+            $cells .= '<c r="' . $cols[$columnIndex] . ($rowIndex + 2) . '"' . $style . ' t="inlineStr"><is><t>' . xlsx_esc((string)$value) . '</t></is></c>';
         }
         $dataCells .= '<row r="' . ($rowIndex + 2) . '">' . $cells . '</row>';
     }
@@ -165,10 +166,10 @@ function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?arra
     $stylesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
         . '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><b/></font></fonts>'
-        . '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF000000"/><bgColor indexed="64"/></patternFill></fill></fills>'
+        . '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF000000"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF2F6FB"/><bgColor indexed="64"/></patternFill></fill></fills>'
         . '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FF808080"/></left><right style="thin"><color rgb="FF808080"/></right><top style="thin"><color rgb="FF808080"/></top><bottom style="thin"><color rgb="FF808080"/></bottom><diagonal/></border></borders>'
         . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-        . '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf></cellXfs>'
+        . '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1" xfId="0"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="3" borderId="1" applyFill="1" applyBorder="1" applyAlignment="1" xfId="0"><alignment vertical="top" wrapText="1"/></xf></cellXfs>'
         . '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
         . '</styleSheet>';
 
@@ -224,7 +225,7 @@ function xlsx_build_radio_locations_report(array $radios): string
     $headers = ['CODIGO', 'IMEI', 'MODELO', 'ESTADO', 'ULTIMA UBICACION', 'NAVE', 'ASIGNADO A', 'RESPONSABLE', 'EN OPERACIONES', 'ACTIVO'];
     $rows = array_map(fn($radio) => [$radio['code'], $radio['imei'], $radio['model'], $radio['condition_status'] ?? 'Excelente Estado', $radio['last_location'] ?? $radio['location'] ?? '', $radio['last_nave'] ?? '', $radio['collaborator_name'] ?? '', $radio['custodian_name'] ?? '', !empty($radio['in_operations']) ? 'SI' : 'NO', !empty($radio['active']) ? 'SI' : 'NO'], $radios);
     if (!$rows) $rows = [array_fill(0, count($headers), '')];
-    return xlsx_build_template('UBICACIONES', $headers, $rows[0], $rows);
+    return xlsx_build_assignments_template('UBICACIONES', $headers, [14, 23, 14, 20, 24, 20, 34, 34, 18, 12], $rows, true);
 }
 
 function xlsx_parse_date_value(string $raw): ?string

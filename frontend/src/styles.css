@@ -609,9 +609,12 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-location-filters .search-box { margin: 0; }
 .radio-location-filters .btn { width: auto; white-space: nowrap; }
 .radio-location-indicators { margin: 0 0 16px; }
+.radio-location-actions { display: flex; gap: 8px; }
+.radio-location-actions .btn { margin: 0; }
 .radio-location-results { margin-top: 20px; }
 .radio-location-results .assignment-list-heading { margin-bottom: 10px; }
 .radio-location-list { max-height: 55vh; overflow-y: auto; padding-right: 2px; }
+.location-print-sheet { display: none; }
 .catalog-new-btn { width: 100%; margin: 0 0 16px; }
 .catalog-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 20px; }
 .catalog-insights > div { display: grid; gap: 4px; min-height: 82px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); box-shadow: var(--shadow-sm); }
@@ -963,6 +966,22 @@ body.login-bg, body.login-bg .app { background: #fff; }
 }
 
 @media print {
+  body.location-printing .topbar, body.location-printing .topbar-accent { display: none !important; }
+  body.location-printing .content > *:not(.radio-location-report) { display: none !important; }
+  body.location-printing .radio-location-report { box-shadow: none !important; border: 0 !important; padding: 0 !important; margin: 0 !important; }
+  body.location-printing .location-screen-only { display: none !important; }
+  body.location-printing .location-print-sheet { display: block; color: #111; }
+  body.location-printing .location-print-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #a51d25; }
+  body.location-printing .location-print-header img { width: 58px; height: auto; }
+  body.location-printing .location-print-header h2 { margin: 0; color: #06275d; font-size: 13pt; }
+  body.location-printing .location-print-header p { margin: 3px 0 0; font-size: 8.5pt; }
+  body.location-printing .location-print-sheet table { width: 100%; border-collapse: collapse; font-size: 7.2pt; }
+  body.location-printing .location-print-sheet th { padding: 4px; background: #06275d !important; color: #fff !important; border: 1px solid #6d7f9a; font-size: 6.4pt; text-align: left; text-transform: uppercase; }
+  body.location-printing .location-print-sheet td { padding: 4px; border: 1px solid #c5ccd6; vertical-align: top; }
+  body.location-printing .location-print-sheet tbody tr:nth-child(even) { background: #e9f0f8 !important; }
+  body.location-printing .location-print-sheet tr { break-inside: avoid; }
+  body.location-printing .location-print-sheet th:first-child, body.location-printing .location-print-sheet td:first-child { white-space: nowrap; font-weight: 700; }
+  @page { size: A4 landscape; margin: 10mm; }
   body.trace-printing .topbar, body.trace-printing .topbar-accent { display: none !important; }
   body.trace-printing .content > *:not(.trace-report-sheet) { display: none !important; }
   body.trace-printing .trace-report-sheet { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }

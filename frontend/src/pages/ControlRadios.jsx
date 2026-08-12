@@ -928,6 +928,7 @@ function RadioLocationsReport() {
   const [operationalStatus, setOperationalStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -953,6 +954,22 @@ function RadioLocationsReport() {
     };
   }, [query, status, operationalStatus]);
 
+  const pdfRecords = useMemo(
+    () =>
+      [...records].sort(
+        (a, b) =>
+          Number(b.in_operations) - Number(a.in_operations) ||
+          Number(a.code) - Number(b.code) ||
+          String(a.code).localeCompare(String(b.code)),
+      ),
+    [records],
+  );
+
+  useEffect(() => {
+    document.body.classList.toggle("location-printing", printing);
+    return () => document.body.classList.remove("location-printing");
+  }, [printing]);
+
   async function downloadReport() {
     setDownloading(true);
     setError("");
@@ -969,9 +986,17 @@ function RadioLocationsReport() {
     }
   }
 
+  function printReport() {
+    setPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setPrinting(false);
+    }, 0);
+  }
+
   return (
     <section className="card radio-location-report">
-      <div className="assignment-list-heading">
+      <div className="assignment-list-heading location-screen-only">
         <div>
           <h2>Reporte de ubicaciones de radios</h2>
           <p>
@@ -983,7 +1008,7 @@ function RadioLocationsReport() {
           <MapPin size={14} /> Excel
         </span>
       </div>
-      <div className="radio-location-filters">
+      <div className="radio-location-filters location-screen-only">
         <div className="search-box">
           <Search className="search-icon" size={18} />
           <input
@@ -1015,11 +1040,11 @@ function RadioLocationsReport() {
         </select>
       </div>
       {error && (
-        <div className="error" role="alert">
+        <div className="error location-screen-only" role="alert">
           {error}
         </div>
       )}
-      <section className="radio-indicators radio-location-indicators">
+      <section className="radio-indicators radio-location-indicators location-screen-only">
         <div>
           <strong>{metrics.total || 0}</strong>
           <span>Total de radios</span>
@@ -1033,11 +1058,16 @@ function RadioLocationsReport() {
           <span>Con observaciones</span>
         </div>
       </section>
-      <button className="btn" disabled={downloading} onClick={downloadReport}>
-        <Download size={16} />
-        {downloading ? "Generando reporte..." : "Descargar reporte Excel"}
-      </button>
-      <section className="radio-location-results">
+      <div className="radio-location-actions location-screen-only">
+        <button className="btn" disabled={downloading} onClick={downloadReport}>
+          <Download size={16} />
+          {downloading ? "Generando reporte..." : "Descargar reporte Excel"}
+        </button>
+        <button className="btn secondary" disabled={loading || !records.length} onClick={printReport}>
+          <Printer size={16} /> Exportar PDF
+        </button>
+      </div>
+      <section className="radio-location-results location-screen-only">
         <div className="assignment-list-heading">
           <div>
             <h3>Radios encontradas</h3>
@@ -1097,6 +1127,41 @@ function RadioLocationsReport() {
             </div>
           </div>
         )}
+      </section>
+      <section className="location-print-sheet">
+        <div className="location-print-header">
+          <img src="./img/logo.png" alt="COSCO Shipping" />
+          <div>
+            <h2>Reporte de ubicaciones de radios</h2>
+            <p>{pdfRecords.length} radios · Operaciones primero, luego disponibles</p>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Radio</th>
+              <th>Modelo / IMEI</th>
+              <th>Estado</th>
+              <th>Ubicación</th>
+              <th>Asignado a</th>
+              <th>Responsable</th>
+              <th>Estado operativo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pdfRecords.map((radio) => (
+              <tr key={radio.id}>
+                <td>RADIO {radio.code}</td>
+                <td>{radio.model} · {radio.imei}</td>
+                <td>{radio.condition_status}</td>
+                <td>{radio.last_location || "Sin ubicación"}{radio.last_nave ? ` · ${radio.last_nave}` : ""}</td>
+                <td>{radio.collaborator_name || "—"}</td>
+                <td>{radio.custodian_name || "Tool Room"}</td>
+                <td>{Number(radio.in_operations) ? "En operaciones" : "Disponible"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </section>
   );
