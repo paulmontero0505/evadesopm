@@ -581,6 +581,12 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .delivery-report-actions { display: flex; gap: 6px; }
 .relief-back { margin: 0 0 16px; }
 .relief-delivery-list { display: grid; gap: 10px; }
+.relief-select-all { display: inline-flex; align-items: center; gap: 8px; margin: -2px 0 10px; color: var(--navy); font-size: 12px; font-weight: 700; cursor: pointer; }
+.relief-select-all input { width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
+.relief-record-list { max-height: 50vh; overflow-y: auto; padding-right: 2px; }
+.relief-record-list .relief-record { margin-bottom: 7px; padding: 11px 13px; }
+.relief-record-list .radio-record-grid { margin-top: 10px; gap: 7px 14px; }
+.relief-record-list .relief-person { margin-top: 10px; padding-top: 9px; }
 .relief-delivery-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 13px; width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); color: var(--navy); text-align: left; cursor: pointer; box-shadow: var(--shadow-sm); }
 .relief-delivery-card:hover, .relief-delivery-card:focus-visible { border-color: #9dc3f4; background: #f8fbff; outline: none; }
 .relief-delivery-card > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }

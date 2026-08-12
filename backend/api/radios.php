@@ -362,8 +362,10 @@ function handle_radio_reports(): void {
  * trazabilidad del responsable anterior hacia el nuevo responsable.
  */
 function radio_daily_report(string $date, string $turno): array {
-    $scope = db()->prepare('SELECT DISTINCT ra.id FROM radio_assignments ra LEFT JOIN radio_assignment_movements m ON m.radio_assignment_id=ra.id AND m.work_date=? AND m.turno=? WHERE (ra.work_date=? AND ra.turno=?) OR m.id IS NOT NULL');
-    $scope->execute([$date, $turno, $date, $turno]);
+    // El reporte incluye tanto los movimientos del turno como las radios que siguen
+    // bajo custodia en él, aunque su entrega original haya sido anterior.
+    $scope = db()->prepare('SELECT DISTINCT ra.id FROM radio_assignments ra LEFT JOIN radio_assignment_movements m ON m.radio_assignment_id=ra.id AND m.work_date=? AND m.turno=? WHERE (ra.work_date=? AND ra.turno=?) OR m.id IS NOT NULL OR (ra.returned_at IS NULL AND COALESCE(ra.current_work_date,ra.work_date)=? AND COALESCE(ra.current_turno,ra.turno)=?)');
+    $scope->execute([$date, $turno, $date, $turno, $date, $turno]);
     $ids = array_values(array_map('intval', $scope->fetchAll(PDO::FETCH_COLUMN)));
     if (!$ids) return [];
     $marks = implode(',', array_fill(0, count($ids), '?'));
@@ -378,7 +380,9 @@ function radio_daily_report(string $date, string $turno): array {
         $record['previous_supervisor_id'] = null;
         $record['previous_supervisor_name'] = 'Tool Room';
         $record['current_supervisor_name'] = $record['current_supervisor_name'] ?: $record['supervisor_name'];
-        $record['movement'] = 'Entregado';
+        $record['movement'] = ($record['returned_at'] === null && $record['work_date'] !== $date)
+            ? 'Pendiente en custodia'
+            : 'Entregado';
         $record['movement_at'] = $record['created_at'];
         $record['movement_comments'] = $record['comments'];
         $record['returned_by_name'] = null;

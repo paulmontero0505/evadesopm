@@ -1210,6 +1210,11 @@ function FlexibleGroupedReliefPanel({
         : [...current, id],
     );
   }
+  function toggleAll() {
+    setSelectedIds((current) =>
+      current.length === activeRecords.length ? [] : activeRecords.map((record) => record.id),
+    );
+  }
   async function updateAssignment(record, payload) {
     setSavingId(record.id);
     setError("");
@@ -1354,12 +1359,13 @@ function FlexibleGroupedReliefPanel({
             <Radio size={14} /> {activeRecords.length}
           </span>
         </div>
+        <label className="relief-select-all"><input type="checkbox" checked={activeRecords.length > 0 && selectedIds.length === activeRecords.length} onChange={toggleAll} /><span>Seleccionar todas las radios ({activeRecords.length})</span></label>
         {error && (
           <div className="error" role="alert">
             {error}
           </div>
         )}
-        {activeRecords.map((record) => {
+        <div className="relief-record-list">{activeRecords.map((record) => {
           const puestoOptions = [
             ...new Set([record.assigned_puesto, ...puestos].filter(Boolean)),
           ]
@@ -1432,7 +1438,7 @@ function FlexibleGroupedReliefPanel({
               </div>
             </article>
           );
-        })}
+        })}</div>
       </section>
       <section className="card">
         <h3>Registrar movimiento de radios</h3>
