@@ -233,13 +233,18 @@ function handle_shifts_list(): void
     $year = $hasDate ? (int)substr($date, 0, 4) : (int)($_GET['year'] ?? date('Y'));
     $quarter = $hasDate ? quarter_of($date) : (int)($_GET['quarter'] ?? quarter_of(date('Y-m-d')));
     $opmId = isset($_GET['opm_id']) && $_GET['opm_id'] !== '' ? (int)$_GET['opm_id'] : null;
+    $all = ($_GET['all'] ?? '') === '1';
 
     $sql = 'SELECT s.*, o.code AS opm_code, o.full_name AS opm_name, u.full_name AS supervisor_name
               FROM shift_records s
               JOIN opms  o ON o.id = s.opm_id
               JOIN users u ON u.id = s.supervisor_id
-             WHERE s.year = ? AND s.quarter = ?';
-    $params = [$year, $quarter];
+              WHERE 1=1';
+    $params = [];
+    if (!$all) {
+        $sql .= ' AND s.year = ? AND s.quarter = ?';
+        $params = [$year, $quarter];
+    }
     if ($hasDate) {
         $sql .= ' AND s.work_date = ?';
         $params[] = $date;

@@ -235,13 +235,18 @@ function handle_compromiso_list(): void
     $year = $hasDate ? (int)substr($date, 0, 4) : (int)($_GET['year'] ?? date('Y'));
     $quarter = $hasDate ? quarter_of($date) : (int)($_GET['quarter'] ?? quarter_of(date('Y-m-d')));
     $opmId = isset($_GET['opm_id']) && $_GET['opm_id'] !== '' ? (int)$_GET['opm_id'] : null;
+    $all = ($_GET['all'] ?? '') === '1';
 
     $sql = 'SELECT c.*, o.code AS opm_code, o.full_name AS opm_name, u.full_name AS supervisor_name
               FROM compromiso_records c
               JOIN opms  o ON o.id = c.opm_id
               JOIN users u ON u.id = c.supervisor_id
-             WHERE c.year = ? AND c.quarter = ?';
-    $params = [$year, $quarter];
+              WHERE 1=1';
+    $params = [];
+    if (!$all) {
+        $sql .= ' AND c.year = ? AND c.quarter = ?';
+        $params = [$year, $quarter];
+    }
     if ($hasDate) {
         $sql .= ' AND c.work_date = ?';
         $params[] = $date;

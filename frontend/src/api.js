@@ -98,8 +98,8 @@ export const api = {
   updateOpm: (id, payload) => request(`/opms/${id}`, { method: 'PUT', body: payload }),
   deleteOpm: (id) => request(`/opms/${id}`, { method: 'DELETE' }),
 
-  shiftRecords: (year, quarter, opmId = '') =>
-    request(`/shift-records?year=${year}&quarter=${quarter}&opm_id=${opmId}`),
+  shiftRecords: (year, quarter, opmId = '', all = false) =>
+    request(`/shift-records?year=${year}&quarter=${quarter}&opm_id=${opmId}${all ? '&all=1' : ''}`),
   shiftRecordsByDate: (date, opmId = '') =>
     request(`/shift-records?date=${date}&opm_id=${opmId}`),
   shiftRecord: (id) => request(`/shift-records/${id}`),
@@ -122,8 +122,8 @@ export const api = {
   control: (year, quarter) => request(`/control?year=${year}&quarter=${quarter}`),
 
   compromisoRules: () => request('/compromiso-rules'),
-  compromisoRecords: (year, quarter, opmId = '') =>
-    request(`/compromiso-records?year=${year}&quarter=${quarter}&opm_id=${opmId}`),
+  compromisoRecords: (year, quarter, opmId = '', all = false) =>
+    request(`/compromiso-records?year=${year}&quarter=${quarter}&opm_id=${opmId}${all ? '&all=1' : ''}`),
   compromisoRecord: (id) => request(`/compromiso-records/${id}`),
   createCompromisoRecord: (payload, photo) => {
     if (!photo) return request('/compromiso-records', { method: 'POST', body: payload })

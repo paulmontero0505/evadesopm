@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ShieldAlert, Trash2, Camera, X, ChevronDown, Printer, Pencil } from 'lucide-react'
+import { ShieldAlert, Trash2, Camera, X, ChevronDown, ChevronLeft, ChevronRight, Printer, Pencil } from 'lucide-react'
 import { api, SITE_BASE } from '../api.js'
 import { useAuth } from '../auth.jsx'
 import { useShift } from '../shift.jsx'
@@ -11,6 +11,10 @@ import ActRow from '../components/ActRow.jsx'
 import Toast from '../components/Toast.jsx'
 
 const fmtDate = (d) => { if (!d) return ''; const [y, m, day] = d.split('-'); return `${day}/${m}/${y}` }
+const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+const weekStart = (date) => { const value = new Date(`${date}T00:00:00`); value.setDate(value.getDate() - ((value.getDay() + 6) % 7)); return dateKey(value) }
+const addDays = (date, days) => { const value = new Date(`${date}T00:00:00`); value.setDate(value.getDate() + days); return dateKey(value) }
+const shiftQuarter = (date, amount) => { const value = new Date(`${date}T00:00:00`); value.setMonth(value.getMonth() + amount * 3); return dateKey(value) }
 
 function isSameWeek(d1, d2) {
   const date1 = new Date(d1 + 'T00:00:00')
@@ -56,21 +60,23 @@ export default function Compromiso() {
   // Filtros de "Registros de hoy"
   const [fOpm, setFOpm] = useState('')
   const [fRango, setFRango] = useState('todos') // 'todos', 'semanal', 'trimestral'
+  const [periodDate, setPeriodDate] = useState(shift.date)
   const [fSuper, setFSuper] = useState('')
 
-  function fetchRecords() {
-    if (!shift?.date) return Promise.resolve()
-    const [yStr, mStr] = shift.date.split('-')
+  function fetchRecords(range = fRango, date = periodDate) {
+    if (!date) return Promise.resolve()
+    const [yStr, mStr] = date.split('-')
     const year = Number(yStr)
     const month = Number(mStr)
     const quarter = Math.ceil(month / 3)
-    return api.compromisoRecords(year, quarter)
+    return api.compromisoRecords(year, quarter, '', range === 'todos')
       .then((d) => setRecords(d.compromiso_records || []))
       .catch(() => setRecords([]))
   }
 
   useEffect(() => {
-    Promise.all([api.compromisoRules(), api.opms(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords()])
+    setPeriodDate(shift.date)
+    Promise.all([api.compromisoRules(), api.opms(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords('todos', shift.date)])
       .then(([r, opmData, team]) => {
         setRules(r.rules)
         const inTurnById = new Map((team.members || []).map((member) => [Number(member.person_id), Number(member.in_turn) === 1]))
@@ -106,11 +112,7 @@ export default function Compromiso() {
   const listo = opmId && pendientes === 0 && !busy && !cuotaTotalExcedida && !cuotaSuperExcedida
 
   const shown = records.filter((r) => {
-    if (fRango === 'todos') {
-      if (r.work_date !== shift.date) return false
-    } else if (fRango === 'semanal') {
-      if (!isSameWeek(r.work_date, shift.date)) return false
-    }
+    if (fRango === 'semanal' && (r.work_date < weekStart(periodDate) || r.work_date > addDays(weekStart(periodDate), 6))) return false
     return (!fOpm || String(r.opm_id) === fOpm) &&
            (!fSuper || String(r.supervisor_id) === fSuper)
   })
@@ -126,6 +128,9 @@ export default function Compromiso() {
     colaboradores: new Set(shown.map((r) => r.opm_id)).size,
     conductas: shown.filter((r) => Number(r.conducta_critica) === 1).length,
   }), [shown])
+
+  function changeRange(range) { setFRango(range); setPeriodDate(shift.date); fetchRecords(range, shift.date) }
+  function movePeriod(amount) { const next = fRango === 'semanal' ? addDays(periodDate, amount * 7) : shiftQuarter(periodDate, amount); setPeriodDate(next); fetchRecords(fRango, next) }
 
   function onCriticaPhoto(e) {
     const file = e.target.files?.[0]
@@ -378,9 +383,9 @@ export default function Compromiso() {
         {tab === 'registrados' && (
           <div className="card">
             <div className="muted" style={{ marginBottom: 10 }}>
-              {fRango === 'todos' && t.fichasDel(fmtDate(shift.date))}
-              {fRango === 'semanal' && t.fichasSemana}
-              {fRango === 'trimestral' && t.fichasTrim}
+              {fRango === 'todos' && 'Todos los registros'}
+              {fRango === 'semanal' && `Semana del ${fmtDate(weekStart(periodDate))} al ${fmtDate(addDays(weekStart(periodDate), 6))}`}
+              {fRango === 'trimestral' && `Trimestre ${Math.ceil(Number(periodDate.slice(5, 7)) / 3)} · ${periodDate.slice(0, 4)}`}
             </div>
 
             <div className="stat-grid" style={{ marginBottom: 14 }}>
@@ -390,10 +395,11 @@ export default function Compromiso() {
             </div>
 
             <div className="tab-bar turno-tabs">
-              <button className={`tab-btn ${fRango === 'todos' ? 'active' : ''}`} onClick={() => setFRango('todos')}>{t.rangoTodos}</button>
-              <button className={`tab-btn ${fRango === 'semanal' ? 'active' : ''}`} onClick={() => setFRango('semanal')}>{t.rangoSemanal}</button>
-              <button className={`tab-btn ${fRango === 'trimestral' ? 'active' : ''}`} onClick={() => setFRango('trimestral')}>{t.rangoTrimestral}</button>
+              <button className={`tab-btn ${fRango === 'todos' ? 'active' : ''}`} onClick={() => changeRange('todos')}>{t.rangoTodos}</button>
+              <button className={`tab-btn ${fRango === 'semanal' ? 'active' : ''}`} onClick={() => changeRange('semanal')}>{t.rangoSemanal}</button>
+              <button className={`tab-btn ${fRango === 'trimestral' ? 'active' : ''}`} onClick={() => changeRange('trimestral')}>{t.rangoTrimestral}</button>
             </div>
+            {fRango !== 'todos' && <div className="row" style={{ marginBottom: 8 }}><button type="button" className="btn secondary small" onClick={() => movePeriod(-1)} aria-label="Periodo anterior"><ChevronLeft size={16} /> Anterior</button><button type="button" className="btn secondary small" onClick={() => movePeriod(1)} aria-label="Periodo siguiente">Siguiente <ChevronRight size={16} /></button></div>}
 
             <SearchSelect value={fOpm} onChange={setFOpm} emptyLabel={t.todosOpm}
               options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name}` }))} />
