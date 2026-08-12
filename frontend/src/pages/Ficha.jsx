@@ -62,7 +62,7 @@ export default function Ficha() {
 
   // Filtros de "Registros de hoy"
   const [fOpm, setFOpm] = useState('')
-  const [fRango, setFRango] = useState('todos') // 'todos', 'semanal', 'trimestral'
+  const [fRango, setFRango] = useState('actual') // 'actual', 'semanal', 'trimestral'
   const [periodDate, setPeriodDate] = useState(shift.date)
   const [fCarga, setFCarga] = useState('')
   const [fSuper, setFSuper] = useState('')
@@ -73,7 +73,7 @@ export default function Ficha() {
     const year = Number(yStr)
     const month = Number(mStr)
     const quarter = Math.ceil(month / 3)
-    return api.shiftRecords(year, quarter, '', range === 'todos')
+    return api.shiftRecords(year, quarter)
       .then((d) => setRecords(d.shift_records || []))
       .catch(() => setRecords([]))
   }
@@ -82,7 +82,7 @@ export default function Ficha() {
     setLoading(true)
     setErr('')
     setPeriodDate(shift.date)
-    Promise.all([api.rules(), api.opms(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords('todos', shift.date)])
+    Promise.all([api.rules(), api.opms(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords('actual', shift.date)])
       .then(([r, opmData, team]) => {
         if (!r?.rules || !Array.isArray(r.rules.cargas) || !Array.isArray(r.rules.bloques) || !r.rules.objetivos) {
           throw new Error(t.errorFichaDatos)
@@ -131,6 +131,7 @@ export default function Ficha() {
   const listo = opmId && carga && pendientes === 0 && !busy && !cuotaTotalExcedida && !cuotaSuperExcedida && !cuotaCargaExcedida
 
   const shown = records.filter((r) => {
+    if (fRango === 'actual' && r.work_date !== shift.date) return false
     if (fRango === 'semanal' && (r.work_date < weekStart(periodDate) || r.work_date > addDays(weekStart(periodDate), 6))) return false
     return (!fOpm || String(r.opm_id) === fOpm) &&
            (!fCarga || r.carga === fCarga) &&
@@ -443,7 +444,7 @@ export default function Ficha() {
         {tab === 'registrados' && (
           <div className="card">
             <div className="muted" style={{ marginBottom: 10 }}>
-              {fRango === 'todos' && 'Todos los registros'}
+              {fRango === 'actual' && t.fichasDel(fmtDate(shift.date))}
               {fRango === 'semanal' && `Semana del ${fmtDate(weekStart(periodDate))} al ${fmtDate(addDays(weekStart(periodDate), 6))}`}
               {fRango === 'trimestral' && `Trimestre ${Math.ceil(Number(periodDate.slice(5, 7)) / 3)} · ${periodDate.slice(0, 4)}`}
             </div>
@@ -455,11 +456,11 @@ export default function Ficha() {
             </div>
 
             <div className="tab-bar turno-tabs">
-              <button className={`tab-btn ${fRango === 'todos' ? 'active' : ''}`} onClick={() => changeRange('todos')}>{t.rangoTodos}</button>
+              <button className={`tab-btn ${fRango === 'actual' ? 'active' : ''}`} onClick={() => changeRange('actual')}>Actual</button>
               <button className={`tab-btn ${fRango === 'semanal' ? 'active' : ''}`} onClick={() => changeRange('semanal')}>{t.rangoSemanal}</button>
               <button className={`tab-btn ${fRango === 'trimestral' ? 'active' : ''}`} onClick={() => changeRange('trimestral')}>{t.rangoTrimestral}</button>
             </div>
-            {fRango !== 'todos' && <div className="row" style={{ marginBottom: 8 }}><button type="button" className="btn secondary small" onClick={() => movePeriod(-1)} aria-label="Periodo anterior"><ChevronLeft size={16} /> Anterior</button><button type="button" className="btn secondary small" onClick={() => movePeriod(1)} aria-label="Periodo siguiente">Siguiente <ChevronRight size={16} /></button></div>}
+            {fRango !== 'actual' && <div className="row" style={{ marginBottom: 8 }}><button type="button" className="btn secondary small" onClick={() => movePeriod(-1)} aria-label="Periodo anterior"><ChevronLeft size={16} /> Anterior</button><button type="button" className="btn secondary small" onClick={() => movePeriod(1)} aria-label="Periodo siguiente">Siguiente <ChevronRight size={16} /></button></div>}
 
             <SearchSelect value={fOpm} onChange={setFOpm} emptyLabel={t.todosOpm}
               options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name}` }))} />
