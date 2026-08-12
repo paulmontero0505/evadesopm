@@ -23,7 +23,7 @@ function is_multipurpose_operator(?string $puesto): bool
 {
     $puesto = mb_strtoupper(trim((string)$puesto));
     $puesto = strtr($puesto, ['Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U']);
-    return str_contains($puesto, 'OPERARIO') && str_contains($puesto, 'MULTIPROPOSITO');
+    return strpos($puesto, 'OPERARIO') !== false && strpos($puesto, 'MULTIPROPOSITO') !== false;
 }
 
 function require_multipurpose_operator(int $opmId): array
