@@ -595,6 +595,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .relief-delivery-card > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
 .relief-delivery-card strong { font-size: 14px; }
 .relief-delivery-card small, .relief-delivery-card em { overflow: hidden; color: var(--muted); font-size: 12px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.relief-delivery-card .relief-delivery-age { color: #486482; }
 .relief-delivery-card em { color: #486482; }
 .relief-delivery-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--blue-tint); color: var(--blue); }
 .catalog-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 10px; }

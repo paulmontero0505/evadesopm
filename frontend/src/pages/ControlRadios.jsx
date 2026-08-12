@@ -48,6 +48,17 @@ const addDays = (dateStr, days) => {
 };
 const EMPTY = { supervisor_id: "", nave: "", comments: "" };
 
+function deliveryAge(createdAt, workDate) {
+  const date = String(createdAt || workDate || "").slice(0, 10);
+  if (!date) return "";
+  const created = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.max(0, Math.floor((today - created) / 86400000));
+  const formatted = created.toLocaleDateString("es-PE");
+  return `Creado: ${formatted} · ${days === 0 ? "Hoy" : `${days} día${days === 1 ? "" : "s"} transcurrido${days === 1 ? "" : "s"}`}`;
+}
+
 function recordState(record) {
   if (record.state) return record.state;
   if (record.returned_at) return "Devuelto a Tool Room";
@@ -1592,6 +1603,12 @@ function FlexibleGroupedReliefPanel({
                       {group.first.nave || "Sin nave registrada"} ·{" "}
                       {group.records.length} radio
                       {group.records.length === 1 ? "" : "s"}
+                    </small>
+                    <small className="relief-delivery-age">
+                      {deliveryAge(
+                        group.first.created_at,
+                        group.first.work_date,
+                      )}
                     </small>
                     <em>{Number(group.first.current_supervisor_id || group.first.supervisor_id) !== Number(group.first.supervisor_id) ? `Reasignado: ${group.first.supervisor_name} → ${group.first.current_supervisor_name}` : `Responsable: ${group.first.current_supervisor_name || group.first.supervisor_name}`}</em>
                   </span>
