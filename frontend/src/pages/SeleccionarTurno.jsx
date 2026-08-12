@@ -8,6 +8,7 @@ import { useShift } from '../shift.jsx'
 import { T, turnoText, useLang } from '../i18n.js'
 
 const SUPERVISOR_DEFAULT_PUESTO = 'OPERARIO DE PUERTO MULTIPROPOSITO'
+const ROLES_WITHOUT_REQUIRED_SELECTION = ['admin', 'supervisor', 'labor', 'coordinator']
 
 export default function SeleccionarTurno() {
   const { user, logout } = useAuth()
@@ -46,6 +47,7 @@ export default function SeleccionarTurno() {
   }, [date, turno, user?.role])
 
   const isAdmin = user?.role === 'admin'
+  const canContinueWithoutSelection = ROLES_WITHOUT_REQUIRED_SELECTION.includes(user?.role)
   const puestos = useMemo(() => [...new Set(members.map((member) => member.puesto || roleLabel(member)).filter(Boolean))].sort(), [members])
   const filtered = useMemo(() => members.filter((member) => {
     const memberPuesto = member.puesto || roleLabel(member)
@@ -95,7 +97,7 @@ export default function SeleccionarTurno() {
       <p className="shift-roster-guide"><span className="turn-state in">IN TURN</span> tiene una función registrada. <span className="turn-state off">OFF TURN</span> puede incorporarse al turno. Quien cubrió el turno anterior queda en descanso obligatorio.</p>
       {loading ? <div className="empty">{t.cargando}</div> : ordered.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>Sin coincidencias</strong><span>Pruebe con otro nombre, código o filtro.</span></div></div> : <div className="home-assignments-list shift-roster-list">{ordered.map((member) => <label className={`home-assignment shift-roster-item${member.worked_previous_turn ? ' is-resting' : ''}`} key={memberKey(member)}><input type="checkbox" checked={selected.has(memberKey(member))} disabled={member.worked_previous_turn} onChange={(event) => toggle(member, event.target.checked)} /><div className="shift-roster-copy"><div className="shift-roster-titleline"><strong>{member.full_name}</strong><span className="shift-roster-indicators">{isBirthday(member.fecha_nacimiento, date) && <span className="birthday-icon" title="Cumpleaños"><PartyPopper size={17} /></span>}<span className={`turn-state ${member.in_turn ? 'in' : 'off'}`}>{member.in_turn ? 'IN TURN' : 'OFF TURN'}</span></span></div><span>{member.code ? `${member.code} · ` : ''}{member.puesto || roleLabel(member) || t.sinPuesto}</span>{member.in_turn && <small>{member.funcion_1 || t.sinFuncion}{member.zona_1 ? ` · ${member.zona_1}` : ''}{member.nave ? ` · ${member.nave}` : ''}</small>}{member.worked_previous_turn && <small className="resting-note">No disponible: cubrió el turno anterior (máximo 12 horas).</small>}</div></label>)}</div>}
     </section>
-    <button className="btn shift-confirm" disabled={(!isAdmin && selected.size === 0) || saving} onClick={confirmar}>{saving ? 'Guardando selección...' : selected.size ? `Confirmar y continuar con ${selected.size} seleccionado${selected.size !== 1 ? 's' : ''}` : isAdmin ? t.continuarSinColaboradores : t.seleccioneColaborador}</button>
+    <button className="btn shift-confirm" disabled={(!canContinueWithoutSelection && selected.size === 0) || saving} onClick={confirmar}>{saving ? 'Guardando selección...' : selected.size ? `Confirmar y continuar con ${selected.size} seleccionado${selected.size !== 1 ? 's' : ''}` : canContinueWithoutSelection ? t.continuarSinColaboradores : t.seleccioneColaborador}</button>
   </main></>
 }
 
