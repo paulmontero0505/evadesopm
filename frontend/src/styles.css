@@ -603,7 +603,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-catalog-row { align-items: center; }
 .radio-catalog-status { width: 175px; min-height: 38px; margin: 0; padding: 6px 8px; font-size: 12px; }
 .radio-location-report .list-row { margin-bottom: 8px; }
-.radio-location-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, .45fr) auto; gap: 8px; margin: 16px 0; }
+.radio-location-filters { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(170px, .45fr)); gap: 8px; margin: 16px 0; }
 .radio-location-filters .input, .radio-location-filters .btn { margin: 0; }
 .radio-location-filters .search-box { margin: 0; }
 .radio-location-filters .btn { width: auto; white-space: nowrap; }

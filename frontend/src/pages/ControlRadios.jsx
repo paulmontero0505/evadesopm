@@ -914,7 +914,7 @@ function RadioLocationsReport() {
   });
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
-  const [filters, setFilters] = useState({ q: "", status: "" });
+  const [operationalStatus, setOperationalStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
@@ -924,7 +924,7 @@ function RadioLocationsReport() {
     setLoading(true);
     setError("");
     api
-      .radioLocations(filters)
+      .radioLocations({ q: query.trim(), status, operational: operationalStatus })
       .then((result) => {
         if (!cancelled) {
           setRecords(result.records || []);
@@ -940,18 +940,17 @@ function RadioLocationsReport() {
     return () => {
       cancelled = true;
     };
-  }, [filters]);
-
-  function searchLocations(event) {
-    event.preventDefault();
-    setFilters({ q: query.trim(), status });
-  }
+  }, [query, status, operationalStatus]);
 
   async function downloadReport() {
     setDownloading(true);
     setError("");
     try {
-      await api.downloadRadiosLocationReport(filters);
+      await api.downloadRadiosLocationReport({
+        q: query.trim(),
+        status,
+        operational: operationalStatus,
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -973,7 +972,7 @@ function RadioLocationsReport() {
           <MapPin size={14} /> Excel
         </span>
       </div>
-      <form className="radio-location-filters" onSubmit={searchLocations}>
+      <div className="radio-location-filters">
         <div className="search-box">
           <Search className="search-icon" size={18} />
           <input
@@ -993,10 +992,17 @@ function RadioLocationsReport() {
           <option value="Excelente Estado">Excelente estado</option>
           <option value="Con observaciones">Con observaciones</option>
         </select>
-        <button className="btn secondary" type="submit">
-          <Search size={16} /> Buscar estado
-        </button>
-      </form>
+        <select
+          className="input"
+          value={operationalStatus}
+          onChange={(event) => setOperationalStatus(event.target.value)}
+          aria-label="Filtrar por estado operativo"
+        >
+          <option value="">Todos los estados operativos</option>
+          <option value="in_operations">En operaciones</option>
+          <option value="available">Disponible</option>
+        </select>
+      </div>
       {error && (
         <div className="error" role="alert">
           {error}

@@ -174,8 +174,8 @@ export const api = {
   updateRadio: (id, payload) => request(`/radios/catalog/${id}`, { method: 'PUT', body: payload }),
   deleteRadio: (id) => request(`/radios/catalog/${id}`, { method: 'DELETE' }),
   downloadRadiosTemplate: () => downloadFile('/radios/catalog/template', 'plantilla_radios.xlsx'),
-  radioLocations: ({ q = '', status = '' } = {}) => request(`/radios/locations?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}`),
-  downloadRadiosLocationReport: ({ q = '', status = '' } = {}) => downloadFile(`/radios/catalog/report?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}`, 'reporte_ubicaciones_radios.xlsx'),
+  radioLocations: ({ q = '', status = '', operational = '' } = {}) => request(`/radios/locations?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&operational=${encodeURIComponent(operational)}`),
+  downloadRadiosLocationReport: ({ q = '', status = '', operational = '' } = {}) => downloadFile(`/radios/catalog/report?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&operational=${encodeURIComponent(operational)}`, 'reporte_ubicaciones_radios.xlsx'),
   importRadios: (file) => { const fd = new FormData(); fd.append('file', file); return upload('/radios/catalog/import', fd) },
   createRadioAssignment: (payload, photo) => {
     const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); if (photo) fd.append('radio_photo', photo)
