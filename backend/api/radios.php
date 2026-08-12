@@ -425,5 +425,7 @@ function handle_radio_daily_report(): void {
     require_role(['admin', 'supervisor', 'coordinator']);
     $date = $_GET['date'] ?? ''; $turno = $_GET['turno'] ?? '';
     if (!radio_shift_is_valid($date, $turno)) json_error('Fecha o turno inválido.', 422);
-    json_response(['records' => radio_daily_report($date, $turno)]);
+    $total = (int)db()->query("SELECT COUNT(*) FROM radios WHERE active=1")->fetchColumn();
+    $inOperations = (int)db()->query("SELECT COUNT(DISTINCT radio_id) FROM radio_assignments WHERE returned_at IS NULL")->fetchColumn();
+    json_response(['records' => radio_daily_report($date, $turno), 'total_radios' => $total, 'in_operations' => $inOperations]);
 }
