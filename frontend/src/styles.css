@@ -592,6 +592,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .relief-delivery-card > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
 .relief-delivery-card strong { font-size: 14px; }
 .relief-delivery-card small, .relief-delivery-card em { overflow: hidden; color: var(--muted); font-size: 12px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.relief-delivery-card em { color: #486482; }
 .relief-delivery-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--blue-tint); color: var(--blue); }
 .catalog-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 10px; }
 .catalog-tools .input { margin: 0; }
@@ -629,6 +630,10 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-module-icon.report { color: #6d28d9; background: #f1e7ff; }
 .radio-module-card.active .radio-module-icon.report { color: #fff; background: #6d28d9; }
 .report-actions { display: flex; gap: 8px; margin: 12px 0 16px; }
+.trace-movement-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.trace-movement-summary > div { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
+.trace-movement-summary strong { color: var(--navy); font-size: 12px; }
+.trace-movement-summary span { color: var(--muted); font-size: 11px; }
 .trace-report { margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
 .trace-report-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .trace-report-header h2 { margin: 0; color: var(--navy); font-size: 15px; }
@@ -681,6 +686,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
   .radio-form-actions { flex-direction: column-reverse; }
   .radio-module-cards { grid-template-columns: 1fr; }
   .radio-indicators { grid-template-columns: 1fr; }
+  .trace-movement-summary { grid-template-columns: 1fr; }
   .delivery-report-meta { grid-template-columns: 1fr; }
   .delivery-report-radios { margin-inline: -2px; }
   .catalog-tools { grid-template-columns: 1fr; }

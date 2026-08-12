@@ -1304,11 +1304,7 @@ function FlexibleGroupedReliefPanel({
                       {group.records.length} radio
                       {group.records.length === 1 ? "" : "s"}
                     </small>
-                    <em>
-                      Responsable:{" "}
-                      {group.first.current_supervisor_name ||
-                        group.first.supervisor_name}
-                    </em>
+                    <em>{Number(group.first.current_supervisor_id || group.first.supervisor_id) !== Number(group.first.supervisor_id) ? `Reasignado: ${group.first.supervisor_name} → ${group.first.current_supervisor_name}` : `Responsable: ${group.first.current_supervisor_name || group.first.supervisor_name}`}</em>
                   </span>
                   <Radio size={18} />
                 </button>
@@ -1553,6 +1549,21 @@ function DailyRadioReport({ date, turno }) {
     }),
     [records],
   );
+  const movementSummary = useMemo(() => {
+    const returned = records.filter((record) => record.movement === "Devuelto a Tool Room");
+    const reassigned = records.filter((record) => record.movement === "Reasignado");
+    const returnBy = Object.entries(returned.reduce((all, record) => {
+      const name = record.returned_by_name || record.previous_supervisor_name || "Sin responsable";
+      all[name] = (all[name] || 0) + 1;
+      return all;
+    }, {}));
+    const reassignedTo = Object.entries(reassigned.reduce((all, record) => {
+      const route = `${record.previous_supervisor_name || "Tool Room"} → ${record.current_supervisor_name || "Tool Room"}`;
+      all[route] = (all[route] || 0) + 1;
+      return all;
+    }, {}));
+    return { returned, reassigned, returnBy, reassignedTo };
+  }, [records]);
 
   function printReport() {
     setPrinting(true);
@@ -1641,6 +1652,7 @@ function DailyRadioReport({ date, turno }) {
           <span>Pendiente devolución</span>
         </div>
       </section>
+      {(movementSummary.returned.length > 0 || movementSummary.reassigned.length > 0) && <section className="trace-movement-summary"><div><strong>Devoluciones: {movementSummary.returned.length}</strong>{movementSummary.returnBy.map(([name, count]) => <span key={name}>{name}: {count} radio{count === 1 ? "" : "s"}</span>)}</div><div><strong>Reasignaciones: {movementSummary.reassigned.length}</strong>{movementSummary.reassignedTo.map(([route, count]) => <span key={route}>{route}: {count} radio{count === 1 ? "" : "s"}</span>)}</div></section>}
       <section className="trace-report">
         <div className="trace-report-header">
           <div>
