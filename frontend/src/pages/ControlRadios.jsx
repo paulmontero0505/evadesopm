@@ -1555,14 +1555,7 @@ function FlexibleGroupedReliefPanel({
   const [savingId, setSavingId] = useState(null);
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState("");
-  const visible =
-    user?.role === "supervisor"
-      ? records.filter(
-          (record) =>
-            Number(record.current_supervisor_id || record.supervisor_id) ===
-            Number(user.id),
-        )
-      : records;
+  const visible = records;
   const groups = useMemo(
     () =>
       Object.values(
