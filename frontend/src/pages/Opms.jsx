@@ -39,10 +39,7 @@ export default function Opms() {
     return byStatus.filter((o) =>
       [o.code, o.full_name, o.puesto, o.dni, o.telefono, o.email_personal, o.team].some((v) => (v || '').toLowerCase().includes(term)))
   }, [opms, q, status])
-  const activePeople = useMemo(() => [
-    ...opms.filter((opm) => Number(opm.active)),
-    ...users.filter((user) => Number(user.active) && ['supervisor', 'coordinator'].includes(user.role)),
-  ], [opms, users])
+  const activePeople = useMemo(() => opms.filter((opm) => Number(opm.active)), [opms])
   const cargoCounts = useMemo(() => Object.entries(activePeople.reduce((counts, person) => {
     const cargo = person.puesto?.trim() || (person.role === 'coordinator' ? 'Coordinador' : person.role === 'supervisor' ? 'Supervisor' : 'Sin cargo registrado')
     counts[cargo] = (counts[cargo] || 0) + 1

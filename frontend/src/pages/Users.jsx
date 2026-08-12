@@ -29,10 +29,11 @@ export default function Users() {
   const [expanded, setExpanded] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [q, setQ] = useState('')
+  const [collaborators, setCollaborators] = useState([])
   const fileRef = useRef(null)
 
   async function load() {
-    try { const d = await api.users(); setUsers(d.users) } catch (e) { setErr(e.message) }
+    try { const [usersData, opmsData] = await Promise.all([api.users(), api.opms()]); setUsers(usersData.users); setCollaborators((opmsData.opms || []).filter((opm) => opm.active)) } catch (e) { setErr(e.message) }
   }
   useEffect(() => { load() }, [])
 
@@ -69,6 +70,16 @@ export default function Users() {
       setForm(EMPTY)
       await load()
     } catch (e) { setErr(e.message) } finally { setBusy(false) }
+  }
+
+  function applyCollaborator(collaborator, target = form, setTarget = setForm) {
+    setTarget({ ...target, employee_number: collaborator.dni || target.employee_number, full_name: collaborator.full_name || target.full_name, code: collaborator.code || '', dni: collaborator.dni || '', fecha_ingreso: collaborator.fecha_ingreso || '', puesto: collaborator.puesto || '', team: collaborator.team || '' })
+  }
+
+  function onDniChange(value, target, setTarget) {
+    const collaborator = collaborators.find((item) => item.dni === value.trim())
+    if (collaborator) applyCollaborator(collaborator, target, setTarget)
+    else setTarget({ ...target, dni: value, employee_number: target.employee_number || value })
   }
 
   function startEdit(u) {
@@ -154,8 +165,7 @@ export default function Users() {
             </div>
           </div>
           <label>{t.nombreCompleto}</label>
-          <input className="input" value={form.full_name}
-                 onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+          <CollaboratorPicker collaborators={collaborators} value={form.full_name} onSelect={(collaborator) => applyCollaborator(collaborator)} onChange={(value) => setForm({ ...form, full_name: value })} />
           <label>{t.contrasena}</label>
           <input className="input" type="text" value={form.password}
                  onChange={(e) => setForm({ ...form, password: e.target.value })} />
@@ -164,8 +174,7 @@ export default function Users() {
           <input className="input" value={form.code}
                  onChange={(e) => setForm({ ...form, code: e.target.value })} />
           <label>{t.dni}</label>
-          <input className="input" value={form.dni}
-                 onChange={(e) => setForm({ ...form, dni: e.target.value })} />
+          <input className="input" value={form.dni} onChange={(e) => onDniChange(e.target.value, form, setForm)} />
           <label>{t.fechaIngreso}</label>
           <input className="input" type="date" value={form.fecha_ingreso}
                  onChange={(e) => setForm({ ...form, fecha_ingreso: e.target.value })} />
@@ -215,9 +224,8 @@ export default function Users() {
                 </select>
               </div>
             </div>
-            <label>{t.nombreCompleto}</label>
-            <input className="input" value={edit.full_name}
-                   onChange={(e) => setEdit({ ...edit, full_name: e.target.value })} />
+             <label>{t.nombreCompleto}</label>
+             <CollaboratorPicker collaborators={collaborators} value={edit.full_name} onSelect={(collaborator) => applyCollaborator(collaborator, edit, setEdit)} onChange={(value) => setEdit({ ...edit, full_name: value })} />
             <label>{t.nuevaContrasena}</label>
             <input className="input" type="text" placeholder={t.dejarVacio}
                    value={edit.password}
@@ -227,8 +235,7 @@ export default function Users() {
             <input className="input" value={edit.code}
                    onChange={(e) => setEdit({ ...edit, code: e.target.value })} />
             <label>{t.dni}</label>
-            <input className="input" value={edit.dni}
-                   onChange={(e) => setEdit({ ...edit, dni: e.target.value })} />
+             <input className="input" value={edit.dni} onChange={(e) => onDniChange(e.target.value, edit, setEdit)} />
             <label>{t.fechaIngreso}</label>
             <input className="input" type="date" value={edit.fecha_ingreso}
                    onChange={(e) => setEdit({ ...edit, fecha_ingreso: e.target.value })} />
@@ -280,4 +287,10 @@ export default function Users() {
       </div>
     </>
   )
+}
+
+function CollaboratorPicker({ collaborators, value, onSelect, onChange }) {
+  const [open, setOpen] = useState(false)
+  const matches = value.trim() ? collaborators.filter((item) => item.full_name.toLowerCase().includes(value.trim().toLowerCase())).slice(0, 12) : []
+  return <div className="search-picker"><div className="search-picker-input"><Search size={16} /><input className="input" value={value} onFocus={() => setOpen(true)} onChange={(event) => { onChange(event.target.value); setOpen(true) }} onBlur={() => setTimeout(() => setOpen(false), 120)} placeholder="Escriba el nombre del colaborador" autoComplete="off" /></div>{open && matches.length > 0 && <div className="search-picker-menu">{matches.map((item) => <button type="button" key={item.id} onMouseDown={(event) => { event.preventDefault(); onSelect(item); setOpen(false) }}>{item.full_name} · {item.dni || 'Sin DNI'}</button>)}</div>}</div>
 }
