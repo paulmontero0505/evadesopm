@@ -1761,7 +1761,7 @@ function DailyRadioReport({ date, turno, user }) {
                 {records.map((record) => (
                   <tr key={record.id}>
                     <td>
-                      <strong>{record.radio_code}</strong>
+                      <strong>RADIO {record.radio_code}</strong>
                       {record.assigned_puesto ? (
                         <small>{record.assigned_puesto}</small>
                       ) : null}

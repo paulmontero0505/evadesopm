@@ -964,8 +964,8 @@ body.login-bg, body.login-bg .app { background: #fff; }
   body.trace-printing .trace-report-header p { color: #111; font-size: 8.5pt; margin: 0; }
   body.trace-printing .trace-movement-summary { margin: 14px 0; gap: 18px; }
   body.trace-printing .trace-movement-summary > div { padding: 12px 10px; box-shadow: none; border-color: #9aa5b5; gap: 6px; }
-  body.trace-printing .trace-signatures { margin-top: 30px; gap: 60px; }
-  body.trace-printing .trace-signature { padding-top: 40px; gap: 6px; }
+  body.trace-printing .trace-signatures { margin-top: 34px; gap: 64px; }
+  body.trace-printing .trace-signature { padding-top: 70px; gap: 7px; }
   body.trace-printing .trace-signature strong { font-size: 9.5pt; color: #111; }
   body.trace-printing .trace-signature span { font-size: 8.5pt; color: #111; }
   body.trace-printing .trace-signature-line { border-top: 1.5px solid #111; margin-bottom: 8px; }
