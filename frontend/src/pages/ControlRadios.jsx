@@ -741,7 +741,6 @@ export default function ControlRadios() {
             onReload={load}
             detailOpen={reliefDetailOpen}
             onDetailChange={setReliefDetailOpen}
-            date={shift.date}
           />
         )}
         {module === "report" && (
@@ -1175,7 +1174,6 @@ function FlexibleGroupedReliefPanel({
   onReload,
   detailOpen,
   onDetailChange,
-  date,
 }) {
   const [activeGroupKey, setActiveGroupKey] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
@@ -1304,7 +1302,7 @@ function FlexibleGroupedReliefPanel({
               {groups.map((group) => (
                 <button
                   type="button"
-                  className={`relief-delivery-card${group.records.some((record) => record.movement === "Pendiente en custodia" && !String(record.movement_at || "").startsWith(date)) ? " needs-attention" : ""}`}
+                  className={`relief-delivery-card${group.records.some((record) => Number(record.current_supervisor_id || record.supervisor_id) === Number(record.supervisor_id)) ? " needs-attention" : ""}`}
                   key={group.key}
                   onClick={() => {
                     setActiveGroupKey(group.key);
@@ -1702,7 +1700,7 @@ function DailyRadioReport({ date, turno }) {
                       </span>
                     </td>
                     <td>
-                      <span className={`movement-badge movement-${movementClass(record.movement)}${record.movement === "Pendiente en custodia" && !String(record.movement_at || "").startsWith(selDate) ? " needs-movement" : ""}`}>
+                      <span className={`movement-badge movement-${movementClass(record.movement)}`}>
                         {record.movement}
                       </span>
                     </td>
