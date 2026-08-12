@@ -7,6 +7,8 @@ import TopBar from '../components/TopBar.jsx'
 import { useShift } from '../shift.jsx'
 import { T, turnoText, useLang } from '../i18n.js'
 
+const SUPERVISOR_DEFAULT_PUESTO = 'OPERARIO DE PUERTO MULTIPROPOSITO'
+
 export default function SeleccionarTurno() {
   const { user, logout } = useAuth()
   const { shift, setShift, clearShift } = useShift()
@@ -27,7 +29,7 @@ export default function SeleccionarTurno() {
 
   useEffect(() => {
     let active = true
-    setLoading(true); setError(''); setFilterText(''); setPuesto(''); setOnlyInTurn(false); setOnlyBirthday(false)
+    setLoading(true); setError(''); setFilterText(''); setPuesto(user?.role === 'supervisor' ? SUPERVISOR_DEFAULT_PUESTO : ''); setOnlyInTurn(user?.role === 'supervisor'); setOnlyBirthday(false)
     api.shiftTeam(date, turno).then((data) => {
       if (!active) return
       const seen = new Set()
@@ -41,7 +43,7 @@ export default function SeleccionarTurno() {
       setSelected(new Set(roster.filter((member) => member.in_turn && !member.worked_previous_turn).map((member) => `${member.person_type}:${member.person_id}`)))
     }).catch((err) => { if (active) { setMembers([]); setError(err.message) } }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [date, turno])
+  }, [date, turno, user?.role])
 
   const isAdmin = user?.role === 'admin'
   const puestos = useMemo(() => [...new Set(members.map((member) => member.puesto || roleLabel(member)).filter(Boolean))].sort(), [members])
