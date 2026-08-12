@@ -408,8 +408,11 @@ function radio_daily_report(string $date, string $turno): array {
     $stmt = db()->prepare(radio_records_sql() . "WHERE ra.id IN ($marks) ORDER BY r.code ASC");
     $stmt->execute($ids);
     $records = $stmt->fetchAll();
-    $movement = db()->prepare("SELECT m.*, from_u.full_name AS from_name, to_u.full_name AS to_name FROM radio_assignment_movements m JOIN users from_u ON from_u.id=m.from_user_id LEFT JOIN users to_u ON to_u.id=m.to_user_id WHERE m.radio_assignment_id IN ($marks) AND m.work_date=? AND m.turno=? ORDER BY m.radio_assignment_id, m.created_at ASC, m.id ASC");
-    $movement->execute([...$ids, $date, $turno]);
+    // Se toma el último movimiento real de cada radio (devolución o reasignación),
+    // sin filtrar por el turno en curso, para reflejar reasignaciones hechas antes
+    // y las devoluciones de este turno aunque luego se haya reasignado.
+    $movement = db()->prepare("SELECT m.*, from_u.full_name AS from_name, to_u.full_name AS to_name FROM radio_assignment_movements m JOIN users from_u ON from_u.id=m.from_user_id LEFT JOIN users to_u ON to_u.id=m.to_user_id WHERE m.radio_assignment_id IN ($marks) ORDER BY m.radio_assignment_id, m.created_at ASC, m.id ASC");
+    $movement->execute($ids);
     $lastByAssignment = [];
     foreach ($movement->fetchAll() as $row) $lastByAssignment[(int)$row['radio_assignment_id']] = $row;
     foreach ($records as &$record) {
