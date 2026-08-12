@@ -123,7 +123,7 @@ function handle_user_create(): void
     if ($emp === '' || $name === '' || $pass === '') {
         json_error('Empleado, nombre y contraseña son obligatorios', 422);
     }
-    if (!in_array($role, ['admin', 'supervisor', 'coordinator'], true)) {
+    if (!in_array($role, ['admin', 'supervisor', 'coordinator', 'labor'], true)) {
         json_error('Rol inválido', 422);
     }
 
@@ -167,7 +167,7 @@ function handle_user_update(int $id): void
     }
     if (isset($b['full_name'])) { $sets[] = 'full_name = ?'; $params[] = trim($b['full_name']); }
     if (isset($b['role'])) {
-        if (!in_array($b['role'], ['admin', 'supervisor', 'coordinator'], true)) {
+        if (!in_array($b['role'], ['admin', 'supervisor', 'coordinator', 'labor'], true)) {
             json_error('Rol inválido', 422);
         }
         $sets[] = 'role = ?'; $params[] = $b['role'];

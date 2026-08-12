@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   employee_number VARCHAR(20)  NOT NULL UNIQUE,
   full_name       VARCHAR(120) NOT NULL,
   password_hash   VARCHAR(255) NOT NULL,
-  role            ENUM('admin','supervisor','coordinator') NOT NULL DEFAULT 'supervisor',
+  role            ENUM('admin','supervisor','coordinator','labor') NOT NULL DEFAULT 'supervisor',
   active          TINYINT(1)   NOT NULL DEFAULT 1,
   -- Se activa cuando administración asigna la clave de un supervisor.
   -- El supervisor puede definir su propia clave en el siguiente inicio de sesión.

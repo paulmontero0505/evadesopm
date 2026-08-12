@@ -151,7 +151,7 @@ export const T = {
 
     // --- Inicio / navegación ---
     appTitulo: 'PortTrack Performance',
-    rolAdmin: 'Administrador', rolSupervisor: 'Supervisor', rolCoordinador: 'Coordinador',
+    rolAdmin: 'Administrador', rolSupervisor: 'Supervisor', rolCoordinador: 'Coordinador', rolLabor: 'Labor',
     turnoBadge: (t, f) => `Turno ${t} (${f})`,
     salir: 'Salir', volver: 'Volver', volverTurno: 'Volver a turno',
     modEval: 'Evaluación (OPM)', modEvalD: 'Evaluación de desenvolvimiento y compromiso',
@@ -377,7 +377,7 @@ export const T = {
 
     // --- Home / navigation ---
     appTitulo: 'PortTrack Performance',
-    rolAdmin: 'Administrator', rolSupervisor: 'Supervisor', rolCoordinador: 'Coordinator',
+    rolAdmin: 'Administrator', rolSupervisor: 'Supervisor', rolCoordinador: 'Coordinator', rolLabor: 'Labor',
     turnoBadge: (t, f) => `${t} shift (${f})`,
     salir: 'Log out', volver: 'Back', volverTurno: 'Back to shift',
     modEval: 'Evaluation (OPM)', modEvalD: 'Performance and commitment evaluation',

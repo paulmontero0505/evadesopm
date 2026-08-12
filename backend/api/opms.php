@@ -5,7 +5,7 @@ require_once __DIR__ . '/../lib/xlsx.php';
 /** GET /opms/template  (admin) — descarga la plantilla Excel (.xlsx) para la carga masiva. */
 function handle_opms_template(): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
     $bytes = xlsx_build_opms_template();
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="plantilla_colaboradores.xlsx"');
@@ -17,7 +17,7 @@ function handle_opms_template(): void
 /** GET /opms/export (admin) — descarga los registros actuales con su estado. */
 function handle_opms_export(): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
     $opms = db()->query('SELECT code, full_name, dni, fecha_ingreso, fecha_nacimiento, telefono, email_personal, puesto, team, active FROM opms ORDER BY code')->fetchAll();
     $bytes = xlsx_build_opms_export($opms);
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -31,7 +31,7 @@ function handle_opms_export(): void
  *  Campo de archivo: "file". Inserta nuevos y actualiza el nombre de los existentes. */
 function handle_opms_import(): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
 
     if (empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
         json_error('No se recibió ningún archivo. Adjunte la plantilla Excel.', 422);
@@ -125,7 +125,7 @@ function handle_opms_list(): void
 /** POST /opms  (admin) { code, full_name, dni?, fecha_ingreso?, puesto?, team? } */
 function handle_opm_create(): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
     $b = json_body();
     $code = trim($b['code'] ?? '');
     $name = trim($b['full_name'] ?? '');
@@ -169,7 +169,7 @@ function handle_opm_create(): void
 /** PUT /opms/{id}  (admin) { code?, full_name?, dni?, fecha_ingreso?, puesto?, team?, active? } */
 function handle_opm_update(int $id): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
     $b = json_body();
     $sets = []; $params = [];
     if (isset($b['full_name']) || isset($b['dni'])) {
@@ -225,7 +225,7 @@ function handle_opm_update(int $id): void
 /** DELETE /opms/{id}  (admin) — si tiene fichas/evaluaciones se desactiva en vez de borrar. */
 function handle_opm_delete(int $id): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
     $stmt = db()->prepare('SELECT id FROM opms WHERE id = ?');
     $stmt->execute([$id]);
     if (!$stmt->fetchColumn()) {

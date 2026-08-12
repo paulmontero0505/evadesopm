@@ -50,7 +50,7 @@ function handle_me(): void
 function handle_change_password(): void
 {
     $user = require_auth();
-    if (!in_array($user['role'], ['supervisor', 'coordinator'], true) || empty($user['password_change_required'])) {
+    if (!in_array($user['role'], ['supervisor', 'coordinator', 'labor'], true) || empty($user['password_change_required'])) {
         json_error('El cambio de contraseña no está disponible para esta cuenta', 403);
     }
 

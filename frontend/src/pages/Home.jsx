@@ -12,7 +12,9 @@ export default function Home() {
   const [lang, , toggleLang] = useLang()
   const nav = useNavigate()
   const t = T[lang]
-  const items = user.role === 'coordinator'
+  const items = user.role === 'labor'
+    ? [{ to: '/admin', i: ShieldCheck, t: t.modAdmin, d: 'Colaboradores y asignación de funciones', c: '#7A5195' }]
+    : user.role === 'coordinator'
     ? [{ to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Registrar y consultar entregas del turno', c: '#EF7D00' }]
     : user.role === 'admin'
       ? [
@@ -29,7 +31,7 @@ export default function Home() {
           { to: '/evaluar', i: Award, t: t.modEvaluar, d: t.modEvaluarD, c: '#EF7D00' },
         ]
 
-  const rolLabel = user.role === 'admin' ? t.rolAdmin : user.role === 'coordinator' ? t.rolCoordinador : t.rolSupervisor
+  const rolLabel = user.role === 'admin' ? t.rolAdmin : user.role === 'coordinator' ? t.rolCoordinador : user.role === 'labor' ? t.rolLabor : t.rolSupervisor
 
   return (
     <>

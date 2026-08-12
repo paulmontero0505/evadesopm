@@ -136,7 +136,7 @@ function handle_assignments_list(): void
 /** GET /assignments/template (admin) */
 function handle_assignments_template(): void
 {
-    require_role(['admin']);
+    require_role(['admin', 'labor']);
     $bytes = xlsx_build_assignments_template();
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="plantilla_asignacion_funciones.xlsx"');
@@ -146,7 +146,7 @@ function handle_assignments_template(): void
 /** POST /assignments/import (admin); admite colaboradores, supervisores y coordinadores en un mismo Excel. */
 function handle_assignments_import(): void
 {
-    $user = require_role(['admin']);
+    $user = require_role(['admin', 'labor']);
     $turno = $_POST['turno'] ?? '';
     if (!in_array($turno, ['dia', 'noche'], true)) json_error('Seleccione el turno para estas asignaciones', 422);
     // La versión actual del frontend envía la fecha seleccionada. Como respaldo para
@@ -192,7 +192,7 @@ function handle_assignments_import(): void
 /** POST /assignments/individual (admin): agrega o actualiza un colaborador en un turno. */
 function handle_assignment_create_individual(): void
 {
-    $user = require_role(['admin']); $b = json_body();
+    $user = require_role(['admin', 'labor']); $b = json_body();
     $opmId = (int)($b['opm_id'] ?? 0); $date = trim($b['date'] ?? ''); $turno = $b['turno'] ?? '';
     if (!$opmId || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !in_array($turno, ['dia', 'noche'], true)) json_error('Seleccione colaborador, fecha y turno válidos.', 422);
     $exists = db()->prepare('SELECT id FROM opms WHERE id=? AND active=1'); $exists->execute([$opmId]);

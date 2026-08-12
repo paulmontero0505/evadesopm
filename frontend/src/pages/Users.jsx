@@ -16,7 +16,7 @@ export default function Users() {
   const { user: me } = useAuth()
   const [lang] = useLang()
   const t = T[lang]
-  const ROLES = [['supervisor', t.rolSupervisor], ['coordinator', t.rolCoordinador], ['admin', t.rolAdmin]]
+  const ROLES = [['supervisor', t.rolSupervisor], ['coordinator', t.rolCoordinador], ['labor', t.rolLabor], ['admin', t.rolAdmin]]
   const [users, setUsers] = useState([])
   const [err, setErr] = useState('')
   const [msg, setMsg] = useState('')
