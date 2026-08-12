@@ -419,6 +419,29 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .turn-state.in { color: #08743f; background: #e2f6e9; }
 .turn-state.off { color: #607189; background: #edf1f6; }
 .shift-in-turn-summary { display: block; margin-top: 10px; color: #526b88; font-size: 12px; }
+.shift-page {
+  height: calc(100vh - 74px); display: flex; flex-direction: column; overflow: hidden;
+  padding-top: 14px; padding-bottom: 14px;
+}
+.shift-setup {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;
+  padding: 13px 16px; margin-bottom: 12px;
+}
+.shift-setup label { margin-top: 0; }
+.shift-setup .input { min-height: 42px; padding: 9px 11px; }
+.shift-page .shift-opm-list { display: flex; flex: 1; min-height: 0; flex-direction: column; margin-top: 14px; }
+.shift-page .shift-selection-heading { margin-bottom: 8px; }
+.shift-page .shift-selection-heading h2 { font-size: 15px; }
+.shift-page .shift-selection-heading p { font-size: 11px; }
+.shift-page .assignment-selection-tools { margin-bottom: 8px; padding: 8px; }
+.shift-page .shift-roster-guide { margin: 7px 0 9px; font-size: 11.5px; }
+.shift-page .turn-state { padding: 3px 7px; font-size: 10px; }
+.shift-page .shift-roster-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.shift-page .home-assignment.shift-roster-item { min-height: 0; padding: 10px 14px !important; gap: 11px !important; }
+.shift-page .home-assignment.shift-roster-item .shift-roster-copy { gap: 2px; }
+.shift-page .home-assignment.shift-roster-item .shift-roster-copy strong { font-size: 12px; }
+.shift-page .home-assignment.shift-roster-item .shift-roster-copy > span, .shift-page .home-assignment.shift-roster-item .shift-roster-copy small { font-size: 10.5px; }
+.shift-page .shift-confirm { flex: 0 0 auto; margin-top: 10px; min-height: 44px; padding: 10px; }
 .assignment-copy { line-height: 1.45; margin: 0 0 8px; }
 .assignment-actions { margin-top: 14px; }
 .assignment-empty { display: flex; align-items: center; gap: 12px; padding: 20px 14px; color: var(--muted); border: 1px dashed #cbd5e1; border-radius: var(--radius); }
@@ -642,7 +665,11 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
    .radio-catalog-row { grid-template-columns: 1fr; }
    .radio-catalog-actions { justify-content: flex-end; }
   .catalog-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .assignment-picker { flex-direction: column; gap: 0; }
+   .assignment-picker { flex-direction: column; gap: 0; }
+   .shift-page { height: calc(100vh - 70px); padding-top: 10px; padding-bottom: 10px; }
+   .shift-setup { grid-template-columns: 1fr; gap: 8px; padding: 12px; }
+   .shift-page .shift-opm-list { margin-top: 10px; }
+   .shift-page .assignment-selection-tools { gap: 6px; }
   .assignment-actions { flex-direction: column; }
   .assignment-selection-tools { grid-template-columns: 1fr; }
   .shift-selection-heading { align-items: flex-start; }

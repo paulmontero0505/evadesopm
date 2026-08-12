@@ -69,9 +69,9 @@ export default function SeleccionarTurno() {
   }
   async function salir() { clearShift(); await logout(); nav('/login') }
 
-  return <><TopBar title={t.turnoTitulo} onExit={salir} /><main className="content">
+  return <><TopBar title={t.turnoTitulo} onExit={salir} /><main className="content shift-page">
     {error && <div className="error" role="alert">{error}</div>}
-    <section className="card"><label>{t.fecha}</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /><label>{t.turnoTrabajo}</label><select className="input" value={turno} onChange={(event) => setTurno(event.target.value)}><option value="dia">{t.turnoDia}</option><option value="noche">{t.turnoNoche}</option></select></section>
+    <section className="card shift-setup"><div><label>{t.fecha}</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div><div><label>{t.turnoTrabajo}</label><select className="input" value={turno} onChange={(event) => setTurno(event.target.value)}><option value="dia">{t.turnoDia}</option><option value="noche">{t.turnoNoche}</option></select></div></section>
     <section className="shift-opm-list" aria-labelledby="shift-roster-title">
       <div className="assignment-list-heading shift-selection-heading"><div><h2 id="shift-roster-title">Equipo del turno</h2><p>{date} · {turnoText(turno, lang)} · Seleccione todo el personal o filtre por cargo.</p></div><span className="shift-selection-count"><UsersRound size={15} /> <strong>{selected.size}</strong> seleccionados</span></div>
       <div className="assignment-selection-tools"><select className="input" aria-label="Filtrar por cargo" value={puesto} onChange={(event) => setPuesto(event.target.value)}><option value="">Todos los cargos</option>{puestos.map((item) => <option key={item} value={item}>{item}</option>)}</select><label className="shift-search"><Search size={17} /><input type="text" className="input" placeholder="Buscar por nombre, código o cargo" value={filterText} onChange={(event) => setFilterText(event.target.value)} /></label><label className="assignment-select-all"><input type="checkbox" checked={allSelected} onChange={(event) => toggleAll(event.target.checked)} disabled={!selectable.length} /><span>Seleccionar todos ({selectable.length})</span></label></div>
