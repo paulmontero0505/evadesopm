@@ -202,7 +202,7 @@ function handle_radio_movements(): void {
     $ids = array_values(array_unique(array_filter(array_map('intval', is_array($b['assignment_ids'] ?? null) ? $b['assignment_ids'] : []))));
     $action = $b['action'] ?? ''; $targetId = (int)($b['target_user_id'] ?? 0); $comments = mb_substr(trim($b['comments'] ?? ''), 0, 1000) ?: null;
     if (!$ids || !in_array($action, ['return','reassign'], true)) json_error('Seleccione radios y la acción a registrar.', 422);
-    if ($action === 'return' && $targetId) { $check = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $check->execute([$targetId]); if (!$check->fetchColumn()) json_error('El supervisor o coordinador seleccionado no existe o está inactivo.', 422); }
+    if ($action === 'return' && $targetId) { $check = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role='coordinator'"); $check->execute([$targetId]); if (!$check->fetchColumn()) json_error('Seleccione un coordinador activo para recibir la devolución en Tool Room.', 422); }
     $marks = implode(',', array_fill(0, count($ids), '?')); $stmt = db()->prepare("SELECT * FROM radio_assignments WHERE id IN ($marks) AND returned_at IS NULL"); $stmt->execute($ids); $rows = $stmt->fetchAll();
     if (count($rows) !== count($ids)) json_error('Uno de los radios ya fue devuelto o no existe.', 422);
     foreach ($rows as $row) if ($me['role'] === 'supervisor' && (int)($row['current_supervisor_id'] ?: $row['supervisor_id']) !== (int)$me['id']) json_error('Solo puede gestionar radios bajo su responsabilidad.', 403);

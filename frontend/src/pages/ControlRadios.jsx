@@ -1455,13 +1455,9 @@ function FlexibleGroupedReliefPanel({
             <option value="return">Registrar devolución</option>
             <option value="reassign">Reasignar al siguiente turno</option>
           </select>
-          <label>
-            {action === "return"
-              ? "Supervisor que recibe la devolución"
-              : "Responsable del siguiente turno"}
-          </label>
+          <label>{action === "return" ? "Coordinador que recibe en Tool Room" : "Responsable del siguiente turno"}</label>
           <SearchablePicker
-            items={nextSupervisors.map((item) => ({
+            items={nextSupervisors.filter((item) => action !== "return" || item.role === "coordinator").map((item) => ({
               ...item,
               id: item.user_id,
             }))}
@@ -1471,7 +1467,7 @@ function FlexibleGroupedReliefPanel({
               `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"} · ${Number(item.in_turn) ? "En turno" : "Fuera de turno"}`
             }
             searchOf={(item) => `${item.full_name} ${item.role}`}
-            placeholder="Buscar supervisor o coordinador"
+            placeholder={action === "return" ? "Buscar coordinador" : "Buscar supervisor o coordinador"}
           />
           <label>Comentarios</label>
           <textarea
@@ -1504,6 +1500,7 @@ function DailyRadioReport({ date, turno }) {
   const [selDate, setSelDate] = useState(date);
   const [selTurno, setSelTurno] = useState(turno);
   const [records, setRecords] = useState([]);
+  const [reportMeta, setReportMeta] = useState({ total_radios: 0, in_operations: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [printing, setPrinting] = useState(false);
@@ -1520,7 +1517,7 @@ function DailyRadioReport({ date, turno }) {
     api
       .radioDailyReport(selDate, selTurno)
       .then((res) => {
-        if (!cancelled) setRecords(res.records || []);
+        if (!cancelled) { setRecords(res.records || []); setReportMeta({ total_radios: Number(res.total_radios) || 0, in_operations: Number(res.in_operations) || 0 }); }
       })
       .catch((err) => {
         if (!cancelled) setError(err.message);
@@ -1535,19 +1532,11 @@ function DailyRadioReport({ date, turno }) {
 
   const stats = useMemo(
     () => ({
-      total: records.length,
-      entregado: records.filter((record) => record.movement === "Entregado")
-        .length,
-      devuelto: records.filter(
-        (record) => record.movement === "Devuelto a Tool Room",
-      ).length,
-      pendienteDevolucion: records.filter(
-        (record) => record.movement !== "Devuelto a Tool Room",
-      ).length,
-      reasignado: records.filter((record) => record.movement === "Reasignado")
-        .length,
+      total: reportMeta.total_radios,
+      devuelto: records.filter((record) => record.movement === "Devuelto a Tool Room" && String(record.movement_at || "").startsWith(selDate)).length,
+      enOperaciones: reportMeta.in_operations,
     }),
-    [records],
+    [records, reportMeta],
   );
   const movementSummary = useMemo(() => {
     const returned = records.filter((record) => record.movement === "Devuelto a Tool Room");
@@ -1585,6 +1574,7 @@ function DailyRadioReport({ date, turno }) {
 
   return (
     <section className="trace-report-sheet">
+      <img className="trace-print-logo" src="./img/logo.png" alt="COSCO Shipping" />
       <div className="assignment-list-heading no-print">
         <div>
           <h2>Reporte diario de trazabilidad de radios</h2>
@@ -1633,23 +1623,15 @@ function DailyRadioReport({ date, turno }) {
       <section className="radio-indicators no-print">
         <div>
           <strong>{stats.total}</strong>
-          <span>Radios en el turno</span>
+          <span>Total de radios</span>
         </div>
         <div>
-          <strong>{stats.entregado}</strong>
-          <span>Entregados</span>
-        </div>
-        <div>
-          <strong>{stats.reasignado}</strong>
-          <span>Reasignados</span>
-        </div>
-        <div className="radio-indicator-return">
           <strong>{stats.devuelto}</strong>
-          <span>Devueltas</span>
+          <span>Devueltas hoy</span>
         </div>
-        <div className="radio-indicator-pending">
-          <strong>{stats.pendienteDevolucion}</strong>
-          <span>Pendiente devolución</span>
+        <div>
+          <strong>{stats.enOperaciones}</strong>
+          <span>En operaciones</span>
         </div>
       </section>
       {(movementSummary.returned.length > 0 || movementSummary.reassigned.length > 0) && <section className="trace-movement-summary"><div><strong>Devoluciones: {movementSummary.returned.length}</strong>{movementSummary.returnBy.map(([name, count]) => <span key={name}>{name}: {count} radio{count === 1 ? "" : "s"}</span>)}</div><div><strong>Reasignaciones: {movementSummary.reassigned.length}</strong>{movementSummary.reassignedTo.map(([route, count]) => <span key={route}>{route}: {count} radio{count === 1 ? "" : "s"}</span>)}</div></section>}
@@ -1700,9 +1682,7 @@ function DailyRadioReport({ date, turno }) {
                       </span>
                     </td>
                     <td>
-                      <span
-                        className={`movement-badge movement-${movementClass(record.movement)}`}
-                      >
+                      <span className={`movement-badge movement-${movementClass(record.movement)}${record.movement === "Pendiente en custodia" && !String(record.movement_at || "").startsWith(selDate) ? " needs-movement" : ""}`}>
                         {record.movement}
                       </span>
                     </td>
