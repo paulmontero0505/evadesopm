@@ -151,7 +151,9 @@ function handle_assignments_import(): void
     // La versión actual del frontend envía la fecha seleccionada. Como respaldo para
     // sesiones que aún tienen el JavaScript anterior en caché, se usa la fecha del servidor.
     $selectedDate = trim($_POST['date'] ?? '') ?: date('Y-m-d');
+    $puesto = mb_substr(trim($_POST['puesto'] ?? ''), 0, 150);
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate)) json_error('Seleccione una fecha válida para estas asignaciones.', 422);
+    if ($puesto === '') json_error('Seleccione el cargo para estas asignaciones.', 422);
     if (empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) json_error('Adjunte la plantilla Excel de asignaciones.', 422);
     $file = $_FILES['file'];
     if ($file['error'] !== UPLOAD_ERR_OK || !preg_match('/\.xlsx$/i', $file['name']) || $file['size'] > 10 * 1024 * 1024) {
@@ -161,7 +163,9 @@ function handle_assignments_import(): void
     catch (Throwable $e) { json_error('No se pudo leer el Excel: ' . $e->getMessage(), 422); }
     if (!$rows) json_error('No se encontraron asignaciones en la plantilla.', 422);
 
-    $opms = db()->query('SELECT id, full_name FROM opms WHERE active = 1')->fetchAll();
+    $opms = db()->prepare('SELECT id, full_name FROM opms WHERE active = 1 AND puesto = ?');
+    $opms->execute([$puesto]);
+    $opms = $opms->fetchAll();
     $opmByName = [];
     foreach ($opms as $opm) $opmByName[assignment_name_key($opm['full_name'])] = (int)$opm['id'];
     $valid = []; $errors = [];
@@ -176,15 +180,15 @@ function handle_assignments_import(): void
     $dates = array_values(array_unique(array_column($valid, 'date')));
     $pdo = db(); $pdo->beginTransaction();
     try {
-        $delete = $pdo->prepare('DELETE FROM opm_assignments WHERE work_date = ? AND turno = ?');
-        foreach ($dates as $date) $delete->execute([$date, $turno]);
+        $delete = $pdo->prepare('DELETE a FROM opm_assignments a JOIN opms o ON o.id=a.opm_id WHERE a.work_date = ? AND a.turno = ? AND o.puesto = ?');
+        foreach ($dates as $date) $delete->execute([$date, $turno, $puesto]);
         $insert = $pdo->prepare(
             'INSERT INTO opm_assignments (opm_id, work_date, turno, funcion_1, funcion_2, zona_1, puesto, nave, nave_2, imported_by)
              VALUES (?,?,?,?,?,?,?,?,?,?)'
         );
         foreach ($valid as $row) $insert->execute([$row['opm_id'], $row['date'], $turno,
             mb_substr(trim($row['funcion_1']), 0, 150) ?: null, mb_substr(trim($row['funcion_2']), 0, 150) ?: null,
-            mb_substr(trim($row['zona_1']), 0, 150) ?: null, mb_substr(trim($row['puesto']), 0, 150) ?: null,
+            mb_substr(trim($row['zona_1']), 0, 150) ?: null, $puesto,
             mb_substr(trim($row['nave']), 0, 150) ?: null, mb_substr(trim($row['nave_2']), 0, 150) ?: null, $user['id']]);
         $pdo->commit();
     } catch (Throwable $e) { $pdo->rollBack(); throw $e; }

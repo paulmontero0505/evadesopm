@@ -38,15 +38,16 @@ function handle_supervisor_assignments_template(): void {
     header('Content-Disposition: attachment; filename="plantilla_asignacion_supervisores.xlsx"'); echo $bytes; exit;
 }
 function handle_supervisor_assignments_import(): void {
-    $me=require_role(['admin']); $date=$_POST['date']??''; $turno=$_POST['turno']??'';
+    $me=require_role(['admin']); $date=$_POST['date']??''; $turno=$_POST['turno']??''; $puesto=mb_substr(trim($_POST['puesto']??''),0,150);
     if (!radio_shift_is_valid($date, $turno) || empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) json_error('Seleccione fecha, turno y plantilla.',422);
+    if ($puesto === '') json_error('Seleccione el cargo para estas asignaciones.',422);
     try { $rows=xlsx_read_assignments($_FILES['file']['tmp_name']); } catch(Throwable $e){ json_error($e->getMessage(),422); }
-    $users=db()->query("SELECT id,full_name FROM users WHERE active=1 AND role IN ('supervisor','coordinator')")->fetchAll();
+    $users=db()->prepare("SELECT id,full_name FROM users WHERE active=1 AND role IN ('supervisor','coordinator') AND puesto=?"); $users->execute([$puesto]); $users=$users->fetchAll();
     $by=[]; foreach($users as $u) $by[mb_strtoupper(trim($u['full_name']))]=(int)$u['id'];
     $pdo=db(); $pdo->beginTransaction(); $valid=0;
-    try { $pdo->prepare('DELETE FROM supervisor_assignments WHERE work_date=? AND turno=?')->execute([$date,$turno]);
+    try { $delete=$pdo->prepare('DELETE a FROM supervisor_assignments a JOIN users u ON u.id=a.user_id WHERE a.work_date=? AND a.turno=? AND u.puesto=?'); $delete->execute([$date,$turno,$puesto]);
       $insert=$pdo->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?)');
-      foreach($rows as $r){$id=$by[mb_strtoupper(trim($r['name']??''))]??null;if(!$id || supervisor_worked_previous_shift((int)$id,$date,$turno))continue;$insert->execute([$id,$date,$turno,$r['funcion_1']?:null,$r['funcion_2']?:null,$r['zona_1']?:null,$r['puesto']?:null,$r['nave']?:null,$r['nave_2']?:null,$me['id']]);$valid++;}
+      foreach($rows as $r){$id=$by[mb_strtoupper(trim($r['name']??''))]??null;if(!$id || supervisor_worked_previous_shift((int)$id,$date,$turno))continue;$insert->execute([$id,$date,$turno,$r['funcion_1']?:null,$r['funcion_2']?:null,$r['zona_1']?:null,$puesto,$r['nave']?:null,$r['nave_2']?:null,$me['id']]);$valid++;}
       $pdo->commit(); } catch(Throwable $e){$pdo->rollBack();throw $e;}
     json_response(['ok'=>true,'imported'=>$valid]);
 }
