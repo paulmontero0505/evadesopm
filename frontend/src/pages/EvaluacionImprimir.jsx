@@ -30,12 +30,10 @@ export default function EvaluacionImprimir() {
 
   if (err) return <div className="empty">{err}</div>
   if (!rules || !rulesC || !info) return <div className="empty">{t.cargando}</div>
-  if (!info.evaluation) return <div className="empty">{t.noSaved}</div>
-
   // Los puntajes se recalculan siempre en vivo (info.preview), igual que en la pantalla de
   // Evaluar desempeño — así el PDF nunca queda desactualizado respecto de un guardado previo
   // si después se agregaron, editaron o borraron fichas.
-  const ev = info.evaluation
+  const ev = info.evaluation || {}
   const obj = info.consolidado.obj
   const objC = info.consolidado_compromiso.obj
   const objScore = info.preview.objScore == null ? null : Number(info.preview.objScore)

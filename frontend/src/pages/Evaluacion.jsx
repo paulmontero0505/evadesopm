@@ -256,14 +256,12 @@ function EvaluacionDetalle({ opmId }) {
             <button className="btn orange" disabled={saving} onClick={guardar}>
               {saving ? t.guardando : saved ? t.guardado : t.guardar}
             </button>
-            {saved && (
-              <button className="btn secondary" style={{ marginTop: 8 }}
-                onClick={() => nav(`/evaluar/imprimir/${opmId}?year=${year}&quarter=${quarter}&lang=${lang}`)}>
-                <Printer size={16} /> {t.imprimir}
-              </button>
-            )}
           </>
         )}
+        <button className="btn secondary" style={{ marginTop: 8 }}
+          onClick={() => nav(`/evaluar/imprimir/${opmId}?year=${year}&quarter=${quarter}&lang=${lang}`)}>
+          <Printer size={16} /> {t.imprimir}
+        </button>
       </div>
     </>
   )

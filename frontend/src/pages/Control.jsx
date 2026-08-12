@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, AlertTriangle, Users } from 'lucide-react'
+import { ChevronDown, AlertTriangle, Printer, Users } from 'lucide-react'
 import { api } from '../api.js'
 import { colorNivel, nivel5, currentQuarter } from '../rules.js'
 import { colorNivel as colorNivelC, nivel5 as nivel5C } from '../rulesCompromiso.js'
@@ -167,6 +167,9 @@ export default function Control() {
                     </div>
                   </div>
                   <span className="badge" style={{ background: r.estado.c }}>{estadoLabel(r.estado.t, lang)}</span>
+                  <a className="iconbtn ghost" href={`#/evaluar/imprimir/${r.id}?year=${year}&quarter=${quarter}&lang=${lang}`} target="_blank" rel="noreferrer" aria-label={t.imprimir} title={t.imprimir}>
+                    <Printer size={16} />
+                  </a>
                 </div>
 
                 <div style={{ padding: '0 12px 10px' }}>
