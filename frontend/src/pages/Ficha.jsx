@@ -76,13 +76,16 @@ export default function Ficha() {
   useEffect(() => {
     setLoading(true)
     setErr('')
-    Promise.all([api.rules(), api.opms(), fetchRecords()])
-      .then(([r, opmData]) => {
+    Promise.all([api.rules(), api.opms(), api.shiftTeam(shift.date, shift.turno, 'opms'), fetchRecords()])
+      .then(([r, opmData, team]) => {
         if (!r?.rules || !Array.isArray(r.rules.cargas) || !Array.isArray(r.rules.bloques) || !r.rules.objetivos) {
           throw new Error(t.errorFichaDatos)
         }
         setRules(r.rules)
-        setOpms((opmData.opms || []).filter((opm) => opm.active && isMultipurposeOperator(opm.puesto)))
+        const inTurnById = new Map((team.members || []).map((member) => [Number(member.person_id), Number(member.in_turn) === 1]))
+        setOpms((opmData.opms || [])
+          .filter((opm) => opm.active && isMultipurposeOperator(opm.puesto))
+          .map((opm) => ({ ...opm, in_turn: inTurnById.get(Number(opm.id)) === true })))
       })
       .catch((e) => { setRules(null); setErr(e.message || t.errorFichaCarga) })
       .finally(() => setLoading(false))
@@ -304,7 +307,7 @@ export default function Ficha() {
             <div className="card">
               <label>{t.operario}</label>
               <SearchSelect value={opmId} onChange={setOpmId} placeholder={t.seleccione}
-                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name}` }))} />
+                options={opms.map((o) => ({ value: String(o.id), label: `${o.code} · ${o.full_name} · ${o.in_turn ? 'IN TURN' : 'OFF TURN'}` }))} />
               {opms.length === 0 && <div className="warn-box">No hay colaboradores activos registrados.</div>}
 
               <label>{t.tipoCarga}</label>
