@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Camera,
   ChevronDown,
+  Download,
   FileText,
   MapPin,
   Minus,
@@ -457,6 +458,20 @@ export default function ControlRadios() {
                 </span>
               </button>
             )}
+            {user?.role === "admin" && (
+              <button
+                className="radio-module-card"
+                onClick={() => setModule("locations")}
+              >
+                <span className="radio-module-icon locations">
+                  <MapPin size={22} />
+                </span>
+                <span>
+                  <strong>Reporte de ubicaciones de radios</strong>
+                  <small>Descargar el listado actualizado por ubicación</small>
+                </span>
+              </button>
+            )}
           </nav>
         )}
         {canCreate && module === "deliver" && (
@@ -759,6 +774,7 @@ export default function ControlRadios() {
             user={user}
           />
         )}
+        {module === "locations" && <RadioLocationsReport />}
         {module === "deliver" && (
           <DeliveryReports
             records={reportPeriod === "turno" ? data.records : reportRecords}
@@ -886,6 +902,49 @@ function RadioMultiPicker({ radios, selectedIds, onChange }) {
         </div>
       )}
     </div>
+  );
+}
+
+function RadioLocationsReport() {
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function downloadReport() {
+    setDownloading(true);
+    setError("");
+    try {
+      await api.downloadRadiosLocationReport();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  return (
+    <section className="card radio-location-report">
+      <div className="assignment-list-heading">
+        <div>
+          <h2>Reporte de ubicaciones de radios</h2>
+          <p>
+            Descargue el listado actualizado de radios y su última ubicación
+            registrada.
+          </p>
+        </div>
+        <span className="chip">
+          <MapPin size={14} /> Excel
+        </span>
+      </div>
+      {error && (
+        <div className="error" role="alert">
+          {error}
+        </div>
+      )}
+      <button className="btn" disabled={downloading} onClick={downloadReport}>
+        <Download size={16} />
+        {downloading ? "Generando reporte..." : "Descargar reporte Excel"}
+      </button>
+    </section>
   );
 }
 

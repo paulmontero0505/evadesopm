@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Download, FileSpreadsheet, MapPin, Pencil, Radio, Search, Trash2, Upload, XCircle } from 'lucide-react'
+import { CheckCircle2, Download, MapPin, Pencil, Radio, Search, Trash2, Upload, XCircle } from 'lucide-react'
 import { api } from '../api.js'
 import TopBar from '../components/TopBar.jsx'
 
@@ -11,13 +11,11 @@ export default function RadiosCatalogo() {
   const [form, setForm] = useState(EMPTY)
   const [editing, setEditing] = useState(null)
   const [showForm, setShowForm] = useState(false)
-  const [showReport, setShowReport] = useState(false)
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [saving, setSaving] = useState(false)
   const [importing, setImporting] = useState(false)
-  const [downloading, setDownloading] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const fileRef = useRef(null)
 
@@ -69,10 +67,6 @@ export default function RadiosCatalogo() {
     setDeletingId(radio.id); setError(''); setMessage('')
     try { await api.deleteRadio(radio.id); setMessage(`Radio ${radio.code} eliminado correctamente.`); await load() } catch (err) { setError(err.message) } finally { setDeletingId(null) }
   }
-  async function downloadReport() {
-    setDownloading(true); setError('')
-    try { await api.downloadRadiosLocationReport() } catch (err) { setError(err.message) } finally { setDownloading(false) }
-  }
 
   return <>
     <TopBar title="Registrar radios" to="/admin" />
@@ -112,9 +106,7 @@ export default function RadiosCatalogo() {
         <div className="home-assignments-heading"><div><h2>Inventario de radios</h2><p>Busque, edite, elimine o consulte la última ubicación.</p></div><span className="shift-selection-count"><Radio size={14} />{filtered.length}</span></div>
         <div className="catalog-tools">
           <div className="search-box"><Search className="search-icon" size={18} /><input className="input" placeholder="Buscar solo por código de radio" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-          <button className="btn secondary" disabled={downloading} onClick={() => setShowReport(!showReport)}><FileSpreadsheet size={16} /> Reporte de ubicaciones</button>
         </div>
-        {showReport && <section className="card radio-location-report"><h3>Reporte de ubicaciones</h3><p className="muted assignment-copy">Descargue el listado actualizado de radios y su última ubicación registrada.</p><button className="btn" disabled={downloading} onClick={downloadReport}><Download size={16} /> {downloading ? 'Descargando...' : 'Descargar reporte Excel'}</button></section>}
         {filtered.length === 0 ? <div className="empty"><Radio size={30} /><div>No se encontraron radios.</div></div> : filtered.map((radio) => <article className="assignment-row radio-catalog-row" key={radio.id}>
           <div className="assignment-row-main"><strong>{radio.code}</strong><span>IMEI: {radio.imei} · {radio.model} · Base: {radio.last_location || radio.location || 'Sin ubicación'}</span></div>
           <select className="input radio-catalog-status" value={radio.condition_status || 'Excelente Estado'} onChange={(e) => update(radio, { condition_status: e.target.value })} aria-label={`Estado del radio ${radio.code}`}>{CONDITIONS.map((condition) => <option key={condition}>{condition}</option>)}</select>

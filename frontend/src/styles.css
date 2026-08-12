@@ -552,6 +552,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-module-icon { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: 13px; flex: 0 0 auto; }
 .radio-module-icon.delivery { color: #df7500; background: #fff1df; }
 .radio-module-icon.relief { color: #1666b8; background: #e4f1ff; }
+.radio-module-icon.locations { color: #28745a; background: #e5f5ed; }
 .radio-module-card.active { border-color: #a8c9ef; background: #f7fbff; }
 .radio-module-card.active .radio-module-icon.delivery { color: #fff; background: #df7500; }
 .radio-module-card.active .radio-module-icon.relief { color: #fff; background: #1666b8; }
