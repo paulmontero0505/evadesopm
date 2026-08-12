@@ -167,6 +167,7 @@ export const api = {
   deleteSupervisorAssignment: (id) => request(`/supervisor-assignments/${id}`, { method: 'DELETE' }),
   radioContext: (date, turno) => request(`/radios?date=${date}&turno=${turno}`),
   radioReports: (from, to) => request(`/radios/reports?from=${from}&to=${to}`),
+  radioOverview: () => request('/radios/overview'),
   radioDailyReport: (date, turno) => request(`/radios/reports/daily?date=${date}&turno=${turno}`),
   radiosCatalog: () => request('/radios/catalog'),
   createRadio: (payload) => request('/radios/catalog', { method: 'POST', body: payload }),

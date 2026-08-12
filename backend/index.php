@@ -88,6 +88,7 @@ switch ($r0) {
         if ($r1 === 'assignments' && $method === 'POST') return handle_radio_batch_assignment_create();
         if ($r1 === 'movements' && $method === 'POST') return handle_radio_movements();
         if ($r1 === 'returns' && $method === 'POST') return handle_radio_return();
+        if ($r1 === 'overview' && $method === 'GET') return handle_radio_overview();
         if ($r1 === 'reports' && $r2 === 'daily' && $method === 'GET') return handle_radio_daily_report();
         if ($r1 === 'reports' && $method === 'GET') return handle_radio_reports();
         if ($r1 === '' && $method === 'GET') return handle_radio_context();

@@ -338,6 +338,42 @@ function handle_radio_return(): void {
     json_response(['ok' => true, 'returned' => $total]);
 }
 
+/**
+ * Visión general de todas las entregas con su último estado (Entregado,
+ * Pendiente, Devuelto a Tool Room o Reasignado) y la fecha de su última
+ * actualización. Se usa en los filtros "Pendientes" y "Completadas".
+ */
+function radio_overview(): array {
+    $assignments = db()->query(radio_records_sql() . 'ORDER BY ra.work_date DESC, ra.id DESC')->fetchAll();
+    if (!$assignments) return [];
+    $marks = implode(',', array_fill(0, count($assignments), '?'));
+    $ids = array_map('intval', array_column($assignments, 'id'));
+    $movement = db()->prepare("SELECT m.*, from_u.full_name AS from_name, to_u.full_name AS to_name FROM radio_assignment_movements m JOIN users from_u ON from_u.id=m.from_user_id LEFT JOIN users to_u ON to_u.id=m.to_user_id WHERE m.radio_assignment_id IN ($marks) ORDER BY m.radio_assignment_id, m.created_at ASC, m.id ASC");
+    $movement->execute($ids);
+    $lastByAssignment = [];
+    foreach ($movement->fetchAll() as $row) $lastByAssignment[(int)$row['radio_assignment_id']] = $row;
+    foreach ($assignments as &$record) {
+        $record['state'] = 'Entregado';
+        $record['state_at'] = $record['created_at'] ?: $record['work_date'];
+        $last = $lastByAssignment[(int)$record['id']] ?? null;
+        if ($last) {
+            $record['state_at'] = $last['created_at'];
+            $record['state'] = $last['action'] === 'return' ? 'Devuelto a Tool Room' : 'Reasignado';
+        } elseif ($record['returned_at']) {
+            $record['state'] = 'Devuelto a Tool Room';
+            $record['state_at'] = $record['returned_at'];
+        } else {
+            $record['state'] = 'Pendiente';
+        }
+    }
+    unset($record);
+    return $assignments;
+}
+function handle_radio_overview(): void {
+    require_role(['admin', 'supervisor', 'coordinator']);
+    json_response(['records' => radio_overview()]);
+}
+
 /** Entregas registradas en un rango de fechas (para reportes semanal / mensual). */
 function handle_radio_reports(): void {
     require_role(['admin', 'coordinator']);
