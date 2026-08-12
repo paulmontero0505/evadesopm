@@ -79,6 +79,7 @@ export default function ControlRadios() {
   const [reportPeriod, setReportPeriod] = useState("turno");
   const [reportRecords, setReportRecords] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
+  const [reliefDetailOpen, setReliefDetailOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -384,7 +385,8 @@ export default function ControlRadios() {
         onBack={
           module
             ? () => {
-                setModule(null);
+                if (module === "relief" && reliefDetailOpen) setReliefDetailOpen(false);
+                else setModule(null);
                 setError("");
                 setMessage("");
               }
@@ -737,6 +739,9 @@ export default function ControlRadios() {
             nextSupervisors={data.next_supervisors || []}
             nextShift={data.next_shift}
             onReload={load}
+            detailOpen={reliefDetailOpen}
+            onDetailChange={setReliefDetailOpen}
+            date={shift.date}
           />
         )}
         {module === "report" && (
@@ -1168,6 +1173,9 @@ function FlexibleGroupedReliefPanel({
   nextSupervisors,
   nextShift,
   onReload,
+  detailOpen,
+  onDetailChange,
+  date,
 }) {
   const [activeGroupKey, setActiveGroupKey] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
@@ -1201,8 +1209,18 @@ function FlexibleGroupedReliefPanel({
   const activeRecords = activeGroup?.records || [];
 
   useEffect(() => {
-    if (activeGroupKey && !activeGroup) setActiveGroupKey("");
+    if (activeGroupKey && !activeGroup) {
+      setActiveGroupKey("");
+      onDetailChange(false);
+    }
   }, [activeGroupKey, activeGroup]);
+  useEffect(() => {
+    if (!detailOpen) {
+      setActiveGroupKey("");
+      setSelectedIds([]);
+      setError("");
+    }
+  }, [detailOpen]);
   function toggle(id) {
     setSelectedIds((current) =>
       current.includes(id)
@@ -1286,12 +1304,13 @@ function FlexibleGroupedReliefPanel({
               {groups.map((group) => (
                 <button
                   type="button"
-                  className="relief-delivery-card"
+                  className={`relief-delivery-card${group.records.some((record) => record.movement === "Pendiente en custodia" && !String(record.movement_at || "").startsWith(date)) ? " needs-attention" : ""}`}
                   key={group.key}
                   onClick={() => {
                     setActiveGroupKey(group.key);
                     setSelectedIds([]);
                     setError("");
+                    onDetailChange(true);
                   }}
                 >
                   <span className="relief-delivery-icon">
@@ -1306,7 +1325,7 @@ function FlexibleGroupedReliefPanel({
                     </small>
                     <em>{Number(group.first.current_supervisor_id || group.first.supervisor_id) !== Number(group.first.supervisor_id) ? `Reasignado: ${group.first.supervisor_name} → ${group.first.current_supervisor_name}` : `Responsable: ${group.first.current_supervisor_name || group.first.supervisor_name}`}</em>
                   </span>
-                  <Radio size={18} />
+                  <Radio className="relief-attention-icon" size={18} />
                 </button>
               ))}
             </div>
@@ -1334,6 +1353,7 @@ function FlexibleGroupedReliefPanel({
           setActiveGroupKey("");
           setSelectedIds([]);
           setError("");
+          onDetailChange(false);
         }}
       >
         <Undo2 size={16} /> Ver todas las entregas
@@ -1346,7 +1366,7 @@ function FlexibleGroupedReliefPanel({
               {activeGroup.first.nave ? ` · ${activeGroup.first.nave}` : ""}
             </h2>
             <p>
-              {activeRecords.length} radios asignadas · Responsable:{" "}
+              {activeRecords.length} radios asignadas · Responsable actual:{" "}
               {activeGroup.first.current_supervisor_name ||
                 activeGroup.first.supervisor_name}
             </p>
@@ -1457,7 +1477,7 @@ function FlexibleGroupedReliefPanel({
           </select>
           <label>{action === "return" ? "Coordinador que recibe en Tool Room" : "Responsable del siguiente turno"}</label>
           <SearchablePicker
-            items={nextSupervisors.filter((item) => action !== "return" || item.role === "coordinator").map((item) => ({
+            items={nextSupervisors.filter((item) => (action !== "return" || item.role === "coordinator") && (action !== "reassign" || Number(item.user_id) !== Number(activeGroup.first.current_supervisor_id || activeGroup.first.supervisor_id))).map((item) => ({
               ...item,
               id: item.user_id,
             }))}

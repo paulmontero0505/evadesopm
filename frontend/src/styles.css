@@ -589,6 +589,8 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .relief-record-list .relief-person { margin-top: 10px; padding-top: 9px; }
 .relief-delivery-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 13px; width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 14px; background: var(--card); color: var(--navy); text-align: left; cursor: pointer; box-shadow: var(--shadow-sm); }
 .relief-delivery-card:hover, .relief-delivery-card:focus-visible { border-color: #9dc3f4; background: #f8fbff; outline: none; }
+.relief-delivery-card.needs-attention .relief-attention-icon { animation: relief-attention 1.35s ease-in-out infinite; }
+@keyframes relief-attention { 50% { color: #d17600; transform: scale(1.22); } }
 .relief-delivery-card > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
 .relief-delivery-card strong { font-size: 14px; }
 .relief-delivery-card small, .relief-delivery-card em { overflow: hidden; color: var(--muted); font-size: 12px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
