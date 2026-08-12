@@ -34,7 +34,7 @@ function handle_control_compromiso(): void
     $year = (int)($_GET['year'] ?? date('Y'));
     $quarter = (int)($_GET['quarter'] ?? quarter_of(date('Y-m-d')));
 
-    $opms = db()->query('SELECT id, code, full_name FROM opms WHERE active = 1 ORDER BY code')->fetchAll();
+    $opms = db()->query("SELECT id, code, full_name FROM opms WHERE active = 1 AND UPPER(puesto) LIKE '%OPERARIO%' AND UPPER(puesto) LIKE '%MULTIPROPOSITO%' ORDER BY code")->fetchAll();
     $allFichas = fetch_compromiso_rows($year, $quarter);
 
     $out = [];
@@ -106,13 +106,7 @@ function handle_compromiso_create(): void
         json_error('Turno inválido', 422);
     }
 
-    $opm = db()->prepare('SELECT id, full_name FROM opms WHERE id = ? AND active = 1');
-    $opm->execute([$opmId]);
-    $opmRow = $opm->fetch();
-    if (!$opmRow) {
-        json_error('OPM no encontrado o inactivo', 404);
-    }
-    require_opm_assignment($opmId, $date, $turno);
+    $opmRow = require_multipurpose_operator($opmId);
 
     $year = (int)substr($date, 0, 4);
     $quarter = quarter_of($date);
@@ -299,11 +293,7 @@ function handle_compromiso_update(int $id): void
         json_error('Turno inválido', 422);
     }
 
-    $opm = db()->prepare('SELECT id FROM opms WHERE id = ? AND active = 1');
-    $opm->execute([$opmId]);
-    if (!$opm->fetchColumn()) {
-        json_error('OPM no encontrado o inactivo', 404);
-    }
+    require_multipurpose_operator($opmId);
 
     [$ratings, $comments] = collect_ratings(required_activity_ids_c(), $ratingsIn, $commentsIn);
 

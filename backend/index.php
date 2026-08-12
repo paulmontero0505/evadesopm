@@ -142,6 +142,7 @@ switch ($r0) {
         if ($r1 === 'individual' && $method === 'POST') return handle_assignment_create_individual();
         if ($r1 === 'template' && $method === 'GET') return handle_assignments_template();
         if ($r1 === 'import' && $method === 'POST') return handle_assignments_import();
+        if ($r1 === '' && $method === 'DELETE') return handle_assignments_delete_shift();
         if ($r1 === '' && $method === 'GET') return handle_assignments_list();
         break;
 

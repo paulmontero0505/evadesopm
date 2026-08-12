@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarDays, Download, Search, Upload, UserPlus, UsersRound } from 'lucide-react'
+import { CalendarDays, Download, Search, Trash2, Upload, UserPlus, UsersRound } from 'lucide-react'
 import { api } from '../api.js'
 import { useShift } from '../shift.jsx'
 import TopBar from '../components/TopBar.jsx'
@@ -14,7 +14,7 @@ export default function Asignaciones() {
   const { shift } = useShift(); const [lang] = useLang(); const t = T[lang]
   const [date, setDate] = useState(shift?.date || today()); const [turno, setTurno] = useState(shift?.turno || 'dia')
   const [assignments, setAssignments] = useState([]); const [people, setPeople] = useState([]); const [cargo, setCargo] = useState(''); const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true)
-  const [importing, setImporting] = useState(false); const [downloading, setDownloading] = useState(false); const [error, setError] = useState(''); const [message, setMessage] = useState('')
+  const [importing, setImporting] = useState(false); const [downloading, setDownloading] = useState(false); const [deleting, setDeleting] = useState(false); const [error, setError] = useState(''); const [message, setMessage] = useState('')
   const [showIndividual, setShowIndividual] = useState(false); const [individual, setIndividual] = useState(EMPTY); const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
 
@@ -59,6 +59,15 @@ export default function Asignaciones() {
     setDownloading(true); setError('')
     try { await api.downloadAssignmentsTemplate() } catch (err) { setError(err.message) } finally { setDownloading(false) }
   }
+  async function deleteShiftAssignments() {
+    const total = assignments.length
+    if (!total || !window.confirm(`¿Eliminar las ${total} asignaciones del ${date} para el turno ${turnoText(turno, lang)}? Esta acción no se puede deshacer.`)) return
+    setDeleting(true); setError(''); setMessage('')
+    try {
+      const result = await api.deleteShiftAssignments(date, turno)
+      setMessage(`Se eliminaron ${result.deleted} asignaciones del turno.`); await load()
+    } catch (err) { setError(err.message) } finally { setDeleting(false) }
+  }
   async function saveIndividual(event) {
     event.preventDefault(); const person = people.find((item) => item.person_key === individual.person_key); if (!person) return
     setSaving(true); setError(''); setMessage('')
@@ -73,7 +82,7 @@ export default function Asignaciones() {
     {error && <div className="error" role="alert">{error}</div>}{message && <div className="success">{message}</div>}
     <section className="card assignment-setup"><h3>{t.cargarAsignaciones}</h3><p className="muted assignment-copy">Importe una sola plantilla con colaboradores, supervisores y coordinadores. Solo se actualizan las personas incluidas.</p>
       <div className="assignment-controls"><div><label>Fecha</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div><div><label>Turno de trabajo</label><select className="input" value={turno} onChange={(event) => setTurno(event.target.value)}><option value="dia">{t.turnoDia}</option><option value="noche">{t.turnoNoche}</option></select></div><div><label htmlFor="assignment-cargo">Filtrar cargo</label><select id="assignment-cargo" className="input" value={cargo} onChange={(event) => setCargo(event.target.value)}><option value="">Todos los cargos</option>{cargos.map((item) => <option key={item} value={item}>{item}</option>)}</select></div></div>
-      <div className="row assignment-actions"><button className="btn" disabled={importing} onClick={() => fileRef.current?.click()}><Upload size={16} /> {importing ? 'Importando...' : 'Importar Excel'}</button><button className="btn secondary" onClick={() => setShowIndividual((value) => !value)}><UserPlus size={16} /> {showIndividual ? 'Ocultar registro' : 'Registro individual'}</button><button className="btn secondary" disabled={downloading} onClick={downloadTemplate}><Download size={16} /> {downloading ? 'Descargando...' : 'Exportar plantilla'}</button></div><input ref={fileRef} type="file" accept=".xlsx" hidden onChange={importFile} />
+      <div className="row assignment-actions"><button className="btn" disabled={importing} onClick={() => fileRef.current?.click()}><Upload size={16} /> {importing ? 'Importando...' : 'Importar Excel'}</button><button className="btn secondary" onClick={() => setShowIndividual((value) => !value)}><UserPlus size={16} /> {showIndividual ? 'Ocultar registro' : 'Registro individual'}</button><button className="btn secondary" disabled={downloading} onClick={downloadTemplate}><Download size={16} /> {downloading ? 'Descargando...' : 'Exportar plantilla'}</button><button className="btn danger" disabled={deleting || !assignments.length} onClick={deleteShiftAssignments}><Trash2 size={16} /> {deleting ? 'Eliminando...' : 'Eliminar asignaciones'}</button></div><input ref={fileRef} type="file" accept=".xlsx" hidden onChange={importFile} />
     </section>
     {showIndividual && <IndividualForm form={individual} setForm={setIndividual} people={people} saving={saving} onSubmit={saveIndividual} />}
     <section className="assignment-list assignment-results"><div className="assignment-list-heading"><div><h2>{cargo ? `Asignaciones: ${cargo}` : 'Personal asignado'}</h2><p>{date} · {turnoText(turno, lang)}</p></div><span className="chip"><UsersRound size={14} /> {filteredAssignments.length}</span></div><label className="assignment-search"><Search size={16} /><input className="input" placeholder="Buscar por nombre o cargo" value={search} onChange={(event) => setSearch(event.target.value)} /></label>

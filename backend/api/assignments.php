@@ -133,6 +133,33 @@ function handle_assignments_list(): void
     json_response(['assignments' => $stmt->fetchAll()]);
 }
 
+/** DELETE /assignments?date=YYYY-MM-DD&turno=dia|noche (admin): elimina el personal del turno completo. */
+function handle_assignments_delete_shift(): void
+{
+    require_role(['admin', 'labor']);
+    $date = trim($_GET['date'] ?? '');
+    $turno = $_GET['turno'] ?? '';
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !in_array($turno, ['dia', 'noche'], true)) {
+        json_error('Fecha y turno válidos son obligatorios.', 422);
+    }
+
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $opmDelete = $pdo->prepare('DELETE FROM opm_assignments WHERE work_date=? AND turno=?');
+        $opmDelete->execute([$date, $turno]);
+        $supervisorDelete = $pdo->prepare('DELETE FROM supervisor_assignments WHERE work_date=? AND turno=?');
+        $supervisorDelete->execute([$date, $turno]);
+        $deleted = $opmDelete->rowCount() + $supervisorDelete->rowCount();
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+
+    json_response(['ok' => true, 'deleted' => $deleted]);
+}
+
 /** GET /assignments/template (admin) */
 function handle_assignments_template(): void
 {

@@ -12,11 +12,11 @@ function handle_evaluation_get(int $opmId): void
     $year = (int)($_GET['year'] ?? date('Y'));
     $quarter = (int)($_GET['quarter'] ?? quarter_of(date('Y-m-d')));
 
-    $opmStmt = db()->prepare('SELECT id, code, full_name, puesto FROM opms WHERE id = ?');
+    $opmStmt = db()->prepare('SELECT id, code, full_name, puesto FROM opms WHERE id = ? AND active = 1');
     $opmStmt->execute([$opmId]);
     $opm = $opmStmt->fetch();
-    if (!$opm) {
-        json_error('OPM no encontrado', 404);
+    if (!$opm || !is_multipurpose_operator($opm['puesto'] ?? '')) {
+        json_error('Seleccione un operario multipropósito activo.', 422);
     }
 
     // Desenvolvimiento (70%): fichas de turno (shift_records).
@@ -67,11 +67,7 @@ function handle_evaluation_save(): void
         json_error('OPM, año y trimestre son obligatorios', 422);
     }
 
-    $opmStmt = db()->prepare('SELECT id FROM opms WHERE id = ?');
-    $opmStmt->execute([$opmId]);
-    if (!$opmStmt->fetchColumn()) {
-        json_error('OPM no encontrado', 404);
-    }
+    require_multipurpose_operator($opmId);
 
     $fichas = fetch_shift_rows($year, $quarter, $opmId);
     $allFichas = fetch_shift_rows($year, $quarter);

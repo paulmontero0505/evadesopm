@@ -19,6 +19,24 @@ function fetch_shift_rows(int $year, int $quarter, ?int $opmId = null): array
     return $stmt->fetchAll();
 }
 
+function is_multipurpose_operator(?string $puesto): bool
+{
+    $puesto = mb_strtoupper(trim((string)$puesto));
+    $puesto = strtr($puesto, ['Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U']);
+    return str_contains($puesto, 'OPERARIO') && str_contains($puesto, 'MULTIPROPOSITO');
+}
+
+function require_multipurpose_operator(int $opmId): array
+{
+    $stmt = db()->prepare('SELECT id, full_name, puesto FROM opms WHERE id = ? AND active = 1');
+    $stmt->execute([$opmId]);
+    $opm = $stmt->fetch();
+    if (!$opm || !is_multipurpose_operator($opm['puesto'] ?? '')) {
+        json_error('Seleccione un operario multipropósito activo.', 422);
+    }
+    return $opm;
+}
+
 /** Máximo permitido para la foto del evento de seguridad. */
 const EVENTO_PHOTO_MAX_BYTES = 8 * 1024 * 1024;
 const EVENTO_PHOTO_MIME = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -80,13 +98,7 @@ function handle_shift_create(): void
         json_error('Tipo de carga inválido', 422);
     }
 
-    $opm = db()->prepare('SELECT id, full_name FROM opms WHERE id = ? AND active = 1');
-    $opm->execute([$opmId]);
-    $opmRow = $opm->fetch();
-    if (!$opmRow) {
-        json_error('OPM no encontrado o inactivo', 404);
-    }
-    require_opm_assignment($opmId, $date, $turno);
+    $opmRow = require_multipurpose_operator($opmId);
 
     $year = (int)substr($date, 0, 4);
     $quarter = quarter_of($date);
@@ -250,7 +262,7 @@ function handle_control(): void
     $year = (int)($_GET['year'] ?? date('Y'));
     $quarter = (int)($_GET['quarter'] ?? quarter_of(date('Y-m-d')));
 
-    $opms = db()->query('SELECT id, code, full_name FROM opms WHERE active = 1 ORDER BY code')->fetchAll();
+    $opms = db()->query("SELECT id, code, full_name FROM opms WHERE active = 1 AND UPPER(puesto) LIKE '%OPERARIO%' AND UPPER(puesto) LIKE '%MULTIPROPOSITO%' ORDER BY code")->fetchAll();
     $allFichas = fetch_shift_rows($year, $quarter);
 
     // Denominador de % de muestreo: turnos distintos (fecha+turno) registrados en el período.
@@ -316,11 +328,7 @@ function handle_shift_update(int $id): void
         json_error('Tipo de carga inválido', 422);
     }
 
-    $opm = db()->prepare('SELECT id FROM opms WHERE id = ? AND active = 1');
-    $opm->execute([$opmId]);
-    if (!$opm->fetchColumn()) {
-        json_error('OPM no encontrado o inactivo', 404);
-    }
+    require_multipurpose_operator($opmId);
 
     [$ratings, $comments] = collect_ratings(required_activity_ids($carga, $amarre), $ratingsIn, $commentsIn);
 
