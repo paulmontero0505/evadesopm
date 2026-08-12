@@ -632,10 +632,15 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .radio-module-icon.report { color: #6d28d9; background: #f1e7ff; }
 .radio-module-card.active .radio-module-icon.report { color: #fff; background: #6d28d9; }
 .report-actions { display: flex; gap: 8px; margin: 12px 0 16px; }
-.trace-movement-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.trace-movement-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
 .trace-movement-summary > div { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
 .trace-movement-summary strong { color: var(--navy); font-size: 12px; }
 .trace-movement-summary span { color: var(--muted); font-size: 11px; }
+.trace-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 26px; }
+.trace-signature { display: grid; gap: 4px; text-align: center; }
+.trace-signature strong { color: var(--navy); font-size: 12px; }
+.trace-signature span { color: var(--muted); font-size: 11px; }
+.trace-signature-line { border-top: 1px solid #111; margin-bottom: 6px; }
 .trace-print-logo { display: none; }
 .trace-report { margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
 .trace-report-header { padding: 14px 16px; border-bottom: 1px solid var(--border); }
@@ -942,7 +947,7 @@ body.login-bg, body.login-bg .app { background: #fff; }
   .delivery-report.print-selected .delivery-report-radio-row:nth-child(odd) { background: #e9f0f8; }
   .delivery-report.print-selected .delivery-report-radio-row + .delivery-report-radio-row { border-top: 1px solid #c5ccd6; }
   .delivery-report.print-selected .delivery-report-return { margin: 10px 0 0; border: 1px solid #8290a4; border-radius: 0; background: #f4f7fa; }
-  .delivery-report.print-selected::after, body.trace-printing .trace-report::after { content: "Firma del responsable de entrega                                      Firma del responsable que recibe"; display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid #111; font-size: 8.5pt; text-align: center; white-space: pre; }
+  .delivery-report.print-selected::after { content: "Firma del responsable de entrega                                      Firma del responsable que recibe"; display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid #111; font-size: 8.5pt; text-align: center; white-space: pre; }
   tr, .ph-obs, .ph-alert { break-inside: avoid; }
   @page { size: A4 landscape; margin: 10mm; }
 }
@@ -952,9 +957,13 @@ body.login-bg, body.login-bg .app { background: #fff; }
   body.trace-printing .content > *:not(.trace-report-sheet) { display: none !important; }
   body.trace-printing .trace-report-sheet { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
   body.trace-printing .trace-report-sheet .no-print { display: none !important; }
-  body.trace-printing .trace-print-logo { display: block; width: 190px; height: auto; margin: 0 auto 8px; }
-  body.trace-printing .trace-movement-summary { margin-bottom: 8px; }
+  body.trace-printing .trace-print-logo { display: block; width: 90px; height: auto; margin: 0 0 6px; }
+  body.trace-printing .trace-movement-summary { margin-bottom: 12px; }
   body.trace-printing .trace-movement-summary > div { padding: 6px 8px; box-shadow: none; border-color: #9aa5b5; }
+  body.trace-printing .trace-signatures { margin-top: 24px; gap: 40px; }
+  body.trace-printing .trace-signature strong { font-size: 9pt; color: #111; }
+  body.trace-printing .trace-signature span { font-size: 8pt; color: #111; }
+  body.trace-printing .trace-signature-line { border-top: 1.5px solid #111; margin-bottom: 6px; }
   body.trace-printing .trace-report { box-shadow: none !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
   body.trace-printing .trace-report-header { padding: 7px 10px; border: 1px solid #9aa5b5; border-top: 0; }
   body.trace-printing .trace-report-header h2 { color: #06275d; font-size: 10pt; }

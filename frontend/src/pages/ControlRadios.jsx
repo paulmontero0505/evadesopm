@@ -753,7 +753,11 @@ export default function ControlRadios() {
           />
         )}
         {module === "report" && (
-          <DailyRadioReport date={shift.date} turno={shift.turno} />
+          <DailyRadioReport
+            date={shift.date}
+            turno={shift.turno}
+            user={user}
+          />
         )}
         {module === "deliver" && (
           <DeliveryReports
@@ -1580,7 +1584,7 @@ function FlexibleGroupedReliefPanel({
   );
 }
 
-function DailyRadioReport({ date, turno }) {
+function DailyRadioReport({ date, turno, user }) {
   const [selDate, setSelDate] = useState(date);
   const [selTurno, setSelTurno] = useState(turno);
   const [records, setRecords] = useState([]);
@@ -1623,6 +1627,7 @@ function DailyRadioReport({ date, turno }) {
     [records, reportMeta],
   );
   const movementSummary = useMemo(() => {
+    const entregados = records.filter((record) => record.movement === "Entregado");
     const returned = records.filter((record) => record.movement === "Devuelto a Tool Room");
     const reassigned = records.filter((record) => record.movement === "Reasignado");
     const returnBy = Object.entries(returned.reduce((all, record) => {
@@ -1635,7 +1640,7 @@ function DailyRadioReport({ date, turno }) {
       all[route] = (all[route] || 0) + 1;
       return all;
     }, {}));
-    return { returned, reassigned, returnBy, reassignedTo };
+    return { entregados, returned, reassigned, returnBy, reassignedTo };
   }, [records]);
 
   function printReport() {
@@ -1718,7 +1723,6 @@ function DailyRadioReport({ date, turno }) {
           <span>En operaciones</span>
         </div>
       </section>
-      {(movementSummary.returned.length > 0 || movementSummary.reassigned.length > 0) && <section className="trace-movement-summary"><div><strong>Devoluciones: {movementSummary.returned.length}</strong>{movementSummary.returnBy.map(([name, count]) => <span key={name}>{name}: {count} radio{count === 1 ? "" : "s"}</span>)}</div><div><strong>Reasignaciones: {movementSummary.reassigned.length}</strong>{movementSummary.reassignedTo.map(([route, count]) => <span key={route}>{route}: {count} radio{count === 1 ? "" : "s"}</span>)}</div></section>}
       <section className="trace-report">
         <div className="trace-report-header">
           <div>
@@ -1801,6 +1805,39 @@ function DailyRadioReport({ date, turno }) {
             </div>
           </div>
         )}
+      </section>
+      <section className="trace-movement-summary">
+        <div>
+          <strong>Entregados: {movementSummary.entregados.length}</strong>
+        </div>
+        <div>
+          <strong>Devoluciones: {movementSummary.returned.length}</strong>
+          {movementSummary.returnBy.map(([name, count]) => (
+            <span key={name}>
+              {name}: {count} radio{count === 1 ? "" : "s"}
+            </span>
+          ))}
+        </div>
+        <div>
+          <strong>Reasignaciones: {movementSummary.reassigned.length}</strong>
+          {movementSummary.reassignedTo.map(([route, count]) => (
+            <span key={route}>
+              {route}: {count} radio{count === 1 ? "" : "s"}
+            </span>
+          ))}
+        </div>
+      </section>
+      <section className="trace-signatures">
+        <div className="trace-signature">
+          <span className="trace-signature-line" />
+          <strong>VASQUEZ BRUNO VICTOR ELIAS</strong>
+          <span>JEFE DEL CENTRO DE OPERACIONES</span>
+        </div>
+        <div className="trace-signature">
+          <span className="trace-signature-line" />
+          <strong>{user?.full_name || "______"}</strong>
+          <span>COORDINADOR EQUIPMENT</span>
+        </div>
       </section>
     </section>
   );
