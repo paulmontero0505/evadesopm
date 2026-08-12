@@ -48,6 +48,20 @@ const addDays = (dateStr, days) => {
 };
 const EMPTY = { supervisor_id: "", nave: "", comments: "" };
 
+function dateTimeLabel(value) {
+  if (!value) return "Sin registro";
+  const date = new Date(String(value).replace(" ", "T"));
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleString("es-PE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+}
+
 function deliveryAge(createdAt, workDate) {
   const date = String(createdAt || workDate || "").slice(0, 10);
   if (!date) return "";
@@ -55,8 +69,18 @@ function deliveryAge(createdAt, workDate) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const days = Math.max(0, Math.floor((today - created) / 86400000));
-  const formatted = created.toLocaleDateString("es-PE");
-  return `Creado: ${formatted} · ${days === 0 ? "Hoy" : `${days} día${days === 1 ? "" : "s"} transcurrido${days === 1 ? "" : "s"}`}`;
+  return `${days === 0 ? "Hoy" : `${days} día${days === 1 ? "" : "s"} transcurrido${days === 1 ? "" : "s"}`}`;
+}
+
+function lastUpdatedAt(records) {
+  return records.reduce((latest, record) => {
+    const value = record.last_movement_at || record.created_at || record.work_date;
+    return !latest || String(value) > String(latest) ? value : latest;
+  }, "");
+}
+
+function isToday(value) {
+  return String(value || "").slice(0, 10) === new Date().toISOString().slice(0, 10);
 }
 
 function recordState(record) {
@@ -1647,10 +1671,12 @@ function FlexibleGroupedReliefPanel({
           </div>
           {groups.length ? (
             <div className="relief-delivery-list">
-              {groups.map((group) => (
+              {groups.map((group) => {
+                const updatedAt = lastUpdatedAt(group.records);
+                return (
                 <button
                   type="button"
-                  className={`relief-delivery-card${group.records.some((record) => Number(record.current_supervisor_id || record.supervisor_id) === Number(record.supervisor_id)) ? " needs-attention" : ""}`}
+                  className={`relief-delivery-card${!isToday(updatedAt) ? " needs-attention" : ""}`}
                   key={group.key}
                   onClick={() => {
                     setActiveGroupKey(group.key);
@@ -1670,16 +1696,17 @@ function FlexibleGroupedReliefPanel({
                       {group.records.length === 1 ? "" : "s"}
                     </small>
                     <small className="relief-delivery-age">
-                      {deliveryAge(
-                        group.first.created_at,
-                        group.first.work_date,
-                      )}
+                      Creación: {dateTimeLabel(group.first.created_at || group.first.work_date)} · {deliveryAge(group.first.created_at, group.first.work_date)}
+                    </small>
+                    <small className="relief-delivery-age">
+                      Última actualización: {dateTimeLabel(updatedAt)}
                     </small>
                     <em>{Number(group.first.current_supervisor_id || group.first.supervisor_id) !== Number(group.first.supervisor_id) ? `Reasignado: ${group.first.supervisor_name} → ${group.first.current_supervisor_name}` : `Responsable: ${group.first.current_supervisor_name || group.first.supervisor_name}`}</em>
                   </span>
                   <Radio className="relief-attention-icon" size={18} />
                 </button>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="assignment-empty">
