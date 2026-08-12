@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarDays, Search, UsersRound } from 'lucide-react'
+import { CakeSlice, CalendarDays, Search, UsersRound } from 'lucide-react'
 import { api } from '../api.js'
 import { useAuth } from '../auth.jsx'
 import TopBar from '../components/TopBar.jsx'
@@ -22,10 +22,12 @@ export default function SeleccionarTurno() {
   const [error, setError] = useState('')
   const [filterText, setFilterText] = useState('')
   const [puesto, setPuesto] = useState('')
+  const [onlyInTurn, setOnlyInTurn] = useState(false)
+  const [onlyBirthday, setOnlyBirthday] = useState(false)
 
   useEffect(() => {
     let active = true
-    setLoading(true); setError(''); setFilterText(''); setPuesto('')
+    setLoading(true); setError(''); setFilterText(''); setPuesto(''); setOnlyInTurn(false); setOnlyBirthday(false)
     api.shiftTeam(date, turno).then((data) => {
       if (!active) return
       const roster = (data.members || []).map((member) => ({ ...member, in_turn: Number(member.in_turn) === 1, worked_previous_turn: Number(member.worked_previous_turn) === 1 }))
@@ -40,8 +42,8 @@ export default function SeleccionarTurno() {
   const filtered = useMemo(() => members.filter((member) => {
     const memberPuesto = member.puesto || roleLabel(member)
     const text = `${member.full_name} ${member.code || ''} ${memberPuesto} ${member.funcion_1 || ''} ${member.zona_1 || ''}`.toLowerCase()
-    return (!puesto || memberPuesto === puesto) && text.includes(filterText.toLowerCase())
-  }), [members, puesto, filterText])
+    return (!puesto || memberPuesto === puesto) && (!onlyInTurn || member.in_turn) && (!onlyBirthday || isBirthday(member.fecha_nacimiento, date)) && text.includes(filterText.toLowerCase())
+  }), [members, puesto, filterText, onlyInTurn, onlyBirthday, date])
   const selectable = filtered.filter((member) => !member.worked_previous_turn)
   const allSelected = selectable.length > 0 && selectable.every((member) => selected.has(memberKey(member)))
 
@@ -74,9 +76,9 @@ export default function SeleccionarTurno() {
     <section className="card shift-setup"><div><label>{t.fecha}</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div><div><label>{t.turnoTrabajo}</label><select className="input" value={turno} onChange={(event) => setTurno(event.target.value)}><option value="dia">{t.turnoDia}</option><option value="noche">{t.turnoNoche}</option></select></div></section>
     <section className="shift-opm-list" aria-labelledby="shift-roster-title">
       <div className="assignment-list-heading shift-selection-heading"><div><h2 id="shift-roster-title">Equipo del turno</h2><p>{date} · {turnoText(turno, lang)} · Seleccione todo el personal o filtre por cargo.</p></div><span className="shift-selection-count"><UsersRound size={15} /> <strong>{selected.size}</strong> seleccionados</span></div>
-      <div className="assignment-selection-tools"><select className="input" aria-label="Filtrar por cargo" value={puesto} onChange={(event) => setPuesto(event.target.value)}><option value="">Todos los cargos</option>{puestos.map((item) => <option key={item} value={item}>{item}</option>)}</select><label className="shift-search"><Search size={17} /><input type="text" className="input" placeholder="Buscar por nombre, código o cargo" value={filterText} onChange={(event) => setFilterText(event.target.value)} /></label><label className="assignment-select-all"><input type="checkbox" checked={allSelected} onChange={(event) => toggleAll(event.target.checked)} disabled={!selectable.length} /><span>Seleccionar todos ({selectable.length})</span></label></div>
-      <p className="shift-roster-guide"><span className="turn-state in">ASIGNADO</span> ya tiene una función registrada. <span className="turn-state off">DISPONIBLE</span> puede incorporarse al turno. Quien cubrió el turno anterior queda en descanso obligatorio.</p>
-      {loading ? <div className="empty">{t.cargando}</div> : filtered.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>Sin coincidencias</strong><span>Pruebe con otro nombre, código o cargo.</span></div></div> : <div className="home-assignments-list shift-roster-list">{filtered.map((member) => <label className={`home-assignment shift-roster-item${member.worked_previous_turn ? ' is-resting' : ''}`} key={memberKey(member)}><input type="checkbox" checked={selected.has(memberKey(member))} disabled={member.worked_previous_turn} onChange={(event) => toggle(member, event.target.checked)} /><div className="shift-roster-copy"><div className="shift-roster-titleline"><strong>{member.full_name}</strong><span className={`turn-state ${member.in_turn ? 'in' : 'off'}`}>{member.in_turn ? 'ASIGNADO' : 'DISPONIBLE'}</span></div><span>{member.code ? `${member.code} · ` : ''}{member.puesto || roleLabel(member) || t.sinPuesto}</span>{member.in_turn && <small>{member.funcion_1 || t.sinFuncion}{member.zona_1 ? ` · ${member.zona_1}` : ''}{member.nave ? ` · ${member.nave}` : ''}</small>}{member.worked_previous_turn && <small className="resting-note">No disponible: cubrió el turno anterior (máximo 12 horas).</small>}</div></label>)}</div>}
+      <div className="assignment-selection-tools"><select className="input" aria-label="Filtrar por cargo" value={puesto} onChange={(event) => setPuesto(event.target.value)}><option value="">Todos los cargos</option>{puestos.map((item) => <option key={item} value={item}>{item}</option>)}</select><label className="shift-search"><Search size={17} /><input type="text" className="input" placeholder="Buscar por nombre, código o cargo" value={filterText} onChange={(event) => setFilterText(event.target.value)} /></label><div className="assignment-filter-checks"><label className="assignment-select-all"><input type="checkbox" checked={allSelected} onChange={(event) => toggleAll(event.target.checked)} disabled={!selectable.length} /><span>Seleccionar todos ({selectable.length})</span></label><label className="assignment-select-all"><input type="checkbox" checked={onlyInTurn} onChange={(event) => setOnlyInTurn(event.target.checked)} /><span>Solo IN TURN</span></label><label className="assignment-select-all"><input type="checkbox" checked={onlyBirthday} onChange={(event) => setOnlyBirthday(event.target.checked)} /><span>Cumpleaños</span></label></div></div>
+      <p className="shift-roster-guide"><span className="turn-state in">IN TURN</span> tiene una función registrada. <span className="turn-state off">OFF TURN</span> puede incorporarse al turno. Quien cubrió el turno anterior queda en descanso obligatorio.</p>
+      {loading ? <div className="empty">{t.cargando}</div> : filtered.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>Sin coincidencias</strong><span>Pruebe con otro nombre, código o filtro.</span></div></div> : <div className="home-assignments-list shift-roster-list">{filtered.map((member) => <label className={`home-assignment shift-roster-item${member.worked_previous_turn ? ' is-resting' : ''}`} key={memberKey(member)}><input type="checkbox" checked={selected.has(memberKey(member))} disabled={member.worked_previous_turn} onChange={(event) => toggle(member, event.target.checked)} /><div className="shift-roster-copy"><div className="shift-roster-titleline"><strong>{member.full_name}</strong><span className="shift-roster-indicators">{isBirthday(member.fecha_nacimiento, date) && <span className="birthday-icon" title="Cumpleaños"><CakeSlice size={16} /></span>}<span className={`turn-state ${member.in_turn ? 'in' : 'off'}`}>{member.in_turn ? 'IN TURN' : 'OFF TURN'}</span></span></div><span>{member.code ? `${member.code} · ` : ''}{member.puesto || roleLabel(member) || t.sinPuesto}</span>{member.in_turn && <small>{member.funcion_1 || t.sinFuncion}{member.zona_1 ? ` · ${member.zona_1}` : ''}{member.nave ? ` · ${member.nave}` : ''}</small>}{member.worked_previous_turn && <small className="resting-note">No disponible: cubrió el turno anterior (máximo 12 horas).</small>}</div></label>)}</div>}
     </section>
     <button className="btn shift-confirm" disabled={(!isAdmin && selected.size === 0) || saving} onClick={confirmar}>{saving ? 'Guardando selección...' : selected.size ? `Confirmar y continuar con ${selected.size} seleccionado${selected.size !== 1 ? 's' : ''}` : isAdmin ? t.continuarSinColaboradores : t.seleccioneColaborador}</button>
   </main></>
@@ -84,3 +86,4 @@ export default function SeleccionarTurno() {
 
 const memberKey = (member) => `${member.person_type}:${member.person_id}`
 const roleLabel = (member) => member.person_type === 'coordinator' ? 'Coordinador' : member.person_type === 'supervisor' ? 'Supervisor' : ''
+const isBirthday = (birthDate, date) => Boolean(birthDate && date && birthDate.slice(5) === date.slice(5))

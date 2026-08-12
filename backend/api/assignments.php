@@ -49,7 +49,7 @@ function handle_shift_team_list(): void
 
     if ($type === 'all') {
         $stmt = db()->prepare(
-            "SELECT o.id AS person_id, 'opm' AS person_type, o.code, o.full_name, o.puesto,
+            "SELECT o.id AS person_id, 'opm' AS person_type, o.code, o.full_name, o.fecha_nacimiento, o.puesto,
                     current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
                     current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
                     CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
@@ -59,7 +59,7 @@ function handle_shift_team_list(): void
                LEFT JOIN opm_assignments previous_assignment ON previous_assignment.opm_id=o.id AND previous_assignment.work_date=? AND previous_assignment.turno=?
               WHERE o.active=1
              UNION ALL
-             SELECT u.id AS person_id, u.role AS person_type, u.employee_number AS code, u.full_name, COALESCE(current_assignment.puesto, u.puesto) AS puesto,
+             SELECT u.id AS person_id, u.role AS person_type, u.employee_number AS code, u.full_name, NULL AS fecha_nacimiento, COALESCE(current_assignment.puesto, u.puesto) AS puesto,
                     current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
                     current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
                     CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
