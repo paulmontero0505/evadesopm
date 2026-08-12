@@ -1635,12 +1635,18 @@ function DailyRadioReport({ date, turno, user }) {
       all[name] = (all[name] || 0) + 1;
       return all;
     }, {}));
+    const entregadoTo = Object.entries(entregados.reduce((all, record) => {
+      const name = record.current_supervisor_name || record.supervisor_name || "Sin responsable";
+      const route = `→ ${name}`;
+      all[route] = (all[route] || 0) + 1;
+      return all;
+    }, {}));
     const reassignedTo = Object.entries(reassigned.reduce((all, record) => {
       const route = `${record.previous_supervisor_name || "Tool Room"} → ${record.current_supervisor_name || "Tool Room"}`;
       all[route] = (all[route] || 0) + 1;
       return all;
     }, {}));
-    return { entregados, returned, reassigned, returnBy, reassignedTo };
+    return { entregados, returned, reassigned, entregadoTo, returnBy, reassignedTo };
   }, [records]);
 
   function printReport() {
@@ -1663,7 +1669,6 @@ function DailyRadioReport({ date, turno, user }) {
 
   return (
     <section className="trace-report-sheet">
-      <img className="trace-print-logo" src="./img/logo.png" alt="COSCO Shipping" />
       <div className="assignment-list-heading no-print">
         <div>
           <h2>Reporte diario de trazabilidad de radios</h2>
@@ -1725,6 +1730,7 @@ function DailyRadioReport({ date, turno, user }) {
       </section>
       <section className="trace-report">
         <div className="trace-report-header">
+          <img className="trace-print-logo" src="./img/logo.png" alt="COSCO Shipping" />
           <div>
             <h2>Reporte diario de trazabilidad de radios</h2>
             <p>
@@ -1809,6 +1815,11 @@ function DailyRadioReport({ date, turno, user }) {
       <section className="trace-movement-summary">
         <div>
           <strong>Entregados: {movementSummary.entregados.length}</strong>
+          {movementSummary.entregadoTo.map(([route, count]) => (
+            <span key={route}>
+              {route} {count} radio{count === 1 ? "" : "s"}
+            </span>
+          ))}
         </div>
         <div>
           <strong>Devoluciones: {movementSummary.returned.length}</strong>
