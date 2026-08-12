@@ -47,6 +47,17 @@ const addDays = (dateStr, days) => {
 };
 const EMPTY = { supervisor_id: "", nave: "", comments: "" };
 
+function recordState(record) {
+  if (record.state) return record.state;
+  if (record.returned_at) return "Devuelto a Tool Room";
+  if (
+    record.current_supervisor_id &&
+    Number(record.current_supervisor_id) !== Number(record.supervisor_id)
+  )
+    return "Reasignado";
+  return "Pendiente";
+}
+
 export default function ControlRadios() {
   const { shift } = useShift();
   const { user } = useAuth();
@@ -888,23 +899,33 @@ function DeliveryReports({
 }) {
   const [printGroup, setPrintGroup] = useState("");
   const [expandedGroup, setExpandedGroup] = useState("");
-  const filteredRecords = useMemo(() => {
-    if (period === "pendientes") return records.filter((record) => record.state === "Pendiente");
-    if (period === "completadas") return records.filter((record) => record.state === "Devuelto a Tool Room" || record.state === "Reasignado");
-    return records;
-  }, [records, period]);
-  const groups = useMemo(
+  const allGroups = useMemo(
     () =>
       Object.values(
-        filteredRecords.reduce((all, record) => {
+        records.reduce((all, record) => {
           const key = record.group_id;
           if (!all[key]) all[key] = { key, records: [], first: record };
           all[key].records.push(record);
           return all;
         }, {}),
-      ),
-    [filteredRecords],
+      ).map((group) => {
+        const returnedCount = group.records.filter(
+          (record) => recordState(record) === "Devuelto a Tool Room",
+        ).length;
+        return {
+          ...group,
+          returnedCount,
+          pendingCount: group.records.length - returnedCount,
+          completed: returnedCount > 0 && returnedCount === group.records.length,
+        };
+      }),
+    [records],
   );
+  const groups = useMemo(() => {
+    if (period === "pendientes") return allGroups.filter((group) => !group.completed);
+    if (period === "completadas") return allGroups.filter((group) => group.completed);
+    return allGroups;
+  }, [allGroups, period]);
   function printReport(key) {
     setPrintGroup(key);
     setTimeout(() => {
@@ -915,14 +936,11 @@ function DeliveryReports({
       }
     }, 0);
   }
-  const indicators = useMemo(
-    () => ({
-      assigned: filteredRecords.length,
-      returned: filteredRecords.filter((record) => record.state === "Devuelto a Tool Room").length,
-      reassigned: filteredRecords.filter((record) => record.state === "Reasignado").length,
-    }),
-    [filteredRecords],
-  );
+  const indicators = useMemo(() => {
+    const returned = allGroups.reduce((sum, group) => sum + group.returnedCount, 0);
+    const pending = allGroups.reduce((sum, group) => sum + group.pendingCount, 0);
+    return { assigned: allGroups.reduce((sum, group) => sum + group.records.length, 0), returned, pending };
+  }, [allGroups]);
   return (
     <section className="assignment-list">
       <div className="report-period-filter no-print">
@@ -961,8 +979,8 @@ function DeliveryReports({
             {period === "turno"
               ? `${date} · ${turnoLabel(turno)}`
               : period === "pendientes"
-                ? "Radios aún sin devolución ni reasignación, con su fecha de actualización."
-                : "Radios devueltas o reasignadas, con su última fecha de actualización."}
+                ? "Entregas con radios aún no devueltas al Tool Room (incluye reasignadas y devoluciones parciales)."
+                : "Entregas con todas sus radios devueltas al Tool Room."}
           </p>
         </div>
         <span className="chip">
@@ -971,34 +989,34 @@ function DeliveryReports({
       </div>
       <section className="radio-indicators no-print">
         <div>
-          <strong>{indicators.assigned}</strong>
-          <span>{period === "completadas" ? "Radios completadas" : "Radios registradas"}</span>
+          <strong>{period === "completadas" ? indicators.returned : indicators.assigned - indicators.returned}</strong>
+          <span>{period === "completadas" ? "Radios devueltas" : period === "pendientes" ? "Radios por devolver" : "Radios registradas"}</span>
         </div>
         {period === "completadas" ? (
           <>
             <div>
-              <strong>{indicators.returned}</strong>
-              <span>Devueltas a Tool Room</span>
+              <strong>{groups.length}</strong>
+              <span>Entregas completadas</span>
             </div>
             <div>
-              <strong>{indicators.reassigned}</strong>
-              <span>Reasignadas</span>
+              <strong>{groups.reduce((sum, group) => sum + group.records.length, 0)}</strong>
+              <span>Radios en total</span>
             </div>
           </>
         ) : (
           <>
             <div>
-              <strong>{indicators.returned}</strong>
-              <span>Devueltas</span>
+              <strong>{period === "pendientes" ? groups.reduce((sum, group) => sum + group.returnedCount, 0) : indicators.returned}</strong>
+              <span>Radios ya devueltas</span>
             </div>
             <div>
-              <strong>{filteredRecords.filter((record) => record.condition_status !== "Excelente Estado").length}</strong>
-              <span>Estado no excelente</span>
+              <strong>{groups.filter((group) => group.records.some((record) => record.condition_status !== "Excelente Estado")).length}</strong>
+              <span>Entregas con estado no excelente</span>
             </div>
           </>
         )}
       </section>
-      {loading || !filteredRecords.length ? (loading ? null : <div className="assignment-empty"><Radio size={25} /><div><strong>{period === "pendientes" ? "No hay radios pendientes" : period === "completadas" ? "No hay radios completadas" : "Aún no hay entregas registradas"}</strong><span>{period === "turno" ? "Las radios agrupadas por supervisor aparecerán como un único reporte." : "Se muestran aquí con su último estado y fecha."}</span></div></div>) : (
+      {loading || !groups.length ? (loading ? null : <div className="assignment-empty"><Radio size={25} /><div><strong>{period === "pendientes" ? "No hay radios pendientes" : period === "completadas" ? "No hay radios completadas" : "Aún no hay entregas registradas"}</strong><span>{period === "turno" ? "Las radios agrupadas por supervisor aparecerán como un único reporte." : "A una entrega solo se la considera completada cuando todas sus radios fueron devueltas al Tool Room."}</span></div></div>) : (
         groups.map((group) => {
           const { first, records: radios } = group;
           const expanded =
@@ -1128,7 +1146,7 @@ function DeliveryReports({
                       </div>
                     </div>
                   )}
-                  {radios.some((radio) => radio.state === "Reasignado") && (
+                  {radios.some((radio) => recordState(radio) === "Reasignado") && (
                     <div className="delivery-report-return">
                       <div className="delivery-report-return-title">
                         <RefreshCw size={14} /> Reasignación
@@ -1136,14 +1154,14 @@ function DeliveryReports({
                       <div className="delivery-report-meta">
                         <span>
                           <b>Estado</b>
-                          {radios.filter((radio) => radio.state === "Reasignado")
+                          {radios.filter((radio) => recordState(radio) === "Reasignado")
                             .length} radio
-                          {radios.filter((radio) => radio.state === "Reasignado")
+                          {radios.filter((radio) => recordState(radio) === "Reasignado")
                             .length === 1
                             ? ""
                             : "s"}{" "}
                           reasignada
-                          {radios.filter((radio) => radio.state === "Reasignado")
+                          {radios.filter((radio) => recordState(radio) === "Reasignado")
                             .length === 1
                             ? ""
                             : "s"}
@@ -1152,7 +1170,7 @@ function DeliveryReports({
                           <b>Última actualización</b>
                           {
                             radios.find(
-                              (radio) => radio.state === "Reasignado",
+                              (radio) => recordState(radio) === "Reasignado",
                             )?.state_at
                           }
                         </span>
@@ -1160,7 +1178,7 @@ function DeliveryReports({
                           <b>Responsable actual</b>
                           {
                             radios.find(
-                              (radio) => radio.state === "Reasignado",
+                              (radio) => recordState(radio) === "Reasignado",
                             )?.current_supervisor_name
                           }
                         </span>
@@ -1191,9 +1209,9 @@ function DeliveryReports({
                           {radio.nave ? ` · ${radio.nave}` : ""}
                         </span>
                         <span>
-                          {radio.state === "Reasignado"
+                          {recordState(radio) === "Reasignado"
                             ? "Reasignado"
-                            : radio.state === "Devuelto a Tool Room"
+                            : recordState(radio) === "Devuelto a Tool Room"
                               ? "Devuelto"
                               : "Pendiente"} ·{" "}
                           {radio.condition_status}
