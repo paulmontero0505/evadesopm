@@ -32,7 +32,7 @@ function supervisor_worked_previous_shift(int $userId, string $date, string $tur
     return (bool)$stmt->fetchColumn();
 }
 
-/** GET /turno-team?date=YYYY-MM-DD&turno=dia|noche&type=opms|supervisors
+/** GET /turno-team?date=YYYY-MM-DD&turno=dia|noche&type=all|opms|supervisors
  * Devuelve todo el catálogo activo y marca quiénes pertenecen al turno actual
  * y quiénes deben descansar por haber cubierto el turno inmediatamente anterior. */
 function handle_shift_team_list(): void
@@ -41,11 +41,38 @@ function handle_shift_team_list(): void
     $date = trim($_GET['date'] ?? '');
     $turno = $_GET['turno'] ?? '';
     $type = $_GET['type'] ?? 'opms';
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !in_array($turno, ['dia', 'noche'], true) || !in_array($type, ['opms', 'supervisors'], true)) {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !in_array($turno, ['dia', 'noche'], true) || !in_array($type, ['all', 'opms', 'supervisors'], true)) {
         json_error('Fecha, turno y equipo válidos son obligatorios.', 422);
     }
 
     [$previousDate, $previousTurno] = assignment_previous_shift($date, $turno);
+
+    if ($type === 'all') {
+        $stmt = db()->prepare(
+            "SELECT o.id AS person_id, 'opm' AS person_type, o.code, o.full_name, o.puesto,
+                    current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
+                    current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
+                    CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
+                    CASE WHEN previous_assignment.id IS NULL THEN 0 ELSE 1 END AS worked_previous_turn
+               FROM opms o
+               LEFT JOIN opm_assignments current_assignment ON current_assignment.opm_id=o.id AND current_assignment.work_date=? AND current_assignment.turno=?
+               LEFT JOIN opm_assignments previous_assignment ON previous_assignment.opm_id=o.id AND previous_assignment.work_date=? AND previous_assignment.turno=?
+              WHERE o.active=1
+             UNION ALL
+             SELECT u.id AS person_id, u.role AS person_type, u.employee_number AS code, u.full_name, COALESCE(current_assignment.puesto, u.puesto) AS puesto,
+                    current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
+                    current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
+                    CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
+                    CASE WHEN previous_assignment.id IS NULL THEN 0 ELSE 1 END AS worked_previous_turn
+               FROM users u
+               LEFT JOIN supervisor_assignments current_assignment ON current_assignment.user_id=u.id AND current_assignment.work_date=? AND current_assignment.turno=?
+               LEFT JOIN supervisor_assignments previous_assignment ON previous_assignment.user_id=u.id AND previous_assignment.work_date=? AND previous_assignment.turno=?
+              WHERE u.active=1 AND u.role IN ('supervisor','coordinator')
+             ORDER BY in_turn DESC, full_name"
+        );
+        $stmt->execute([$date, $turno, $previousDate, $previousTurno, $date, $turno, $previousDate, $previousTurno]);
+        json_response(['members' => $stmt->fetchAll(), 'previous_shift' => ['date' => $previousDate, 'turno' => $previousTurno]]);
+    }
 
     if ($type === 'opms') {
         $stmt = db()->prepare(

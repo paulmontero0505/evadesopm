@@ -12,7 +12,6 @@ export default function Admin() {
     { to: '/opms', t: t.opmsTitulo, d: t.modOpmsD, i: Ship, c: '#7A5195' },
     { to: '/users', t: t.modUsers, d: t.modUsersD, i: Users, c: '#1E7B34' },
     { to: '/asignaciones', t: t.modAsignaciones, d: t.modAsignacionesD, i: ClipboardList, c: '#0060A9' },
-    { to: '/asignaciones-supervisores', t: 'Asignación de funciones (Supervisores)', d: 'Importar supervisores y coordinadores por turno', i: ClipboardList, c: '#1E7B34' },
     { to: '/registrar-radios', t: 'Registrar radios', d: 'Catálogo de IMEI, código, modelo y ubicación', i: Radio, c: '#EF7D00' },
   ]
 

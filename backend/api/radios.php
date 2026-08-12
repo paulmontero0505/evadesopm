@@ -29,7 +29,7 @@ function save_radio_photo(string $field = 'radio_photo'): ?string {
 
 function handle_supervisor_assignments_list(): void {
     require_auth(); $date = $_GET['date'] ?? ''; $turno = $_GET['turno'] ?? '';
-    $stmt = db()->prepare("SELECT a.*, u.full_name, u.role FROM supervisor_assignments a JOIN users u ON u.id=a.user_id WHERE a.work_date=? AND a.turno=? ORDER BY u.full_name");
+    $stmt = db()->prepare("SELECT a.*, u.full_name, u.employee_number, u.role FROM supervisor_assignments a JOIN users u ON u.id=a.user_id WHERE a.work_date=? AND a.turno=? ORDER BY u.full_name");
     $stmt->execute([$date, $turno]); json_response(['assignments' => $stmt->fetchAll()]);
 }
 function handle_supervisor_assignments_template(): void {

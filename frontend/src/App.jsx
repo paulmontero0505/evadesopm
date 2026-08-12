@@ -17,7 +17,6 @@ import Users from './pages/Users.jsx'
 import EvaluacionOpm from './pages/EvaluacionOpm.jsx'
 import CambiarClave from './pages/CambiarClave.jsx'
 import Asignaciones from './pages/Asignaciones.jsx'
-import AsignacionesSupervisores from './pages/AsignacionesSupervisores.jsx'
 import ControlRadios from './pages/ControlRadios.jsx'
 import RadiosCatalogo from './pages/RadiosCatalogo.jsx'
 import AppErrorBoundary from './components/AppErrorBoundary.jsx'
@@ -54,7 +53,7 @@ export default function App() {
         <Route path="/opms" element={<Protected roles={['admin']}><Opms /></Protected>} />
         <Route path="/users" element={<Protected roles={['admin']}><Users /></Protected>} />
         <Route path="/asignaciones" element={<Protected roles={['admin']}><Asignaciones /></Protected>} />
-        <Route path="/asignaciones-supervisores" element={<Protected roles={['admin']}><AsignacionesSupervisores /></Protected>} />
+        <Route path="/asignaciones-supervisores" element={<Navigate to="/asignaciones" replace />} />
         <Route path="/radios" element={<Protected roles={['admin','supervisor','coordinator']}><ControlRadios /></Protected>} />
         <Route path="/registrar-radios" element={<Protected roles={['admin']}><RadiosCatalogo /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -162,7 +162,7 @@ export const T = {
     modCompromiso: 'Evaluación de Conductas y Buenas Prácticas (OPM)', modCompromisoD: 'Califica el compromiso y conducta en el turno al OPM',
     modOpms: 'Registrar Colaborador (OPM)', modOpmsD: 'Alta y baja del catálogo de operarios',
     modUsers: 'Usuarios', modUsersD: 'Cuentas de administradores y supervisores',
-    modAsignaciones: 'Asignación de funciones OPM', modAsignacionesD: 'Importar y consultar personal por turno',
+    modAsignaciones: 'Asignación de funciones', modAsignacionesD: 'Registrar y consultar todo el personal por turno',
 
     // --- Turno de trabajo ---
     turnoTitulo: 'Seleccionar turno de trabajo',
@@ -253,7 +253,7 @@ export const T = {
     confirmarBorrarUser: (name, num) => `¿Eliminar a ${name} (${num})?\n\nEsta acción no se puede deshacer.`,
 
     // --- Asignaciones OPM ---
-    asignacionesTitulo: 'Asignación de funciones OPM', cargarAsignaciones: 'Cargar asignaciones del turno',
+    asignacionesTitulo: 'Asignación de funciones', cargarAsignaciones: 'Cargar asignaciones del turno',
     cargarAsignacionesD: 'Importe el Excel con los datos de cada colaborador. La fecha y el turno seleccionados se aplicarán a todas las filas; una nueva importación reemplaza ese turno y fecha.',
     importarAsignaciones: 'Importar Excel', asignacionImportada: (n) => `${n} asignaciones importadas.`,
     asignacionFilasError: (n) => `${n} fila${n !== 1 ? 's' : ''} no se pudo asociar`,
@@ -388,7 +388,7 @@ export const T = {
     modCompromiso: 'Commitment Evaluation (OPM)', modCompromisoD: 'Rate an OPM\'s behavior at the end of the shift',
     modOpms: 'Register Worker (OPM)', modOpmsD: 'Add and remove operators from the catalog',
     modUsers: 'Users', modUsersD: 'Administrator and supervisor accounts',
-    modAsignaciones: 'OPM function assignments', modAsignacionesD: 'Import and check personnel by shift',
+    modAsignaciones: 'Function assignments', modAsignacionesD: 'Register and check all personnel by shift',
 
     // --- Work shift ---
     turnoTitulo: 'Select work shift',
@@ -479,7 +479,7 @@ export const T = {
     confirmarBorrarUser: (name, num) => `Delete ${name} (${num})?\n\nThis action cannot be undone.`,
 
     // --- OPM assignments ---
-    asignacionesTitulo: 'OPM function assignments', cargarAsignaciones: 'Upload shift assignments',
+    asignacionesTitulo: 'Function assignments', cargarAsignaciones: 'Upload shift assignments',
     cargarAsignacionesD: 'Import the Excel file with each worker\'s details. The selected date and shift apply to every row; a new import replaces that shift and date.',
     importarAsignaciones: 'Import Excel', asignacionImportada: (n) => `${n} assignments imported.`,
     asignacionFilasError: (n) => `${n} row${n !== 1 ? 's' : ''} could not be matched`,
