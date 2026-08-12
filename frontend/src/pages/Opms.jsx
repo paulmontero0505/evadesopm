@@ -119,7 +119,7 @@ export default function Opms() {
   return (
     <>
       <TopBar title={t.opmsTitulo} to="/admin" />
-      <div className="content">
+      <div className="content collaborators-page">
         {err && <div className="error">{err}</div>}
         {msg && <div className="success">{msg}</div>}
 

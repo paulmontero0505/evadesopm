@@ -683,6 +683,8 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
    .radio-catalog-actions { justify-content: flex-end; }
   .catalog-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
    .assignment-picker { flex-direction: column; gap: 0; }
+   .collaborators-page { height: calc(100vh - 70px); padding-top: 10px; padding-bottom: 10px; }
+   .opm-role-table-wrap { max-height: min(36vh, 300px); }
    .assignment-page { height: calc(100vh - 70px); padding-top: 10px; padding-bottom: 10px; }
    .assignment-setup { padding: 12px; }
    .assignment-controls { grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -717,10 +719,13 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 }
 .opm-role-summary { margin: 0 0 16px; }
 .opm-export-actions { margin-top: 8px; }
-.opm-role-summary .home-assignments-heading { margin-bottom: 10px; }
-.opm-role-table-wrap { overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
+.collaborators-page { height: calc(100vh - 74px); overflow-y: auto; overscroll-behavior: contain; padding-top: 14px; padding-bottom: 14px; }
+.collaborators-page > .card:first-of-type { margin-bottom: 12px; padding: 14px 16px; }
+.collaborators-page > .card:first-of-type .muted { margin-bottom: 9px !important; }
+.opm-role-summary .home-assignments-heading { margin-bottom: 8px; }
+.opm-role-table-wrap { max-height: min(40vh, 350px); overflow-y: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm); }
 .opm-role-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.opm-role-table th { padding: 9px 12px; background: #f4f7fb; color: var(--muted); font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.opm-role-table th { position: sticky; top: 0; z-index: 1; padding: 9px 12px; background: #f4f7fb; color: var(--muted); font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
 .opm-role-table th:last-child, .opm-role-table td:last-child { width: 112px; text-align: center; }
 .opm-role-table td { padding: 10px 12px; border-top: 1px solid var(--border); }
 .opm-role-table td:first-child { color: var(--text); font-weight: 600; }
