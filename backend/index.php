@@ -76,6 +76,7 @@ switch ($r0) {
     case 'radios':
         if ($r1 === 'catalog' && $r2 === 'template' && $method === 'GET') return handle_radios_catalog_template();
         if ($r1 === 'catalog' && $r2 === 'report' && $method === 'GET') return handle_radios_catalog_report();
+        if ($r1 === 'locations' && $method === 'GET') return handle_radio_locations();
         if ($r1 === 'catalog' && $r2 === 'import' && $method === 'POST') return handle_radios_catalog_import();
         if ($r1 === 'catalog' && $method === 'GET') return handle_radios_catalog_list();
         if ($r1 === 'catalog' && $method === 'POST') return handle_radios_catalog_create();

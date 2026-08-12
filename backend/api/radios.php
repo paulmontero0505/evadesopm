@@ -77,10 +77,36 @@ function handle_radios_catalog_template(): void {
     require_role(['admin']); $bytes=xlsx_build_radios_template();
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition: attachment; filename="plantilla_radios.xlsx"'); header('Content-Length: '.strlen($bytes)); echo $bytes; exit;
 }
+function radio_location_filters(): array {
+    $query = mb_substr(trim($_GET['q'] ?? ''), 0, 150);
+    $status = trim($_GET['status'] ?? '');
+    if ($status !== '' && !in_array($status, ['Excelente Estado', 'Con observaciones'], true)) json_error('Estado de radio inválido.', 422);
+    return [$query, $status];
+}
+function radio_location_records(string $query, string $status): array {
+    $sql = "SELECT r.id, r.code, r.imei, r.model, r.active, COALESCE(assignment.condition_status, history.condition_status, r.condition_status, 'Excelente Estado') AS condition_status, COALESCE(assignment.location, history.location, r.location, '') AS last_location, COALESCE(assignment.nave, history.nave, '') AS last_nave, collaborator.full_name AS collaborator_name, custodian.full_name AS custodian_name, CASE WHEN assignment.id IS NULL THEN 0 ELSE 1 END AS in_operations FROM radios r LEFT JOIN radio_assignments assignment ON assignment.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id AND ra.returned_at IS NULL ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) LEFT JOIN radio_assignments history ON history.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) LEFT JOIN users custodian ON custodian.id=COALESCE(assignment.current_supervisor_id, assignment.supervisor_id) LEFT JOIN radio_assignment_collaborators rac ON rac.radio_assignment_id=assignment.id LEFT JOIN opms collaborator ON collaborator.id=rac.opm_id WHERE r.active=1";
+    $params = [];
+    if ($query !== '') {
+        $like = '%' . $query . '%';
+        $sql .= ' AND (r.code LIKE ? OR r.imei LIKE ? OR r.model LIKE ? OR COALESCE(assignment.location, r.location, \'\') LIKE ? OR collaborator.full_name LIKE ? OR custodian.full_name LIKE ?)';
+        $params = [$like, $like, $like, $like, $like, $like];
+    }
+    if ($status === 'Excelente Estado') { $sql .= " AND COALESCE(assignment.condition_status, r.condition_status, 'Excelente Estado')='Excelente Estado'"; }
+    if ($status === 'Con observaciones') { $sql .= " AND COALESCE(assignment.condition_status, r.condition_status, 'Excelente Estado')<>'Excelente Estado'"; }
+    $sql .= ' ORDER BY CAST(r.code AS UNSIGNED), r.code';
+    $stmt = db()->prepare($sql); $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+function handle_radio_locations(): void {
+    require_role(['admin']);
+    [$query, $status] = radio_location_filters();
+    $records = radio_location_records($query, $status);
+    json_response(['records' => $records, 'metrics' => ['total' => count($records), 'in_operations' => count(array_filter($records, fn($record) => (bool)$record['in_operations'])), 'observations' => count(array_filter($records, fn($record) => $record['condition_status'] !== 'Excelente Estado'))]]);
+}
 function handle_radios_catalog_report(): void {
     require_role(['admin']);
-    $sql = "SELECT r.*, last_assignment.location AS last_location, last_assignment.nave AS last_nave FROM radios r LEFT JOIN radio_assignments last_assignment ON last_assignment.id=(SELECT ra.id FROM radio_assignments ra WHERE ra.radio_id=r.id ORDER BY ra.updated_at DESC, ra.id DESC LIMIT 1) ORDER BY CAST(r.code AS UNSIGNED), r.code";
-    $bytes = xlsx_build_radio_locations_report(db()->query($sql)->fetchAll());
+    [$query, $status] = radio_location_filters();
+    $bytes = xlsx_build_radio_locations_report(radio_location_records($query, $status));
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); header('Content-Disposition: attachment; filename="reporte_ubicaciones_radios.xlsx"'); echo $bytes; exit;
 }
 function handle_radios_catalog_import(): void {

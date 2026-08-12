@@ -221,8 +221,8 @@ function xlsx_build_radios_template(): string
 
 function xlsx_build_radio_locations_report(array $radios): string
 {
-    $headers = ['CODIGO', 'IMEI', 'MODELO', 'ESTADO', 'ULTIMA UBICACION', 'NAVE', 'ACTIVO'];
-    $rows = array_map(fn($radio) => [$radio['code'], $radio['imei'], $radio['model'], $radio['condition_status'] ?? 'Excelente Estado', $radio['last_location'] ?? $radio['location'] ?? '', $radio['last_nave'] ?? '', !empty($radio['active']) ? 'SI' : 'NO'], $radios);
+    $headers = ['CODIGO', 'IMEI', 'MODELO', 'ESTADO', 'ULTIMA UBICACION', 'NAVE', 'ASIGNADO A', 'RESPONSABLE', 'EN OPERACIONES', 'ACTIVO'];
+    $rows = array_map(fn($radio) => [$radio['code'], $radio['imei'], $radio['model'], $radio['condition_status'] ?? 'Excelente Estado', $radio['last_location'] ?? $radio['location'] ?? '', $radio['last_nave'] ?? '', $radio['collaborator_name'] ?? '', $radio['custodian_name'] ?? '', !empty($radio['in_operations']) ? 'SI' : 'NO', !empty($radio['active']) ? 'SI' : 'NO'], $radios);
     if (!$rows) $rows = [array_fill(0, count($headers), '')];
     return xlsx_build_template('UBICACIONES', $headers, $rows[0], $rows);
 }

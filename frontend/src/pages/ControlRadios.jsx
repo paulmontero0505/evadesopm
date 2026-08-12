@@ -906,14 +906,52 @@ function RadioMultiPicker({ radios, selectedIds, onChange }) {
 }
 
 function RadioLocationsReport() {
+  const [records, setRecords] = useState([]);
+  const [metrics, setMetrics] = useState({
+    total: 0,
+    in_operations: 0,
+    observations: 0,
+  });
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+  const [filters, setFilters] = useState({ q: "", status: "" });
+  const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    api
+      .radioLocations(filters)
+      .then((result) => {
+        if (!cancelled) {
+          setRecords(result.records || []);
+          setMetrics(result.metrics || {});
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filters]);
+
+  function searchLocations(event) {
+    event.preventDefault();
+    setFilters({ q: query.trim(), status });
+  }
 
   async function downloadReport() {
     setDownloading(true);
     setError("");
     try {
-      await api.downloadRadiosLocationReport();
+      await api.downloadRadiosLocationReport(filters);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -935,15 +973,114 @@ function RadioLocationsReport() {
           <MapPin size={14} /> Excel
         </span>
       </div>
+      <form className="radio-location-filters" onSubmit={searchLocations}>
+        <div className="search-box">
+          <Search className="search-icon" size={18} />
+          <input
+            className="input"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar radio, IMEI, ubicación o responsable"
+          />
+        </div>
+        <select
+          className="input"
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+          aria-label="Filtrar por estado del radio"
+        >
+          <option value="">Todos los estados</option>
+          <option value="Excelente Estado">Excelente estado</option>
+          <option value="Con observaciones">Con observaciones</option>
+        </select>
+        <button className="btn secondary" type="submit">
+          <Search size={16} /> Buscar estado
+        </button>
+      </form>
       {error && (
         <div className="error" role="alert">
           {error}
         </div>
       )}
+      <section className="radio-indicators radio-location-indicators">
+        <div>
+          <strong>{metrics.total || 0}</strong>
+          <span>Total de radios</span>
+        </div>
+        <div>
+          <strong>{metrics.in_operations || 0}</strong>
+          <span>En operaciones</span>
+        </div>
+        <div>
+          <strong>{metrics.observations || 0}</strong>
+          <span>Con observaciones</span>
+        </div>
+      </section>
       <button className="btn" disabled={downloading} onClick={downloadReport}>
         <Download size={16} />
         {downloading ? "Generando reporte..." : "Descargar reporte Excel"}
       </button>
+      <section className="radio-location-results">
+        <div className="assignment-list-heading">
+          <div>
+            <h3>Radios encontradas</h3>
+            <p>La descarga Excel respetará los filtros aplicados.</p>
+          </div>
+          <span className="chip">
+            <Radio size={14} /> {records.length}
+          </span>
+        </div>
+        {loading ? (
+          <div className="empty">Buscando radios...</div>
+        ) : records.length ? (
+          <div className="radio-location-list">
+            {records.map((radio) => (
+              <article className="radio-record" key={radio.id}>
+                <div className="radio-record-head">
+                  <div>
+                    <strong>RADIO {radio.code}</strong>
+                    <span>{radio.model} · IMEI {radio.imei}</span>
+                  </div>
+                  <span
+                    className={`radio-status${
+                      radio.condition_status === "Excelente Estado" ? " good" : ""
+                    }`}
+                  >
+                    {radio.condition_status}
+                  </span>
+                </div>
+                <div className="radio-record-grid">
+                  <span>
+                    <b>Ubicación actual</b>
+                    {radio.last_location || "Sin ubicación"}
+                    {radio.last_nave ? ` · ${radio.last_nave}` : ""}
+                  </span>
+                  <span>
+                    <b>Asignado a</b>
+                    {radio.collaborator_name || "Sin colaborador asignado"}
+                  </span>
+                  <span>
+                    <b>Responsable actual</b>
+                    {radio.custodian_name || "Tool Room"}
+                  </span>
+                  <span>
+                    <b>Estado operativo</b>
+                    {Number(radio.in_operations) ? "En operaciones" : "Disponible"}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="assignment-empty">
+            <Radio size={25} />
+            <div>
+              <strong>No se encontraron radios</strong>
+              <span>Pruebe con otro código, ubicación, responsable o estado.</span>
+            </div>
+          </div>
+        )}
+      </section>
     </section>
   );
 }
