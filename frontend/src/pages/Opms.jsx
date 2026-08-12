@@ -22,24 +22,31 @@ export default function Opms() {
   const [expanded, setExpanded] = useState(null)
   const [q, setQ] = useState('')
   const [exporting, setExporting] = useState(false)
+  const [status, setStatus] = useState('active')
+  const [users, setUsers] = useState([])
   const fileRef = useRef(null)
 
   async function load() {
-    try { const d = await api.opms(); setOpms(d.opms) } catch (e) { setErr(e.message) }
+    try { const [opmData, userData] = await Promise.all([api.opms(), api.users()]); setOpms(opmData.opms); setUsers(userData.users) } catch (e) { setErr(e.message) }
   }
   useEffect(() => { load() }, [])
 
   const shown = useMemo(() => {
     const term = q.trim().toLowerCase()
-    if (!term) return opms
-    return opms.filter((o) =>
+    const byStatus = opms.filter((opm) => Number(opm.active) === (status === 'active' ? 1 : 0))
+    if (!term) return byStatus
+    return byStatus.filter((o) =>
       [o.code, o.full_name, o.puesto, o.dni, o.telefono, o.email_personal, o.team].some((v) => (v || '').toLowerCase().includes(term)))
-  }, [opms, q])
-  const cargoCounts = useMemo(() => Object.entries(opms.filter((opm) => Number(opm.active)).reduce((counts, opm) => {
-    const cargo = opm.puesto?.trim() || 'Sin cargo registrado'
+  }, [opms, q, status])
+  const activePeople = useMemo(() => [
+    ...opms.filter((opm) => Number(opm.active)),
+    ...users.filter((user) => Number(user.active) && ['supervisor', 'coordinator'].includes(user.role)),
+  ], [opms, users])
+  const cargoCounts = useMemo(() => Object.entries(activePeople.reduce((counts, person) => {
+    const cargo = person.puesto?.trim() || (person.role === 'coordinator' ? 'Coordinador' : person.role === 'supervisor' ? 'Supervisor' : 'Sin cargo registrado')
     counts[cargo] = (counts[cargo] || 0) + 1
     return counts
-  }, {})).sort(([a], [b]) => a.localeCompare(b)), [opms])
+  }, {})).sort(([a], [b]) => a.localeCompare(b)), [activePeople])
 
   async function create(e) {
     e.preventDefault(); setBusy(true); setErr(''); setMsg('')
@@ -77,7 +84,7 @@ export default function Opms() {
     setEdit({
       code: o.code, full_name: o.full_name, puesto: o.puesto || '', fecha_ingreso: o.fecha_ingreso || '',
       dni: o.dni || '', fecha_nacimiento: o.fecha_nacimiento || '', telefono: o.telefono || '',
-      email_personal: o.email_personal || '', team: o.team || '',
+      email_personal: o.email_personal || '', team: o.team || '', active: Number(o.active) ? '1' : '0',
     })
   }
 
@@ -88,18 +95,12 @@ export default function Opms() {
         code: edit.code.trim(), full_name: edit.full_name.trim(),
         puesto: edit.puesto.trim(), fecha_ingreso: edit.fecha_ingreso, dni: edit.dni.trim(),
         fecha_nacimiento: edit.fecha_nacimiento, telefono: edit.telefono.trim(),
-        email_personal: edit.email_personal.trim(), team: edit.team.trim(),
+        email_personal: edit.email_personal.trim(), team: edit.team.trim(), active: edit.active === '1',
       })
       setMsg(t.opmActualizado)
       setEditing(null)
       await load()
     } catch (e) { setErr(e.message) } finally { setBusy(false) }
-  }
-
-  async function toggleActive(o) {
-    setErr(''); setMsg('')
-    try { await api.updateOpm(o.id, { active: o.active ? 0 : 1 }); await load() }
-    catch (e) { setErr(e.message) }
   }
 
   async function remove(o) {
@@ -173,7 +174,7 @@ export default function Opms() {
         )}
 
         <section className="opm-role-summary" aria-labelledby="opm-role-summary-title">
-          <div className="home-assignments-heading"><div><h2 id="opm-role-summary-title">Personal activo por cargo</h2><p>Distribución actual del catálogo de colaboradores.</p></div><span className="shift-selection-count">{opms.filter((opm) => Number(opm.active)).length}</span></div>
+          <div className="home-assignments-heading"><div><h2 id="opm-role-summary-title">Personal activo por cargo</h2><p>Distribución actual del personal disponible para el turno.</p></div><span className="shift-selection-count">{activePeople.length}</span></div>
           <div className="opm-role-table-wrap"><table className="opm-role-table"><thead><tr><th>Cargo</th><th>Personas activas</th></tr></thead><tbody>{cargoCounts.map(([cargo, count]) => <tr key={cargo}><td>{cargo}</td><td>{count}</td></tr>)}</tbody></table></div>
         </section>
 
@@ -189,9 +190,11 @@ export default function Opms() {
         </div>
         {q && (
           <div className="muted" style={{ margin: '0 0 10px 2px' }}>
-            {t.deColaboradores(shown.length, opms.length)}
+            {t.deColaboradores(shown.length, opms.filter((opm) => Number(opm.active) === (status === 'active' ? 1 : 0)).length)}
           </div>
         )}
+
+        <div className="tab-bar" aria-label="Estado del personal"><button className={`tab-btn${status === 'active' ? ' active' : ''}`} onClick={() => setStatus('active')}>Activos <span className="chip">{opms.filter((opm) => Number(opm.active)).length}</span></button><button className={`tab-btn${status === 'ceased' ? ' active' : ''}`} onClick={() => setStatus('ceased')}>Cesados <span className="chip">{opms.filter((opm) => !Number(opm.active)).length}</span></button></div>
 
         {shown.length === 0 ? (
           <div className="empty">{t.sinColaboradores(q)}</div>
@@ -216,6 +219,8 @@ export default function Opms() {
             <input className="input" type="email" value={edit.email_personal} onChange={(e) => setEdit({ ...edit, email_personal: e.target.value })} />
             <label>{t.team}</label>
             <input className="input" value={edit.team} onChange={(e) => setEdit({ ...edit, team: e.target.value })} />
+            <label>Estado laboral</label>
+            <select className="input" value={edit.active} onChange={(e) => setEdit({ ...edit, active: e.target.value })}><option value="1">Activo</option><option value="0">Cesado</option></select>
             <div style={{ height: 12 }} />
             <div className="row">
               <button className="btn secondary" disabled={busy} onClick={() => setEditing(null)}>{t.cancelar}</button>
@@ -233,9 +238,7 @@ export default function Opms() {
                 <div className="name">{o.code}</div>
                 <div className="meta">{o.full_name}</div>
               </div>
-              <button className={`btn small ${o.active ? 'ghost' : 'secondary'}`} disabled={busy} onClick={() => toggleActive(o)}>
-                {o.active ? t.activo : t.inactivo}
-              </button>
+              <span className={`person-status ${Number(o.active) ? 'active' : 'ceased'}`}>{Number(o.active) ? 'Activo' : 'Cesado'}</span>
               <button className="btn small secondary" onClick={() => startEdit(o)}>{t.editar}</button>
               <button className="btn small danger" disabled={busy} onClick={() => remove(o)}>{t.eliminar}</button>
             </div>

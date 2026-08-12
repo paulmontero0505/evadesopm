@@ -704,6 +704,9 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .opm-role-table td:first-child { color: var(--text); font-weight: 600; }
 .opm-role-table td:last-child { color: var(--blue); font-size: 16px; font-weight: 700; }
 .opm-role-table tbody tr:nth-child(even) { background: #f8fbff; }
+.person-status { flex: 0 0 auto; padding: 5px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.person-status.active { color: #08743f; background: #e2f6e9; }
+.person-status.ceased { color: #9a3d31; background: #fdecea; }
 .opm-expand {
   background: #eef2f8; border: none; color: var(--muted); border-radius: 8px;
   width: 30px; height: 30px; flex-shrink: 0; cursor: pointer;
