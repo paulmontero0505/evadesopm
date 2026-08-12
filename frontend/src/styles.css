@@ -444,6 +444,23 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .shift-page .shift-confirm { flex: 0 0 auto; margin-top: 10px; min-height: 44px; padding: 10px; }
 .assignment-copy { line-height: 1.45; margin: 0 0 8px; }
 .assignment-actions { margin-top: 14px; }
+.assignment-page { height: calc(100vh - 74px); display: flex; flex-direction: column; overflow: hidden; padding-top: 14px; padding-bottom: 14px; }
+.assignment-setup { flex: 0 0 auto; padding: 13px 16px; margin-bottom: 12px; }
+.assignment-setup h3 { margin-bottom: 4px; }
+.assignment-setup .assignment-copy { font-size: 12px; }
+.assignment-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.assignment-controls label { margin-top: 6px; }
+.assignment-controls .input { min-height: 40px; padding: 8px 10px; }
+.assignment-setup .assignment-actions { margin-top: 10px; }
+.assignment-setup .btn { min-height: 42px; padding: 10px; font-size: 13px; }
+.assignment-results { display: flex; flex: 1; min-height: 0; flex-direction: column; margin-bottom: 0; }
+.assignment-results .assignment-list-heading { margin-bottom: 7px; }
+.assignment-search { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 0 11px; border: 1px solid #dbe7f7; border-radius: 11px; background: #f8fbff; }
+.assignment-search svg { flex: 0 0 auto; color: #5f718d; }
+.assignment-search .input { min-height: 38px; margin: 0; padding: 7px 0; border: 0; background: transparent; }
+.assignment-results-list { flex: 1; min-height: 0; overflow-y: auto; padding-right: 2px; }
+.assignment-results-list .assignment-row { min-height: 58px; margin-bottom: 6px; padding: 9px 12px; }
+.assignment-results-list .assignment-row strong { font-size: 12px; }
 .assignment-empty { display: flex; align-items: center; gap: 12px; padding: 20px 14px; color: var(--muted); border: 1px dashed #cbd5e1; border-radius: var(--radius); }
 .assignment-empty svg { color: var(--blue); flex: 0 0 auto; }
 .assignment-empty div { display: grid; gap: 3px; font-size: 13px; }
@@ -666,6 +683,10 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
    .radio-catalog-actions { justify-content: flex-end; }
   .catalog-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
    .assignment-picker { flex-direction: column; gap: 0; }
+   .assignment-page { height: calc(100vh - 70px); padding-top: 10px; padding-bottom: 10px; }
+   .assignment-setup { padding: 12px; }
+   .assignment-controls { grid-template-columns: 1fr 1fr; gap: 6px; }
+   .assignment-controls > div:last-child { grid-column: 1 / -1; }
    .shift-page { height: calc(100vh - 70px); padding-top: 10px; padding-bottom: 10px; }
    .shift-setup { grid-template-columns: 1fr; gap: 8px; padding: 12px; }
    .shift-page .shift-opm-list { margin-top: 10px; }

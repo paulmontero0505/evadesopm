@@ -157,7 +157,7 @@ export const api = {
 
   assignments: (date, turno) => request(`/assignments?date=${encodeURIComponent(date)}&turno=${encodeURIComponent(turno)}`),
   shiftTeam: (date, turno, type = 'all') => request(`/turno-team?date=${encodeURIComponent(date)}&turno=${encodeURIComponent(turno)}&type=${encodeURIComponent(type)}`),
-  importAssignments: (file, turno, date, puesto) => { const fd = new FormData(); fd.append('file', file); fd.append('turno', turno); fd.append('date', date); fd.append('puesto', puesto); return upload('/assignments/import', fd) },
+  importAssignments: (file, turno, date) => { const fd = new FormData(); fd.append('file', file); fd.append('turno', turno); fd.append('date', date); return upload('/assignments/import', fd) },
   downloadAssignmentsTemplate: () => downloadFile('/assignments/template', 'plantilla_asignacion_opm.xlsx'),
   createAssignmentIndividual: (payload) => request('/assignments/individual', { method: 'POST', body: payload }),
   supervisorAssignments: (date, turno) => request(`/supervisor-assignments?date=${date}&turno=${turno}`),

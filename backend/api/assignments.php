@@ -139,11 +139,11 @@ function handle_assignments_template(): void
     require_role(['admin']);
     $bytes = xlsx_build_assignments_template();
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment; filename="plantilla_asignacion_opm.xlsx"');
+    header('Content-Disposition: attachment; filename="plantilla_asignacion_funciones.xlsx"');
     header('Content-Length: ' . strlen($bytes)); echo $bytes; exit;
 }
 
-/** POST /assignments/import (admin); la fecha y turno seleccionados se aplican a las filas sin fecha. */
+/** POST /assignments/import (admin); admite colaboradores, supervisores y coordinadores en un mismo Excel. */
 function handle_assignments_import(): void
 {
     $user = require_role(['admin']);
@@ -152,9 +152,7 @@ function handle_assignments_import(): void
     // La versión actual del frontend envía la fecha seleccionada. Como respaldo para
     // sesiones que aún tienen el JavaScript anterior en caché, se usa la fecha del servidor.
     $selectedDate = trim($_POST['date'] ?? '') ?: date('Y-m-d');
-    $puesto = mb_substr(trim($_POST['puesto'] ?? ''), 0, 150);
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate)) json_error('Seleccione una fecha válida para estas asignaciones.', 422);
-    if ($puesto === '') json_error('Seleccione el cargo para estas asignaciones.', 422);
     if (empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) json_error('Adjunte la plantilla Excel de asignaciones.', 422);
     $file = $_FILES['file'];
     if ($file['error'] !== UPLOAD_ERR_OK || !preg_match('/\.xlsx$/i', $file['name']) || $file['size'] > 10 * 1024 * 1024) {
@@ -164,36 +162,31 @@ function handle_assignments_import(): void
     catch (Throwable $e) { json_error('No se pudo leer el Excel: ' . $e->getMessage(), 422); }
     if (!$rows) json_error('No se encontraron asignaciones en la plantilla.', 422);
 
-    $opms = db()->prepare('SELECT id, full_name FROM opms WHERE active = 1 AND puesto = ?');
-    $opms->execute([$puesto]);
-    $opms = $opms->fetchAll();
-    $opmByName = [];
-    foreach ($opms as $opm) $opmByName[assignment_name_key($opm['full_name'])] = (int)$opm['id'];
+    $opmByName = []; $userByName = [];
+    foreach (db()->query('SELECT id, full_name, puesto FROM opms WHERE active=1')->fetchAll() as $opm) $opmByName[assignment_name_key($opm['full_name'])] = $opm;
+    foreach (db()->query("SELECT id, full_name, puesto FROM users WHERE active=1 AND role IN ('supervisor','coordinator')")->fetchAll() as $user) $userByName[assignment_name_key($user['full_name'])] = $user;
     $valid = []; $errors = [];
     foreach ($rows as $row) {
         $row['date'] = $row['date'] ?: $selectedDate;
-        $opmId = $opmByName[assignment_name_key($row['name'])] ?? null;
-        if (!$row['date'] || !$opmId || opm_worked_previous_shift((int)$opmId, $row['date'], $turno)) { $errors[] = $row['row']; continue; }
-        $row['opm_id'] = $opmId; $valid[] = $row;
+        $key = assignment_name_key($row['name']); $opm = $opmByName[$key] ?? null; $supervisor = $userByName[$key] ?? null;
+        if (!$row['date'] || (!$opm && !$supervisor)) { $errors[] = $row['row']; continue; }
+        if ($opm && opm_worked_previous_shift((int)$opm['id'], $row['date'], $turno)) { $errors[] = $row['row']; continue; }
+        if ($supervisor && supervisor_worked_previous_shift((int)$supervisor['id'], $row['date'], $turno)) { $errors[] = $row['row']; continue; }
+        $row['person_type'] = $opm ? 'opm' : 'supervisor'; $row['person'] = $opm ?: $supervisor; $valid[] = $row;
     }
-    if (!$valid) json_error('Ninguna fila es válida. Verifique fecha y que cada nombre exista en Colaboradores (OPM).', 422);
+    if (!$valid) json_error('Ninguna fila es válida. Verifique que cada nombre exista en el catálogo de personal activo.', 422);
 
-    $dates = array_values(array_unique(array_column($valid, 'date')));
     $pdo = db(); $pdo->beginTransaction();
     try {
-        $delete = $pdo->prepare('DELETE a FROM opm_assignments a JOIN opms o ON o.id=a.opm_id WHERE a.work_date = ? AND a.turno = ? AND o.puesto = ?');
-        foreach ($dates as $date) $delete->execute([$date, $turno, $puesto]);
-        $insert = $pdo->prepare(
-            'INSERT INTO opm_assignments (opm_id, work_date, turno, funcion_1, funcion_2, zona_1, puesto, nave, nave_2, imported_by)
-             VALUES (?,?,?,?,?,?,?,?,?,?)'
-        );
-        foreach ($valid as $row) $insert->execute([$row['opm_id'], $row['date'], $turno,
-            mb_substr(trim($row['funcion_1']), 0, 150) ?: null, mb_substr(trim($row['funcion_2']), 0, 150) ?: null,
-            mb_substr(trim($row['zona_1']), 0, 150) ?: null, $puesto,
-            mb_substr(trim($row['nave']), 0, 150) ?: null, mb_substr(trim($row['nave_2']), 0, 150) ?: null, $user['id']]);
+        $opmInsert = $pdo->prepare('INSERT INTO opm_assignments (opm_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)');
+        $userInsert = $pdo->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)');
+        foreach ($valid as $row) {
+            $values = [(int)$row['person']['id'], $row['date'], $turno, mb_substr(trim($row['funcion_1']), 0, 150) ?: null, mb_substr(trim($row['funcion_2']), 0, 150) ?: null, mb_substr(trim($row['zona_1']), 0, 150) ?: null, mb_substr(trim($row['puesto']), 0, 150) ?: ($row['person']['puesto'] ?: null), mb_substr(trim($row['nave']), 0, 150) ?: null, mb_substr(trim($row['nave_2']), 0, 150) ?: null, $user['id']];
+            ($row['person_type'] === 'opm' ? $opmInsert : $userInsert)->execute($values);
+        }
         $pdo->commit();
     } catch (Throwable $e) { $pdo->rollBack(); throw $e; }
-    json_response(['ok' => true, 'imported' => count($valid), 'dates' => $dates, 'errors' => $errors]);
+    json_response(['ok' => true, 'imported' => count($valid), 'errors' => $errors]);
 }
 
 /** POST /assignments/individual (admin): agrega o actualiza un colaborador en un turno. */

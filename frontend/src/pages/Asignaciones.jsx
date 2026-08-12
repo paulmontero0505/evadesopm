@@ -13,7 +13,7 @@ const roleLabel = (person) => person.person_type === 'coordinator' ? 'Coordinado
 export default function Asignaciones() {
   const { shift } = useShift(); const [lang] = useLang(); const t = T[lang]
   const [date, setDate] = useState(shift?.date || today()); const [turno, setTurno] = useState(shift?.turno || 'dia')
-  const [assignments, setAssignments] = useState([]); const [people, setPeople] = useState([]); const [cargo, setCargo] = useState(''); const [loading, setLoading] = useState(true)
+  const [assignments, setAssignments] = useState([]); const [people, setPeople] = useState([]); const [cargo, setCargo] = useState(''); const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false); const [downloading, setDownloading] = useState(false); const [error, setError] = useState(''); const [message, setMessage] = useState('')
   const [showIndividual, setShowIndividual] = useState(false); const [individual, setIndividual] = useState(EMPTY); const [saving, setSaving] = useState(false)
   const fileRef = useRef(null)
@@ -38,28 +38,26 @@ export default function Asignaciones() {
 
   const peopleByKey = useMemo(() => new Map(people.map((person) => [person.person_key, person])), [people])
   const cargos = useMemo(() => [...new Set(people.map((person) => person.puesto?.trim() || roleLabel(person)).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [people])
-  const selectedPeople = useMemo(() => people.filter((person) => (person.puesto?.trim() || roleLabel(person)) === cargo), [people, cargo])
-  const importType = selectedPeople[0]?.person_type === 'opm' ? 'opms' : 'supervisors'
   const filteredAssignments = useMemo(() => assignments.filter((assignment) => {
-    if (!cargo) return true
     const catalogPerson = peopleByKey.get(personKey(assignment.person_type, assignment.person_id))
-    return (catalogPerson?.puesto?.trim() || assignment.puesto || roleLabel(assignment)) === cargo
-  }), [assignments, cargo, peopleByKey])
+    const assignmentCargo = catalogPerson?.puesto?.trim() || assignment.puesto || roleLabel(assignment)
+    const text = `${assignment.full_name} ${assignment.code || ''} ${assignmentCargo}`.toLowerCase()
+    return (!cargo || assignmentCargo === cargo) && text.includes(search.toLowerCase())
+  }), [assignments, cargo, search, peopleByKey])
 
   async function importFile(event) {
     const file = event.target.files?.[0]; event.target.value = ''
-    if (!file || !cargo) return
+    if (!file) return
     setImporting(true); setError(''); setMessage('')
     try {
-      const result = importType === 'opms' ? await api.importAssignments(file, turno, date, cargo) : await api.importSupervisorAssignments(file, turno, date, cargo)
+      const result = await api.importAssignments(file, turno, date)
       const omitted = result.errors?.length ? ` Se omitieron ${result.errors.length} filas.` : ''
-      setMessage(`Se importaron ${result.imported} asignaciones para ${cargo}.${omitted}`); await load()
+      setMessage(`Se importaron ${result.imported} asignaciones.${omitted}`); await load()
     } catch (err) { setError(err.message) } finally { setImporting(false) }
   }
   async function downloadTemplate() {
-    if (!cargo) return
     setDownloading(true); setError('')
-    try { importType === 'opms' ? await api.downloadAssignmentsTemplate() : await api.downloadSupervisorAssignmentsTemplate() } catch (err) { setError(err.message) } finally { setDownloading(false) }
+    try { await api.downloadAssignmentsTemplate() } catch (err) { setError(err.message) } finally { setDownloading(false) }
   }
   async function saveIndividual(event) {
     event.preventDefault(); const person = people.find((item) => item.person_key === individual.person_key); if (!person) return
@@ -71,17 +69,15 @@ export default function Asignaciones() {
     } catch (err) { setError(err.message) } finally { setSaving(false) }
   }
 
-  return <><TopBar title={t.asignacionesTitulo} to="/admin" /><main className="content">
+  return <><TopBar title={t.asignacionesTitulo} to="/admin" /><main className="content assignment-page">
     {error && <div className="error" role="alert">{error}</div>}{message && <div className="success">{message}</div>}
-    <section className="card"><h3>{t.cargarAsignaciones}</h3><p className="muted assignment-copy">Seleccione un cargo para consultar sus asignaciones e importar su plantilla.</p>
-      <div className="row assignment-picker"><div><label>Fecha</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div><div><label>Turno de trabajo</label><select className="input" value={turno} onChange={(event) => setTurno(event.target.value)}><option value="dia">{t.turnoDia}</option><option value="noche">{t.turnoNoche}</option></select></div></div>
-      <label htmlFor="assignment-cargo">Cargo</label><select id="assignment-cargo" className="input" value={cargo} onChange={(event) => setCargo(event.target.value)}><option value="">Todos los cargos</option>{cargos.map((item) => <option key={item} value={item}>{item}</option>)}</select>
-      <div className="row assignment-actions"><button className="btn" disabled={importing || !cargo} onClick={() => fileRef.current?.click()}><Upload size={16} /> {importing ? 'Importando...' : 'Importar Excel'}</button><button className="btn secondary" onClick={() => setShowIndividual((value) => !value)}><UserPlus size={16} /> {showIndividual ? 'Ocultar registro' : 'Registro individual'}</button><button className="btn secondary" disabled={downloading || !cargo} onClick={downloadTemplate}><Download size={16} /> {downloading ? 'Descargando...' : 'Exportar plantilla'}</button></div>
-      {!cargo && <p className="field-help">Elija un cargo para habilitar la importación y descarga de su plantilla.</p>}<input ref={fileRef} type="file" accept=".xlsx" hidden onChange={importFile} />
+    <section className="card assignment-setup"><h3>{t.cargarAsignaciones}</h3><p className="muted assignment-copy">Importe una sola plantilla con colaboradores, supervisores y coordinadores. Solo se actualizan las personas incluidas.</p>
+      <div className="assignment-controls"><div><label>Fecha</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div><div><label>Turno de trabajo</label><select className="input" value={turno} onChange={(event) => setTurno(event.target.value)}><option value="dia">{t.turnoDia}</option><option value="noche">{t.turnoNoche}</option></select></div><div><label htmlFor="assignment-cargo">Filtrar cargo</label><select id="assignment-cargo" className="input" value={cargo} onChange={(event) => setCargo(event.target.value)}><option value="">Todos los cargos</option>{cargos.map((item) => <option key={item} value={item}>{item}</option>)}</select></div></div>
+      <div className="row assignment-actions"><button className="btn" disabled={importing} onClick={() => fileRef.current?.click()}><Upload size={16} /> {importing ? 'Importando...' : 'Importar Excel'}</button><button className="btn secondary" onClick={() => setShowIndividual((value) => !value)}><UserPlus size={16} /> {showIndividual ? 'Ocultar registro' : 'Registro individual'}</button><button className="btn secondary" disabled={downloading} onClick={downloadTemplate}><Download size={16} /> {downloading ? 'Descargando...' : 'Exportar plantilla'}</button></div><input ref={fileRef} type="file" accept=".xlsx" hidden onChange={importFile} />
     </section>
     {showIndividual && <IndividualForm form={individual} setForm={setIndividual} people={people} saving={saving} onSubmit={saveIndividual} />}
-    <section className="assignment-list"><div className="assignment-list-heading"><div><h2>{cargo ? `Asignaciones: ${cargo}` : 'Personal asignado'}</h2><p>{date} · {turnoText(turno, lang)}</p></div><span className="chip"><UsersRound size={14} /> {filteredAssignments.length}</span></div>
-      {loading ? <div className="empty">{t.cargando}</div> : filteredAssignments.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>No hay asignaciones</strong><span>{cargo ? `No hay asignaciones registradas para ${cargo}.` : 'Seleccione un cargo o registre una asignación individual.'}</span></div></div> : filteredAssignments.map((row) => <article className="assignment-row" key={`${row.person_type}:${row.id}`}><div className="assignment-row-main"><strong>{row.full_name}</strong><span>{row.code ? `${row.code} · ` : ''}{peopleByKey.get(personKey(row.person_type, row.person_id))?.puesto || row.puesto || roleLabel(row)}</span></div><div className="assignment-row-detail"><strong>{row.funcion_1 || t.sinFuncion}</strong><span>{[row.zona_1, row.nave].filter(Boolean).join(' · ') || 'Sin zona o nave'}</span></div></article>)}
+    <section className="assignment-list assignment-results"><div className="assignment-list-heading"><div><h2>{cargo ? `Asignaciones: ${cargo}` : 'Personal asignado'}</h2><p>{date} · {turnoText(turno, lang)}</p></div><span className="chip"><UsersRound size={14} /> {filteredAssignments.length}</span></div><label className="assignment-search"><Search size={16} /><input className="input" placeholder="Buscar por nombre o cargo" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
+      {loading ? <div className="empty">{t.cargando}</div> : filteredAssignments.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>No hay asignaciones</strong><span>Importe una plantilla o registre una asignación individual.</span></div></div> : <div className="assignment-results-list">{filteredAssignments.map((row) => <article className="assignment-row" key={`${row.person_type}:${row.id}`}><div className="assignment-row-main"><strong>{row.full_name}</strong><span>{row.code ? `${row.code} · ` : ''}{peopleByKey.get(personKey(row.person_type, row.person_id))?.puesto || row.puesto || roleLabel(row)}</span></div><div className="assignment-row-detail"><strong>{row.funcion_1 || t.sinFuncion}</strong><span>{[row.zona_1, row.nave].filter(Boolean).join(' · ') || 'Sin zona o nave'}</span></div></article>)}</div>}
     </section>
   </main></>
 }
