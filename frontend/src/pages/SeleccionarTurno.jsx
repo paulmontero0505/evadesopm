@@ -19,6 +19,7 @@ export default function SeleccionarTurno() {
   const [date, setDate] = useState(shift?.date || new Date().toISOString().slice(0, 10))
   const [turno, setTurno] = useState(shift?.turno || 'dia')
   const [members, setMembers] = useState([])
+  const [quarterProgress, setQuarterProgress] = useState({})
   const [selected, setSelected] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -32,7 +33,9 @@ export default function SeleccionarTurno() {
   useEffect(() => {
     let active = true
     setLoading(true); setError(''); setFilterText(''); setPuesto(user?.role === 'supervisor' ? SUPERVISOR_DEFAULT_PUESTO : ''); setUbicacion(''); setOnlyInTurn(true); setOnlyBirthday(false)
-    api.shiftTeam(date, turno).then((data) => {
+    const year = Number(date.slice(0, 4))
+    const quarter = Math.ceil(Number(date.slice(5, 7)) / 3)
+    Promise.all([api.shiftTeam(date, turno), api.control(year, quarter)]).then(([data, controlData]) => {
       if (!active) return
       const seen = new Set()
       const roster = (data.members || []).map((member) => ({ ...member, in_turn: Number(member.in_turn) === 1, worked_previous_turn: Number(member.worked_previous_turn) === 1 })).filter((member) => {
@@ -42,8 +45,9 @@ export default function SeleccionarTurno() {
         return true
       })
       setMembers(roster)
+      setQuarterProgress(Object.fromEntries((controlData.control || []).map((row) => [Number(row.id), Number(row.n) || 0])))
       setSelected(new Set(roster.filter((member) => member.in_turn && !member.worked_previous_turn).map((member) => `${member.person_type}:${member.person_id}`)))
-    }).catch((err) => { if (active) { setMembers([]); setError(err.message) } }).finally(() => { if (active) setLoading(false) })
+    }).catch((err) => { if (active) { setMembers([]); setQuarterProgress({}); setError(err.message) } }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [date, turno, user?.role])
 
@@ -107,7 +111,7 @@ export default function SeleccionarTurno() {
       <div className="assignment-list-heading shift-selection-heading"><div><h2 id="shift-roster-title">Equipo del turno</h2><p>{date} · {turnoText(turno, lang)} · Seleccione todo el personal o filtre por cargo.</p></div><span className="shift-selection-count"><UsersRound size={15} /> <strong>{selected.size}</strong> seleccionados</span></div>
        <div className="assignment-selection-tools"><select className="input" aria-label="Filtrar por cargo" value={puesto} onChange={(event) => setPuesto(event.target.value)}><option value="">Todos los cargos</option>{puestos.map((item) => <option key={item} value={item}>{item}</option>)}</select><select className="input shift-location-filter" aria-label="Filtrar por ubicación" value={ubicacion} onChange={(event) => changeUbicacion(event.target.value)}><option value="">Todas las ubicaciones</option>{ubicaciones.map((item) => <option key={item} value={item}>{item}</option>)}</select><label className="shift-search"><Search size={17} /><input type="text" className="input" placeholder="Buscar por nombre, código o cargo" value={filterText} onChange={(event) => setFilterText(event.target.value)} /></label><div className="assignment-filter-checks"><label className="assignment-select-all"><input type="checkbox" checked={allSelected} onChange={(event) => toggleAll(event.target.checked)} disabled={!selectable.length} /><span>Seleccionar todos ({selectable.length})</span></label><label className="assignment-select-all"><input type="checkbox" checked={onlyInTurn} onChange={(event) => setOnlyInTurn(event.target.checked)} /><span>Solo en turno</span></label><label className="assignment-select-all"><input type="checkbox" checked={onlyBirthday} onChange={(event) => setOnlyBirthday(event.target.checked)} /><span>Cumpleaños</span></label></div></div>
       <p className="shift-roster-guide"><span className="turn-state in">IN TURN</span> tiene una función registrada. <span className="turn-state off">OFF TURN</span> puede incorporarse al turno. Quien cubrió el turno anterior queda en descanso obligatorio.</p>
-      {loading ? <div className="empty">{t.cargando}</div> : ordered.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>Sin coincidencias</strong><span>Pruebe con otro nombre, código o filtro.</span></div></div> : <div className="home-assignments-list shift-roster-list">{ordered.map((member) => <label className={`home-assignment shift-roster-item${member.worked_previous_turn ? ' is-resting' : ''}`} key={memberKey(member)}><input type="checkbox" checked={selected.has(memberKey(member))} disabled={member.worked_previous_turn} onChange={(event) => toggle(member, event.target.checked)} /><div className="shift-roster-copy"><div className="shift-roster-titleline"><strong>{member.full_name}</strong><span className="shift-roster-indicators">{isBirthday(member.fecha_nacimiento, date) && <span className="birthday-icon" title="Cumpleaños"><PartyPopper size={17} /></span>}<span className={`turn-state ${member.in_turn ? 'in' : 'off'}`}>{member.in_turn ? 'IN TURN' : 'OFF TURN'}</span></span></div><span>{member.code ? `${member.code} · ` : ''}{member.puesto || roleLabel(member) || t.sinPuesto}</span>{member.in_turn && <small>{member.funcion_1 || t.sinFuncion}{member.zona_1 ? ` · ${member.zona_1}` : ''}{member.nave ? ` · ${member.nave}` : ''}</small>}{member.worked_previous_turn && <small className="resting-note">No disponible: cubrió el turno anterior (máximo 12 horas).</small>}</div></label>)}</div>}
+       {loading ? <div className="empty">{t.cargando}</div> : ordered.length === 0 ? <div className="assignment-empty"><CalendarDays size={25} /><div><strong>Sin coincidencias</strong><span>Pruebe con otro nombre, código o filtro.</span></div></div> : <div className="home-assignments-list shift-roster-list">{ordered.map((member) => { const records = quarterProgress[Number(member.person_id)] || 0; return <label className={`home-assignment shift-roster-item${member.worked_previous_turn ? ' is-resting' : ''}`} key={memberKey(member)}><input type="checkbox" checked={selected.has(memberKey(member))} disabled={member.worked_previous_turn} onChange={(event) => toggle(member, event.target.checked)} /><div className="shift-roster-copy"><div className="shift-roster-titleline"><strong>{member.full_name}</strong><span className="shift-roster-indicators">{isBirthday(member.fecha_nacimiento, date) && <span className="birthday-icon" title="Cumpleaños"><PartyPopper size={17} /></span>}<span className={`turn-state ${member.in_turn ? 'in' : 'off'}`}>{member.in_turn ? 'IN TURN' : 'OFF TURN'}</span></span></div><span>{member.code ? `${member.code} · ` : ''}{member.puesto || roleLabel(member) || t.sinPuesto}</span>{member.in_turn && <small>{member.funcion_1 || t.sinFuncion}{member.zona_1 ? ` · ${member.zona_1}` : ''}{member.nave ? ` · ${member.nave}` : ''}</small>}{member.person_type === 'opm' && <span className="shift-quarter-progress"><i><b style={{ width: `${Math.min(100, records / 8 * 100)}%` }} /></i>{records} de 8 fichas mínimas</span>}{member.worked_previous_turn && <small className="resting-note">No disponible: cubrió el turno anterior (máximo 12 horas).</small>}</div></label> })}</div>}
     </section>
     <button className="btn shift-confirm" disabled={(!canContinueWithoutSelection && selected.size === 0) || saving} onClick={confirmar}>{saving ? 'Guardando selección...' : selected.size ? `Confirmar y continuar con ${selected.size} seleccionado${selected.size !== 1 ? 's' : ''}` : canContinueWithoutSelection ? t.continuarSinColaboradores : t.seleccioneColaborador}</button>
   </main></>

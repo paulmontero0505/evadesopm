@@ -420,6 +420,9 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .birthday-icon { display: inline-grid !important; place-items: center; padding: 4px; border-radius: 999px; color: #c43d69; background: #ffe9f0; }
 .home-assignment.shift-roster-item .shift-roster-copy strong { color: #073c82; }
 .home-assignment.shift-roster-item .shift-roster-copy > span, .home-assignment.shift-roster-item .shift-roster-copy small { color: #526b88; font-size: 12px; }
+.shift-quarter-progress { display: grid !important; grid-template-columns: minmax(0, 1fr); gap: 3px; margin-top: 2px; color: #526b88 !important; font-size: 10px !important; }
+.shift-quarter-progress i { height: 4px; overflow: hidden; border-radius: 999px; background: #e4e9f1; }
+.shift-quarter-progress b { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
 .resting-note { color: #a45916 !important; font-weight: 650; }
 .turn-state { flex: 0 0 auto; border-radius: 999px; padding: 4px 8px; font-size: 11px; line-height: 1; font-weight: 750; }
 .turn-state.in { color: #08743f; background: #e2f6e9; }
