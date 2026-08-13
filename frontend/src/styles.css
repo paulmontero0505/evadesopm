@@ -424,6 +424,14 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .shift-quarter-progress span { color: inherit !important; font-size: inherit !important; }
 .shift-quarter-progress i { height: 5px; overflow: hidden; border-radius: 999px; background: #dce4ee; }
 .shift-quarter-progress b { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
+.shift-load-coverage { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
+.shift-load-coverage > span { display: grid !important; gap: 1px; min-width: 0; padding: 4px 3px; border-radius: 6px; text-align: center; }
+.shift-load-coverage small { overflow: hidden; color: inherit !important; font-size: 8px !important; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.shift-load-coverage b { color: inherit; font-size: 10px; }
+.shift-load-coverage .containers { color: #075ca8; background: #e5f2ff; }
+.shift-load-coverage .bulk { color: #6a4b00; background: #fff4d5; }
+.shift-load-coverage .breakbulk { color: #6b347b; background: #f5eaff; }
+.shift-load-coverage .bags { color: #17643a; background: #e4f6ea; }
 .resting-note { color: #a45916 !important; font-weight: 650; }
 .incident-reevaluation { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 11px 12px; border: 1px solid #f2c47a; border-radius: 12px; background: #fff8e8; color: #7c5100; }
 .incident-reevaluation > div, .incident-reevaluation.active { display: grid; gap: 3px; }
