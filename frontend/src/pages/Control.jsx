@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, AlertTriangle, Printer, Users } from 'lucide-react'
 import { api } from '../api.js'
+import { useAuth } from '../auth.jsx'
+import { useShift } from '../shift.jsx'
 import { colorNivel, nivel5, currentQuarter } from '../rules.js'
 import { colorNivel as colorNivelC, nivel5 as nivel5C } from '../rulesCompromiso.js'
 import TopBar from '../components/TopBar.jsx'
@@ -12,6 +14,8 @@ const PISO_C = 4
 const fmtDate = (d) => { if (!d) return ''; const [y, m, day] = d.split('-'); return `${day}/${m}/${y}` }
 
 export default function Control() {
+  const { user } = useAuth()
+  const { shift } = useShift()
   const [lang] = useLang()
   const t = T[lang]
   const [vista, setVista] = useState('desempeno') // 'desempeno' | 'compromiso'
@@ -51,7 +55,8 @@ export default function Control() {
 
   const norm = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   const term = norm(q)
-  const control = dataActiva?.control ?? []
+  const selectedOpms = new Set((shift.selectedOpms || []).map(Number))
+  const control = (dataActiva?.control ?? []).filter((row) => user.role === 'admin' || selectedOpms.has(Number(row.id)))
   const resumenEstados = control.reduce((resumen, r) => {
     if (r.n === 0) resumen.noIniciados += 1
     else if (r.estado.t === 'VÁLIDA') resumen.completos += 1

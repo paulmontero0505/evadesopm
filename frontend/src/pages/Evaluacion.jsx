@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, Printer } from 'lucide-react'
 import { api } from '../api.js'
+import { useAuth } from '../auth.jsx'
+import { useShift } from '../shift.jsx'
 import { nivel5, colorNivel, currentQuarter } from '../rules.js'
 import { T, useLang, objName, nivelText, estadoLabel } from '../i18n.js'
 import TopBar from '../components/TopBar.jsx'
@@ -20,6 +22,8 @@ function usePeriod() {
 
 function EvaluacionLista() {
   const nav = useNavigate()
+  const { user } = useAuth()
+  const { shift } = useShift()
   const inicial = usePeriod()
   const [lang] = useLang()
   const [year, setYear] = useState(inicial.year)
@@ -41,12 +45,14 @@ function EvaluacionLista() {
 
   const norm = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   const term = norm(q)
-  const shown = rows ? rows.filter((r) => !term || norm(r.code).includes(term) || norm(r.full_name).includes(term)) : null
+  const selectedOpms = new Set((shift.selectedOpms || []).map(Number))
+  const teamRows = rows ? rows.filter((row) => user.role === 'admin' || selectedOpms.has(Number(row.id))) : null
+  const shown = teamRows ? teamRows.filter((r) => !term || norm(r.code).includes(term) || norm(r.full_name).includes(term)) : null
 
-  const stats = rows ? {
-    total: rows.reduce((s, r) => s + r.n, 0),
-    completadas: rows.filter((r) => r.estado.t === 'VÁLIDA' && r.compromiso?.estado.t === 'VÁLIDA').length,
-    eventos: rows.reduce((s, r) => s + r.eventos, 0),
+  const stats = teamRows ? {
+    total: teamRows.reduce((s, r) => s + r.n, 0),
+    completadas: teamRows.filter((r) => r.estado.t === 'VÁLIDA' && r.compromiso?.estado.t === 'VÁLIDA').length,
+    eventos: teamRows.reduce((s, r) => s + r.eventos, 0),
   } : null
 
   return (
