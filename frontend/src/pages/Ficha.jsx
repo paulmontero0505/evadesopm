@@ -89,13 +89,15 @@ export default function Ficha() {
         }
         setRules(r.rules)
         const inTurnById = new Map((team.members || []).map((member) => [Number(member.person_id), Number(member.in_turn) === 1]))
+        const selectedOpms = new Set((shift.selectedOpms || []).map(Number))
         setOpms((opmData.opms || [])
           .filter((opm) => opm.active && isMultipurposeOperator(opm.puesto))
+          .filter((opm) => user.role === 'admin' || selectedOpms.has(Number(opm.id)))
           .map((opm) => ({ ...opm, in_turn: inTurnById.get(Number(opm.id)) === true })))
       })
       .catch((e) => { setRules(null); setErr(e.message || t.errorFichaCarga) })
       .finally(() => setLoading(false))
-  }, [loadAttempt, shift.date, shift.turno])
+  }, [loadAttempt, shift.date, shift.turno, shift.selectedOpms, user.role])
 
   const visibles = useMemo(() => {
     if (!rules || !carga) return []

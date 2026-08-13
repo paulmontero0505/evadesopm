@@ -80,13 +80,15 @@ export default function Compromiso() {
       .then(([r, opmData, team]) => {
         setRules(r.rules)
         const inTurnById = new Map((team.members || []).map((member) => [Number(member.person_id), Number(member.in_turn) === 1]))
+        const selectedOpms = new Set((shift.selectedOpms || []).map(Number))
         setOpms((opmData.opms || [])
           .filter((opm) => opm.active && isMultipurposeOperator(opm.puesto))
+          .filter((opm) => user.role === 'admin' || selectedOpms.has(Number(opm.id)))
           .map((opm) => ({ ...opm, in_turn: inTurnById.get(Number(opm.id)) === true })))
       })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false))
-  }, [shift.date, shift.turno])
+  }, [shift.date, shift.turno, shift.selectedOpms, user.role])
 
   const prom = useMemo(() => {
     if (!rules) return {}
