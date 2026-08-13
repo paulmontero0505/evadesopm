@@ -31,7 +31,7 @@ export default function SeleccionarTurno() {
 
   useEffect(() => {
     let active = true
-    setLoading(true); setError(''); setFilterText(''); setPuesto(user?.role === 'supervisor' ? SUPERVISOR_DEFAULT_PUESTO : ''); setUbicacion(''); setOnlyInTurn(user?.role === 'supervisor'); setOnlyBirthday(false)
+    setLoading(true); setError(''); setFilterText(''); setPuesto(user?.role === 'supervisor' ? SUPERVISOR_DEFAULT_PUESTO : ''); setUbicacion(''); setOnlyInTurn(true); setOnlyBirthday(false)
     api.shiftTeam(date, turno).then((data) => {
       if (!active) return
       const seen = new Set()
