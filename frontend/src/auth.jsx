@@ -12,8 +12,16 @@ export function AuthProvider({ children }) {
     if (!token) { setLoading(false); return }
     api.me()
       .then((d) => setUser(d.user))
-      .catch(() => { localStorage.removeItem('token') })
-      .finally(() => setLoading(false))
+       .catch(() => { localStorage.removeItem('token') })
+       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    function clearExpiredSession() {
+      setUser(null)
+    }
+    window.addEventListener('auth-expired', clearExpiredSession)
+    return () => window.removeEventListener('auth-expired', clearExpiredSession)
   }, [])
 
   async function login(employee_number, password) {

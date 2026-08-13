@@ -34,6 +34,10 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     const err = new Error(msg)
     err.status = res.status
     err.data = data
+    if (res.status === 401) {
+      localStorage.removeItem('token')
+      window.dispatchEvent(new Event('auth-expired'))
+    }
     throw err
   }
   return data
@@ -51,6 +55,10 @@ async function upload(path, formData) {
     const err = new Error(msg)
     err.status = res.status
     err.data = data
+    if (res.status === 401) {
+      localStorage.removeItem('token')
+      window.dispatchEvent(new Event('auth-expired'))
+    }
     throw err
   }
   return data
