@@ -18,7 +18,12 @@ function create_token(int $userId): string
 function bearer_token(): ?string
 {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    // Apache/FastCGI can expose Authorization only through server variables.
+    $auth = $headers['Authorization']
+        ?? $headers['authorization']
+        ?? $_SERVER['HTTP_AUTHORIZATION']
+        ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+        ?? '';
     if (preg_match('/Bearer\s+(\S+)/i', $auth, $m)) {
         return $m[1];
     }
