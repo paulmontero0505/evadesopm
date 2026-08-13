@@ -140,15 +140,7 @@ export default function Control() {
         {err && <div className="error">{err}</div>}
         {loading && <div className="empty">{t.cargando}</div>}
 
-        {!loading && dataActiva && control.every((r) => r.n === 0) && (
-          <div className="empty">
-            <Users size={32} />
-            <div style={{ fontWeight: 600, color: '#334155' }}>{t.sinFichasTitulo}</div>
-            <div>{t.sinFichasDesc(esDesempeno ? t.tipoTurnos : t.tipoCompromiso)}</div>
-          </div>
-        )}
-
-        {!loading && dataActiva && !control.every((r) => r.n === 0) && (
+        {!loading && dataActiva && (
           <>
             <input className="input" style={{ marginBottom: 12 }} value={q} onChange={(e) => setQ(e.target.value)}
               placeholder={t.buscar} />
