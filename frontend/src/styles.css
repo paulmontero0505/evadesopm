@@ -376,16 +376,17 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .shift-selection-count strong { font-size: 14px; }
 .assignment-selection-tools {
   display: grid; grid-template-columns: minmax(130px, .75fr) minmax(150px, .85fr) minmax(180px, 1.2fr); gap: 8px;
-  margin: 0 0 14px; padding: 10px; border: 1px solid #dbe7f7; border-radius: 14px; background: #f8fbff;
+  margin: 0 0 14px; padding: 7px; border: 1px solid #dbe7f7; border-radius: 14px; background: #f8fbff;
 }
-.assignment-selection-tools .input { min-height: 42px; margin: 0; padding: 9px 10px; background: #fff; }
+.assignment-selection-tools .input { min-height: 36px; margin: 0; padding: 7px 9px; background: #fff; font-size: 12px; }
+.assignment-selection-tools select.input option { font-size: 12px; }
 .assignment-selection-tools .shift-location-filter {
-  max-width: 136px; min-height: 38px; padding: 7px 9px;
+  max-width: 136px; min-height: 36px; padding: 7px 9px;
   border-color: #e2ad23; background: #fff6cf; color: #704b00; font-size: 12px; font-weight: 700;
 }
 .assignment-selection-tools .shift-location-filter:focus { border-color: #b77900; box-shadow: 0 0 0 3px rgba(226, 173, 35, .25); }
 .assignment-filter-checks { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
-.assignment-select-all { display: inline-flex; align-items: center; gap: 8px; min-width: 0; margin: 4px 2px 0; color: var(--navy); font-size: 13px; font-weight: 700; cursor: pointer; }
+.assignment-select-all { display: inline-flex; align-items: center; gap: 7px; min-width: 0; margin: 2px; color: var(--navy); font-size: 12px; font-weight: 700; cursor: pointer; }
 .assignment-select-all input, .home-assignment input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); cursor: pointer; }
 .home-assignments-list { border-radius: 14px; }
 .home-assignment {
