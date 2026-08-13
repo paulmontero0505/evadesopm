@@ -50,6 +50,7 @@ export default function Ficha() {
   const [eventoComment, setEventoComment] = useState('')
   const [eventoPhoto, setEventoPhoto] = useState(null)
   const [eventoPhotoPreview, setEventoPhotoPreview] = useState('')
+  const [reevaluacionIncidente, setReevaluacionIncidente] = useState(false)
   const [ratings, setRatings] = useState({})
   const [comments, setComments] = useState({})
   const [busy, setBusy] = useState(false)
@@ -129,8 +130,11 @@ export default function Ficha() {
   const cuotaTotalExcedida = !esAdmin && totalCount >= (rules?.params.piso ?? 8)
   const cuotaSuperExcedida = !esAdmin && superCount >= 3
   const cuotaCargaExcedida = cargaCount >= (rules?.params.minCarga ?? 2)
+  const maxCargaConIncidentes = (rules?.params.minCarga ?? 2) + 2
+  const maxReevaluacionesAlcanzado = cargaCount >= maxCargaConIncidentes
 
-  const listo = opmId && carga && pendientes === 0 && !busy && !cuotaTotalExcedida && !cuotaSuperExcedida && !cuotaCargaExcedida
+  const incidenteDocumentado = reevaluacionIncidente && evento && eventoComment.trim()
+  const listo = opmId && carga && pendientes === 0 && !busy && !cuotaTotalExcedida && !cuotaSuperExcedida && !maxReevaluacionesAlcanzado && (!cuotaCargaExcedida || incidenteDocumentado)
 
   const shown = records.filter((r) => {
     if (fRango === 'actual' && r.work_date !== shift.date) return false
@@ -182,6 +186,7 @@ export default function Ficha() {
         amarre,
         evento_seguridad: evento,
         evento_comment: evento ? eventoComment : '',
+        reevaluacion_incidente: reevaluacionIncidente,
         ratings,
         comments,
       }
@@ -208,7 +213,7 @@ export default function Ficha() {
   }
 
   function nuevaFicha() {
-    setOpmId(''); setCarga(''); setNave(''); setAmarre(false); setEvento(false)
+    setOpmId(''); setCarga(''); setNave(''); setAmarre(false); setEvento(false); setReevaluacionIncidente(false)
     setRatings({}); setComments({}); setEventoComment(''); quitarEventoPhoto()
     setEditingId(null)
     setClearPhoto(false)
@@ -229,6 +234,7 @@ export default function Ficha() {
       setNave(fullRecord.nave || '')
       setAmarre(Number(fullRecord.amarre) === 1)
       setEvento(Number(fullRecord.evento_seguridad) === 1)
+      setReevaluacionIncidente(false)
       setEventoComment(fullRecord.evento_comment || '')
       setEventoPhotoPreview(fullRecord.evento_photo ? (SITE_BASE + fullRecord.evento_photo) : '')
       setEventoPhoto(null)
@@ -323,7 +329,7 @@ export default function Ficha() {
                 {rules.cargas.map((c) => (
                   <button key={c} className={`choice ${carga === c ? 'active' : ''}`}
                     style={carga === c ? { background: '#0060A9' } : {}}
-                    onClick={() => setCarga(c)}>{cargaLabel(c, lang, rules)}</button>
+                    onClick={() => { setCarga(c); setReevaluacionIncidente(false) }}>{cargaLabel(c, lang, rules)}</button>
                 ))}
               </div>
 
@@ -344,8 +350,14 @@ export default function Ficha() {
             {!cuotaTotalExcedida && cuotaSuperExcedida && (
               <div className="error">{t.cuotaSuper}</div>
             )}
-            {!cuotaTotalExcedida && !cuotaSuperExcedida && cuotaCargaExcedida && (
-              <div className="error">{t.cuotaCarga(rules?.params.minCarga ?? 2, cargaLabel(carga, lang, rules))}</div>
+            {!cuotaTotalExcedida && !cuotaSuperExcedida && maxReevaluacionesAlcanzado && (
+              <div className="error">Ya se alcanzó el máximo de {maxCargaConIncidentes} fichas para {cargaLabel(carga, lang, rules)}, incluidas las reevaluaciones por incidente.</div>
+            )}
+            {!cuotaTotalExcedida && !cuotaSuperExcedida && cuotaCargaExcedida && !maxReevaluacionesAlcanzado && !reevaluacionIncidente && (
+              <div className="incident-reevaluation"><div><strong>Tope de carga alcanzado</strong><span>{t.cuotaCarga(rules?.params.minCarga ?? 2, cargaLabel(carga, lang, rules))}</span></div><button type="button" className="btn small incident-reevaluation-btn" onClick={() => { setReevaluacionIncidente(true); setEvento(true) }}>Reevaluar por incidente</button></div>
+            )}
+            {!cuotaTotalExcedida && !cuotaSuperExcedida && cuotaCargaExcedida && !maxReevaluacionesAlcanzado && reevaluacionIncidente && (
+              <div className="incident-reevaluation active"><strong>Reevaluación por incidente activada</strong><span>Describa el incidente de seguridad para registrar esta ficha adicional.</span></div>
             )}
 
             {!carga && (
@@ -372,7 +384,7 @@ export default function Ficha() {
               <>
                 <button className={`toggle-btn ${evento ? 'active' : ''}`}
                   style={evento ? { background: '#C0392B', textAlign: 'left', justifyContent: 'flex-start' } : { textAlign: 'left', justifyContent: 'flex-start' }}
-                  onClick={() => setEvento(!evento)}>
+                  onClick={() => { setEvento(!evento); if (evento) setReevaluacionIncidente(false) }}>
                   <ShieldAlert size={20} />
                   <span>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{t.eventoTitulo}</div>
@@ -429,7 +441,8 @@ export default function Ficha() {
                 <button className="btn orange" style={{ marginTop: 14 }} disabled={!listo} onClick={enviar}>
                   {(!editingId && cuotaTotalExcedida) ? t.btnMaxFichas
                     : (!editingId && cuotaSuperExcedida) ? t.btnCuota
-                    : (!editingId && cuotaCargaExcedida) ? t.btnActividadCompleta
+                    : (!editingId && maxReevaluacionesAlcanzado) ? 'Máximo de reevaluaciones alcanzado'
+                    : (!editingId && cuotaCargaExcedida && !incidenteDocumentado) ? 'Describa el incidente para reevaluar'
                     : pendientes > 0 ? t.btnFaltan(pendientes)
                     : (busy ? t.btnGuardando : (editingId ? t.btnGuardarCambios : t.btnGuardarFicha))}
                 </button>

@@ -69,7 +69,7 @@ function save_evento_photo(): ?string
 
 /** POST /shift-records
  *  JSON o multipart/form-data con campo "payload" (JSON) + archivo opcional "evento_photo".
- *  { opm_id, work_date, turno, carga, amarre, evento_seguridad, evento_comment, ratings, comments } */
+ *  { opm_id, work_date, turno, carga, amarre, evento_seguridad, evento_comment, reevaluacion_incidente, ratings, comments } */
 function handle_shift_create(): void
 {
     $user = require_auth();
@@ -85,6 +85,7 @@ function handle_shift_create(): void
     $evento = !empty($b['evento_seguridad']);
     $eventoComment = trim($b['evento_comment'] ?? '');
     $eventoComment = $eventoComment === '' ? null : mb_substr($eventoComment, 0, 500);
+    $reevaluacionIncidente = !empty($b['reevaluacion_incidente']);
     $ratingsIn = is_array($b['ratings'] ?? null) ? $b['ratings'] : [];
     $commentsIn = is_array($b['comments'] ?? null) ? $b['comments'] : [];
 
@@ -124,14 +125,18 @@ function handle_shift_create(): void
         }
     }
 
-    // Regla de cobertura por tipo de carga: aplica siempre, incluso para el administrador
-    // (asegura que las 8 fichas mínimas cubran distintos tipos de carga, no solo una).
-    // Un OPM no puede ser evaluado más de PARAMS['minCarga'] veces con el mismo tipo de carga en el trimestre.
+    // Regla de cobertura por tipo de carga: el límite se puede exceder únicamente para
+    // documentar un incidente de seguridad ocurrido en el turno actual.
     $cargaCount = db()->prepare(
         'SELECT COUNT(*) FROM shift_records WHERE opm_id = ? AND carga = ? AND year = ? AND quarter = ?'
     );
     $cargaCount->execute([$opmId, $carga, $year, $quarter]);
-    if ((int)$cargaCount->fetchColumn() >= PARAMS['minCarga']) {
+    $currentCargaCount = (int)$cargaCount->fetchColumn();
+    $maxIncidentReevaluations = 2;
+    if ($currentCargaCount >= PARAMS['minCarga'] + $maxIncidentReevaluations) {
+        json_error("{$opmRow['full_name']} ya alcanzó el máximo de " . (PARAMS['minCarga'] + $maxIncidentReevaluations) . " fichas con carga \"$carga\" este trimestre, incluidas las reevaluaciones por incidente.", 422);
+    }
+    if ($currentCargaCount >= PARAMS['minCarga'] && (!$reevaluacionIncidente || !$evento || $eventoComment === null)) {
         json_error("Ya se completó esta actividad: {$opmRow['full_name']} ya fue evaluado " . PARAMS['minCarga'] . " veces con carga \"$carga\" este trimestre.", 422);
     }
 
@@ -147,12 +152,12 @@ function handle_shift_create(): void
         $stmt = $pdo->prepare(
             'INSERT INTO shift_records
                (opm_id, supervisor_id, work_date, year, quarter, turno, carga, nave, amarre,
-                evento_seguridad, evento_comment, evento_photo, obj_o1, obj_o2, obj_o3, obj_o4)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                evento_seguridad, evento_comment, evento_photo, reevaluacion_incidente, obj_o1, obj_o2, obj_o3, obj_o4)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute([
             $opmId, $user['id'], $date, $year, $quarter, $turno, $carga, $nave, $amarre ? 1 : 0,
-            $evento ? 1 : 0, $evento ? $eventoComment : null, $eventoPhoto,
+            $evento ? 1 : 0, $evento ? $eventoComment : null, $eventoPhoto, $reevaluacionIncidente ? 1 : 0,
             $obj['O1'], $obj['O2'], $obj['O3'], $obj['O4'],
         ]);
         $shiftId = (int)$pdo->lastInsertId();

@@ -425,6 +425,12 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .shift-quarter-progress i { height: 5px; overflow: hidden; border-radius: 999px; background: #dce4ee; }
 .shift-quarter-progress b { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
 .resting-note { color: #a45916 !important; font-weight: 650; }
+.incident-reevaluation { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 11px 12px; border: 1px solid #f2c47a; border-radius: 12px; background: #fff8e8; color: #7c5100; }
+.incident-reevaluation > div, .incident-reevaluation.active { display: grid; gap: 3px; }
+.incident-reevaluation strong { font-size: 13px; }
+.incident-reevaluation span { font-size: 12px; line-height: 1.35; }
+.incident-reevaluation-btn { flex: 0 0 auto; background: #b85c00; }
+.incident-reevaluation.active { display: grid; color: #8a4300; border-color: #efba72; background: #fff3e5; }
 .turn-state { flex: 0 0 auto; border-radius: 999px; padding: 4px 8px; font-size: 11px; line-height: 1; font-weight: 750; }
 .turn-state.in { color: #08743f; background: #e2f6e9; }
 .turn-state.off { color: #607189; background: #edf1f6; }

@@ -178,8 +178,9 @@ CREATE TABLE IF NOT EXISTS shift_records (
   nave             VARCHAR(150) NULL,               -- nombre de la nave / operación (opcional)
   amarre           TINYINT(1) NOT NULL DEFAULT 0,
   evento_seguridad TINYINT(1) NOT NULL DEFAULT 0,
-  evento_comment   VARCHAR(500) NULL,              -- comentario opcional del evento de seguridad
-  evento_photo     VARCHAR(255) NULL,               -- ruta relativa a la foto opcional del evento
+   evento_comment   VARCHAR(500) NULL,              -- comentario opcional del evento de seguridad
+   evento_photo     VARCHAR(255) NULL,               -- ruta relativa a la foto opcional del evento
+   reevaluacion_incidente TINYINT(1) NOT NULL DEFAULT 0, -- ficha adicional autorizada por incidente
   -- Promedios por objetivo de ESTA ficha (1-5), ya con el tope por evento aplicado.
   obj_o1 DECIMAL(3,2) NULL,
   obj_o2 DECIMAL(3,2) NULL,
