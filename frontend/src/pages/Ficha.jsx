@@ -122,7 +122,7 @@ export default function Ficha() {
     ? records.filter((r) => String(r.opm_id) === opmId && Number(r.supervisor_id) === Number(user.id) && r.id !== editingId).length
     : 0
   const cargaCount = opmId && carga
-    ? records.filter((r) => String(r.opm_id) === opmId && r.carga === carga && r.id !== editingId).length
+    ? records.filter((r) => String(r.opm_id) === opmId && r.carga === carga && r.id !== editingId && !Number(r.reevaluacion_incidente)).length
     : 0
   // El administrador no tiene cuotas de total ni de supervisor, pero la cobertura por tipo de
   // carga sí aplica siempre (incluso a él): asegura que las fichas mínimas cubran los 4 tipos.
@@ -130,11 +130,10 @@ export default function Ficha() {
   const cuotaTotalExcedida = !esAdmin && totalCount >= (rules?.params.piso ?? 8)
   const cuotaSuperExcedida = !esAdmin && superCount >= 3
   const cuotaCargaExcedida = cargaCount >= (rules?.params.minCarga ?? 2)
-  const maxCargaConIncidentes = (rules?.params.minCarga ?? 2) + 2
-  const maxReevaluacionesAlcanzado = cargaCount >= maxCargaConIncidentes
-
   const incidenteDocumentado = reevaluacionIncidente && evento && eventoComment.trim()
-  const listo = opmId && carga && pendientes === 0 && !busy && !cuotaTotalExcedida && !cuotaSuperExcedida && !maxReevaluacionesAlcanzado && (!cuotaCargaExcedida || incidenteDocumentado)
+  const evaluacionRegularEnTurno = opmId && carga && !reevaluacionIncidente && records.some((r) => String(r.opm_id) === opmId && r.carga === carga && r.work_date === shift.date && r.turno === shift.turno && !Number(r.reevaluacion_incidente) && r.id !== editingId)
+  const topesRegularesExcedidos = cuotaTotalExcedida || cuotaSuperExcedida || evaluacionRegularEnTurno
+  const listo = opmId && carga && pendientes === 0 && !busy && (!reevaluacionIncidente ? !topesRegularesExcedidos && !cuotaCargaExcedida : incidenteDocumentado)
 
   const shown = records.filter((r) => {
     if (fRango === 'actual' && r.work_date !== shift.date) return false
@@ -344,19 +343,19 @@ export default function Ficha() {
               </button>
             </div>
 
-            {cuotaTotalExcedida && (
+            {cuotaTotalExcedida && !reevaluacionIncidente && (
               <div className="error">{t.cuotaTotal(rules?.params.piso ?? 8)}</div>
             )}
-            {!cuotaTotalExcedida && cuotaSuperExcedida && (
+            {!cuotaTotalExcedida && cuotaSuperExcedida && !reevaluacionIncidente && (
               <div className="error">{t.cuotaSuper}</div>
             )}
-            {!cuotaTotalExcedida && !cuotaSuperExcedida && maxReevaluacionesAlcanzado && (
-              <div className="error">Ya se alcanzó el máximo de {maxCargaConIncidentes} fichas para {cargaLabel(carga, lang, rules)}, incluidas las reevaluaciones por incidente.</div>
+            {!reevaluacionIncidente && evaluacionRegularEnTurno && (
+              <div className="error">Este colaborador ya tiene una evaluación regular de {cargaLabel(carga, lang, rules)} en el turno seleccionado.</div>
             )}
-            {!cuotaTotalExcedida && !cuotaSuperExcedida && cuotaCargaExcedida && !maxReevaluacionesAlcanzado && !reevaluacionIncidente && (
+            {cuotaCargaExcedida && !reevaluacionIncidente && (
               <div className="incident-reevaluation"><div><strong>Tope de carga alcanzado</strong><span>{t.cuotaCarga(rules?.params.minCarga ?? 2, cargaLabel(carga, lang, rules))}</span></div><button type="button" className="btn small incident-reevaluation-btn" onClick={() => { setReevaluacionIncidente(true); setEvento(true) }}>Reevaluar por incidente</button></div>
             )}
-            {!cuotaTotalExcedida && !cuotaSuperExcedida && cuotaCargaExcedida && !maxReevaluacionesAlcanzado && reevaluacionIncidente && (
+            {cuotaCargaExcedida && reevaluacionIncidente && (
               <div className="incident-reevaluation active"><strong>Reevaluación por incidente activada</strong><span>Describa el incidente de seguridad para registrar esta ficha adicional.</span></div>
             )}
 
@@ -439,9 +438,9 @@ export default function Ficha() {
                 </div>
 
                 <button className="btn orange" style={{ marginTop: 14 }} disabled={!listo} onClick={enviar}>
-                  {(!editingId && cuotaTotalExcedida) ? t.btnMaxFichas
-                    : (!editingId && cuotaSuperExcedida) ? t.btnCuota
-                    : (!editingId && maxReevaluacionesAlcanzado) ? 'Máximo de reevaluaciones alcanzado'
+                  {(!editingId && !reevaluacionIncidente && cuotaTotalExcedida) ? t.btnMaxFichas
+                    : (!editingId && !reevaluacionIncidente && cuotaSuperExcedida) ? t.btnCuota
+                    : (!editingId && !reevaluacionIncidente && evaluacionRegularEnTurno) ? 'Evaluación regular ya registrada en este turno'
                     : (!editingId && cuotaCargaExcedida && !incidenteDocumentado) ? 'Describa el incidente para reevaluar'
                     : pendientes > 0 ? t.btnFaltan(pendientes)
                     : (busy ? t.btnGuardando : (editingId ? t.btnGuardarCambios : t.btnGuardarFicha))}

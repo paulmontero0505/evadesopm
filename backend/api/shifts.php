@@ -105,7 +105,7 @@ function handle_shift_create(): void
     $quarter = quarter_of($date);
 
     // Las cuotas no aplican al administrador: puede registrar sin límites ni excepciones.
-    if ($user['role'] !== 'admin') {
+    if ($user['role'] !== 'admin' && !$reevaluacionIncidente) {
         // Regla: un OPM no puede acumular más de PARAMS['piso'] fichas en el trimestre (tope total).
         $totalCount = db()->prepare(
             'SELECT COUNT(*) FROM shift_records WHERE opm_id = ? AND year = ? AND quarter = ?'
@@ -125,18 +125,33 @@ function handle_shift_create(): void
         }
     }
 
-    // Regla de cobertura por tipo de carga: el límite se puede exceder únicamente para
-    // documentar un incidente de seguridad ocurrido en el turno actual.
-    $cargaCount = db()->prepare(
-        'SELECT COUNT(*) FROM shift_records WHERE opm_id = ? AND carga = ? AND year = ? AND quarter = ?'
-    );
-    $cargaCount->execute([$opmId, $carga, $year, $quarter]);
-    $currentCargaCount = (int)$cargaCount->fetchColumn();
-    $maxIncidentReevaluations = 2;
-    if ($currentCargaCount >= PARAMS['minCarga'] + $maxIncidentReevaluations) {
-        json_error("{$opmRow['full_name']} ya alcanzó el máximo de " . (PARAMS['minCarga'] + $maxIncidentReevaluations) . " fichas con carga \"$carga\" este trimestre, incluidas las reevaluaciones por incidente.", 422);
+    // Una ficha regular por OPM, carga y turno. Las reevaluaciones por incidente
+    // son excepcionales, conservan el historial y deben estar sustentadas.
+    if (!$reevaluacionIncidente) {
+        $turnCount = db()->prepare(
+            'SELECT COUNT(*) FROM shift_records WHERE opm_id = ? AND work_date = ? AND turno = ? AND carga = ? AND reevaluacion_incidente = 0'
+        );
+        $turnCount->execute([$opmId, $date, $turno, $carga]);
+        if ((int)$turnCount->fetchColumn() >= 1) {
+            json_error("{$opmRow['full_name']} ya tiene una evaluación regular con carga \"$carga\" en este turno.", 422);
+        }
     }
-    if ($currentCargaCount >= PARAMS['minCarga'] && (!$reevaluacionIncidente || !$evento || $eventoComment === null)) {
+
+    // El límite de dos corresponde únicamente a fichas regulares acumuladas.
+    $regularCargaCount = db()->prepare(
+        'SELECT COUNT(*) FROM shift_records WHERE opm_id = ? AND carga = ? AND year = ? AND quarter = ? AND reevaluacion_incidente = 0'
+    );
+    $regularCargaCount->execute([$opmId, $carga, $year, $quarter]);
+    $regularCount = (int)$regularCargaCount->fetchColumn();
+    if ($reevaluacionIncidente) {
+        if ($regularCount < PARAMS['minCarga']) {
+            json_error('La reevaluación por incidente se habilita después de completar las dos evaluaciones regulares de esta carga.', 422);
+        }
+        if (!$evento || $eventoComment === null) {
+            json_error('La reevaluación por incidente requiere registrar y describir el incidente de seguridad.', 422);
+        }
+    }
+    if ($regularCount >= PARAMS['minCarga'] && !$reevaluacionIncidente) {
         json_error("Ya se completó esta actividad: {$opmRow['full_name']} ya fue evaluado " . PARAMS['minCarga'] . " veces con carga \"$carga\" este trimestre.", 422);
     }
 
