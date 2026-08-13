@@ -26,6 +26,13 @@ function is_multipurpose_operator(?string $puesto): bool
     return strpos($puesto, 'OPERARIO') !== false && strpos($puesto, 'MULTIPROPOSITO') !== false;
 }
 
+/** Hora límite para que un supervisor registre una ficha del turno seleccionado. */
+function supervisor_shift_registration_deadline(string $date, string $turno): DateTimeImmutable
+{
+    $deadlineTime = $turno === 'dia' ? '00:00:00' : '12:00:00';
+    return new DateTimeImmutable($date . ' +1 day ' . $deadlineTime);
+}
+
 function require_multipurpose_operator(int $opmId): array
 {
     $stmt = db()->prepare('SELECT id, full_name, puesto FROM opms WHERE id = ? AND active = 1');
@@ -97,6 +104,13 @@ function handle_shift_create(): void
     }
     if (!in_array($carga, CARGAS, true)) {
         json_error('Tipo de carga inválido', 422);
+    }
+    if ($user['role'] === 'supervisor') {
+        $deadline = supervisor_shift_registration_deadline($date, $turno);
+        if (new DateTimeImmutable('now') > $deadline) {
+            $label = $turno === 'dia' ? '00:00' : '12:00';
+            json_error("El plazo para registrar el turno de " . ($turno === 'dia' ? 'día' : 'noche') . " venció el " . $deadline->format('d/m/Y') . " a las $label.", 422);
+        }
     }
 
     $opmRow = require_multipurpose_operator($opmId);
@@ -325,6 +339,13 @@ function handle_shift_update(int $id): void
     }
     if ($user['role'] !== 'admin' && (int)$record['supervisor_id'] !== (int)$user['id']) {
         json_error('Solo puede editar las fichas que usted registró', 403);
+    }
+    if ($user['role'] === 'supervisor') {
+        $deadline = supervisor_shift_registration_deadline($record['work_date'], $record['turno']);
+        if (new DateTimeImmutable('now') > $deadline) {
+            $label = $record['turno'] === 'dia' ? '00:00' : '12:00';
+            json_error("El plazo para modificar el turno de " . ($record['turno'] === 'dia' ? 'día' : 'noche') . " venció el " . $deadline->format('d/m/Y') . " a las $label.", 422);
+        }
     }
 
     $b = isset($_POST['payload']) ? (json_decode($_POST['payload'], true) ?: []) : json_body();
