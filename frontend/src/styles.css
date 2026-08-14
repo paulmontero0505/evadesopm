@@ -1081,3 +1081,26 @@ body.login-bg, body.login-bg .app { background: #fff; }
   body.trace-printing .trace-table td > small, body.trace-printing .trace-model { font-size: 6.8pt; color: #334155; }
   body.trace-printing .movement-badge, body.trace-printing .trace-condition { color: #111; background: transparent; padding: 0; font-size: 7pt; font-weight: 700; }
 }
+
+/* ---------- Auditoría ---------- */
+.audit-filters { display: flex; flex-direction: column; gap: 12px; }
+.audit-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 14px; }
+.audit-filter-grid label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.audit-filter-search { grid-column: span 2; min-width: 180px; }
+.audit-filter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: flex-end; }
+.audit-table-card { margin-top: 12px; padding: 0; overflow: hidden; }
+.audit-table { overflow-x: auto; }
+.audit-head, .audit-cells { display: grid; grid-template-columns: minmax(140px, .95fr) minmax(150px, 1fr) minmax(120px, .8fr) minmax(200px, 1.4fr) minmax(90px, .6fr); min-width: 780px; }
+.audit-head { background: #f4f7fb; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.audit-head span, .audit-cells > * { padding: 10px 12px; align-self: center; }
+.audit-row { border-top: 1px solid var(--border); color: var(--muted); font-size: 12.5px; }
+.audit-row:nth-child(odd) { background: #fbfdff; }
+.audit-row.open { background: #f2f7ff; }
+.audit-cells strong { color: var(--navy); display: block; }
+.audit-role { display: inline-block; margin-top: 2px; text-transform: capitalize; color: var(--muted); font-size: 10.5px; }
+.audit-when { color: var(--text); font-variant-numeric: tabular-nums; }
+.audit-module { display: inline-block; padding: 2px 9px; border-radius: 999px; background: #e7f0fb; color: #1666b8; font-size: 11px; font-weight: 700; }
+.audit-entity { color: var(--muted); }
+.audit-detail-toggle { padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--blue); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.audit-detail-toggle:hover { background: #f0f6ff; }
+.audit-detail { margin: 0 12px 12px; padding: 10px 12px; background: #0f172a; color: #e2e8f0; border-radius: 8px; font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; overflow-x: auto; }

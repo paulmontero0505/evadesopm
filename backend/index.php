@@ -15,7 +15,9 @@ set_exception_handler(function (Throwable $e) {
     json_error(DEBUG ? 'Error interno: ' . $e->getMessage() : 'Error interno del servidor', 500);
 });
 
+require_once __DIR__ . '/lib/audit.php';
 require_once __DIR__ . '/api/auth.php';
+require_once __DIR__ . '/api/audit.php';
 require_once __DIR__ . '/api/rules.php';
 require_once __DIR__ . '/api/opms.php';
 require_once __DIR__ . '/api/shifts.php';
@@ -37,6 +39,9 @@ if ($path === '') {
     $path = $uri;
 }
 $seg = array_values(array_filter(explode('/', $path), fn($s) => $s !== ''));
+
+// Auditoría automática de toda petición que modifica datos.
+audit_register_request($method, $path);
 
 // --- Enrutamiento ---
 $r0 = $seg[0] ?? '';
@@ -148,6 +153,10 @@ switch ($r0) {
 
     case 'turno-team':
         if ($r1 === '' && $method === 'GET') return handle_shift_team_list();
+        break;
+
+    case 'audit':
+        if ($r1 === '' && $method === 'GET') return handle_audit_list();
         break;
 
     case '':

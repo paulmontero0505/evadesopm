@@ -201,6 +201,8 @@ export const api = {
   deleteRadioAssignment: (id) => request(`/radios/assignments/${id}`, { method: 'DELETE' }),
   assignRadioCollaborator: (id, opm_id, puesto = '') => request(`/radios/assignments/${id}/collaborator`, { method: 'POST', body: { opm_id, puesto } }),
   moveRadioAssignments: (payload, photo) => { const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); if (photo) fd.append('movement_photo', photo); return upload('/radios/movements', fd) },
+  audit: ({ from = '', to = '', user_id = '', module = '', q = '', limit = 300 } = {}) =>
+    request(`/audit?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&user_id=${encodeURIComponent(user_id)}&module=${encodeURIComponent(module)}&q=${encodeURIComponent(q)}&limit=${limit}`),
   returnRadioAssignments: (payload, photo) => {
     const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); if (photo) fd.append('return_photo', photo)
     return upload('/radios/returns', fd)

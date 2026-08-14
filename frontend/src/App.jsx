@@ -19,6 +19,7 @@ import CambiarClave from './pages/CambiarClave.jsx'
 import Asignaciones from './pages/Asignaciones.jsx'
 import ControlRadios from './pages/ControlRadios.jsx'
 import RadiosCatalogo from './pages/RadiosCatalogo.jsx'
+import Auditoria from './pages/Auditoria.jsx'
 import AppErrorBoundary from './components/AppErrorBoundary.jsx'
 
 function Protected({ children, roles, needShift = true }) {
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="/asignaciones-supervisores" element={<Navigate to="/asignaciones" replace />} />
         <Route path="/radios" element={<Protected roles={['admin','supervisor','coordinator']}><ControlRadios /></Protected>} />
         <Route path="/registrar-radios" element={<Protected roles={['admin']}><RadiosCatalogo /></Protected>} />
+        <Route path="/auditoria" element={<Protected roles={['admin']} needShift={false}><Auditoria /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </AppErrorBoundary>
