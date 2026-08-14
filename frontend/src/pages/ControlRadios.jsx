@@ -2064,6 +2064,7 @@ function DailyRadioReport({ date, turno, user }) {
                   <th>Fecha y hora</th>
                   <th>Responsable anterior</th>
                   <th>Responsable actual</th>
+                  <th>Colaborador que recibe la radio</th>
                   <th>Ubicación final</th>
                   <th>Comentarios del movimiento</th>
                 </tr>
@@ -2101,6 +2102,11 @@ function DailyRadioReport({ date, turno, user }) {
                           Turno: {turnoLabel(record.current_turno || record.turno)}
                         </small>
                       ) : null}
+                    </td>
+                    <td>
+                      {record.collaborator_name || (
+                        <span className="muted">Sin colaborador que recibe</span>
+                      )}
                     </td>
                     <td>{record.final_location || "TOOLROOM"}</td>
                     <td>
