@@ -360,7 +360,10 @@ function handle_radio_assignment_group_update(): void {
     $storedRadioIds = array_keys($recordsByRadio); $requestedRadioIds = $radioIds;
     $addedRadioIds = array_values(array_diff($requestedRadioIds, $storedRadioIds));
     $removedRadioIds = array_values(array_diff($storedRadioIds, $requestedRadioIds));
-    if (($addedRadioIds || $removedRadioIds) && array_filter($records, fn($record) => $record['returned_at'])) json_error('No se pueden agregar o quitar radios de una entrega que ya tiene devoluciones registradas.', 409);
+    if ($removedRadioIds) {
+        $removedReturned = array_filter($records, fn($record) => in_array((int)$record['radio_id'], $removedRadioIds, true) && $record['returned_at']);
+        if ($removedReturned) json_error('No se puede quitar un radio que ya fue devuelto. Puede agregar radios nuevos a esta entrega, pero las devoluciones registradas se conservan.', 409);
+    }
     $supervisor = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $supervisor->execute([$supervisorId]);
     if (!$supervisor->fetchColumn()) json_error('Seleccione un supervisor o coordinador activo.', 422);
     foreach ($radioIds as $radioId) if (!in_array($statuses[(string)$radioId] ?? $statuses[$radioId] ?? '', RADIO_CONDITIONS, true)) json_error('Seleccione un estado válido para cada radio.', 422);
