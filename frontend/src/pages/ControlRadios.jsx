@@ -1558,6 +1558,7 @@ function FlexibleGroupedReliefPanel({
   const [selectedIds, setSelectedIds] = useState([]);
   const [action, setAction] = useState("return");
   const [targetUserId, setTargetUserId] = useState("");
+  const [targetGroupKey, setTargetGroupKey] = useState("");
   const [comments, setComments] = useState("");
   const [savingId, setSavingId] = useState(null);
   const [moving, setMoving] = useState(false);
@@ -1579,6 +1580,13 @@ function FlexibleGroupedReliefPanel({
   );
   const activeGroup = groups.find((group) => group.key === activeGroupKey);
   const activeRecords = activeGroup?.records || [];
+  const locationTargets = groups
+    .filter((group) => group.key !== activeGroupKey)
+    .map((group) => ({
+      value: group.key,
+      label: `${group.first.location || "TOOLROOM"}${group.first.nave ? ` · ${group.first.nave}` : ""} · ${group.first.current_supervisor_name || group.first.supervisor_name}`,
+    }));
+  const targetGroup = groups.find((group) => group.key === targetGroupKey);
   const visibleRecords = activeRecords.filter((record) => {
     const query = radioSearch.trim().toLowerCase();
     return !query || `${record.radio_code} ${record.model} ${record.imei}`.toLowerCase().includes(query);
@@ -1643,11 +1651,17 @@ function FlexibleGroupedReliefPanel({
       await api.moveRadioAssignments({
         assignment_ids: selectedIds,
         action,
-        target_user_id: targetUserId,
+        target_user_id: action === "relocate"
+          ? targetGroup?.first.current_supervisor_id || targetGroup?.first.supervisor_id
+          : targetUserId,
+        target_group_id: targetGroupKey,
+        target_location: targetGroup?.first.location || "",
+        target_nave: targetGroup?.first.nave || "",
         comments,
       });
       setSelectedIds([]);
       setComments("");
+      setTargetGroupKey("");
       await onReload();
     } catch (err) {
       setError(err.message);
@@ -1904,9 +1918,8 @@ function FlexibleGroupedReliefPanel({
       </section>
       <section className="card">
         <h3>Registrar movimiento de radios</h3>
-        <p className="muted assignment-copy">
-          Devuelva o reasigne únicamente los radios seleccionados de esta
-          ubicación.
+          <p className="muted assignment-copy">
+            Registre la devolución, el relevo de turno o el traslado de los radios seleccionados.
         </p>
         <form onSubmit={move}>
           <label>Acción</label>
@@ -1916,25 +1929,46 @@ function FlexibleGroupedReliefPanel({
             onChange={(event) => {
               setAction(event.target.value);
               setTargetUserId("");
+              setTargetGroupKey("");
             }}
           >
             <option value="return">Registrar devolución</option>
-            <option value="reassign">Reasignar al siguiente turno</option>
+            <option value="reassign">Relevar al siguiente turno</option>
+            <option value="relocate">Reasignación a otra ubicación</option>
           </select>
-          <label>{action === "return" ? "Coordinador que recibe en Tool Room" : "Responsable del siguiente turno"}</label>
-          <SearchablePicker
-            items={nextSupervisors.filter((item) => (action !== "return" || item.role === "coordinator") && (action !== "reassign" || Number(item.user_id) !== Number(activeGroup.first.current_supervisor_id || activeGroup.first.supervisor_id))).map((item) => ({
-              ...item,
-              id: item.user_id,
-            }))}
-            value={targetUserId}
-            onSelect={setTargetUserId}
-            labelOf={(item) =>
-              `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"} · ${Number(item.in_turn) ? "En turno" : "Fuera de turno"}`
-            }
-            searchOf={(item) => `${item.full_name} ${item.role}`}
-            placeholder={action === "return" ? "Buscar coordinador" : "Buscar supervisor o coordinador"}
-          />
+          {action === "relocate" ? (
+            <>
+              <label>Ubicación y responsable que recibe</label>
+              <SearchSelect
+                value={targetGroupKey}
+                onChange={(value) => setTargetGroupKey(value)}
+                options={locationTargets}
+                placeholder="Seleccione una ubicación"
+              />
+              {targetGroup && (
+                <span className="field-help">
+                  Responsable actual: {targetGroup.first.current_supervisor_name || targetGroup.first.supervisor_name}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <label>{action === "return" ? "Coordinador que recibe en Tool Room" : "Responsable del siguiente turno"}</label>
+              <SearchablePicker
+                items={nextSupervisors.filter((item) => (action !== "return" || item.role === "coordinator") && (action !== "reassign" || Number(item.user_id) !== Number(activeGroup.first.current_supervisor_id || activeGroup.first.supervisor_id))).map((item) => ({
+                  ...item,
+                  id: item.user_id,
+                }))}
+                value={targetUserId}
+                onSelect={setTargetUserId}
+                labelOf={(item) =>
+                  `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"} · ${Number(item.in_turn) ? "En turno" : "Fuera de turno"}`
+                }
+                searchOf={(item) => `${item.full_name} ${item.role}`}
+                placeholder={action === "return" ? "Buscar coordinador" : "Buscar supervisor o coordinador"}
+              />
+            </>
+          )}
           <label>Comentarios</label>
           <textarea
             className="input radio-textarea"
@@ -1947,14 +1981,17 @@ function FlexibleGroupedReliefPanel({
             disabled={
               moving ||
               !selectedIds.length ||
-              (action === "reassign" && !targetUserId)
+              (action === "reassign" && !targetUserId) ||
+              (action === "relocate" && !targetGroupKey)
             }
           >
             {moving
               ? "Registrando…"
               : action === "return"
                 ? `Devolver ${selectedIds.length} radio${selectedIds.length === 1 ? "" : "s"}`
-                : `Reasignar ${selectedIds.length} radio${selectedIds.length === 1 ? "" : "s"}`}
+                : action === "reassign"
+                  ? `Relevar ${selectedIds.length} radio${selectedIds.length === 1 ? "" : "s"}`
+                  : `Reasignar ${selectedIds.length} radio${selectedIds.length === 1 ? "" : "s"}`}
           </button>
         </form>
       </section>
@@ -2007,7 +2044,8 @@ function DailyRadioReport({ date, turno, user }) {
   const movementSummary = useMemo(() => {
     const entregados = records.filter((record) => record.movement === "Entregado");
     const returned = records.filter((record) => record.movement === "Devuelto a Tool Room");
-    const reassigned = records.filter((record) => record.movement === "Reasignado");
+    const relieved = records.filter((record) => record.movement === "Relevado al siguiente turno");
+    const relocated = records.filter((record) => record.movement === "Reasignación a otra ubicación");
     const returnBy = Object.entries(returned.reduce((all, record) => {
       const name = record.returned_by_name || record.previous_supervisor_name || "Sin responsable";
       all[name] = (all[name] || 0) + 1;
@@ -2019,12 +2057,17 @@ function DailyRadioReport({ date, turno, user }) {
       all[route] = (all[route] || 0) + 1;
       return all;
     }, {}));
-    const reassignedTo = Object.entries(reassigned.reduce((all, record) => {
+    const relievedTo = Object.entries(relieved.reduce((all, record) => {
       const route = `${record.previous_supervisor_name || "Tool Room"} → ${record.current_supervisor_name || "Tool Room"}`;
       all[route] = (all[route] || 0) + 1;
       return all;
     }, {}));
-    return { entregados, returned, reassigned, entregadoTo, returnBy, reassignedTo };
+    const relocatedTo = Object.entries(relocated.reduce((all, record) => {
+      const route = `→ ${record.final_location || "Sin ubicación"} · ${record.current_supervisor_name || "Sin responsable"}`;
+      all[route] = (all[route] || 0) + 1;
+      return all;
+    }, {}));
+    return { entregados, returned, relieved, relocated, entregadoTo, returnBy, relievedTo, relocatedTo };
   }, [records]);
 
   function printReport() {
@@ -2040,8 +2083,10 @@ function DailyRadioReport({ date, turno, user }) {
   function movementClass(movement) {
     return movement === "Devuelto a Tool Room"
       ? "return"
-      : movement === "Reasignado"
+      : movement === "Relevado al siguiente turno"
         ? "reassign"
+        : movement === "Reasignación a otra ubicación"
+          ? "relocate"
         : "deliver";
   }
 
@@ -2214,8 +2259,16 @@ function DailyRadioReport({ date, turno, user }) {
           ))}
         </div>
         <div>
-          <strong>Reasignaciones: {movementSummary.reassigned.length}</strong>
-          {movementSummary.reassignedTo.map(([route, count]) => (
+          <strong>Relevos de turno: {movementSummary.relieved.length}</strong>
+          {movementSummary.relievedTo.map(([route, count]) => (
+            <span key={route}>
+              {route}: {count} radio{count === 1 ? "" : "s"}
+            </span>
+          ))}
+        </div>
+        <div>
+          <strong>Reasignaciones de ubicación: {movementSummary.relocated.length}</strong>
+          {movementSummary.relocatedTo.map(([route, count]) => (
             <span key={route}>
               {route}: {count} radio{count === 1 ? "" : "s"}
             </span>

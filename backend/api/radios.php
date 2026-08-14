@@ -231,16 +231,28 @@ function handle_radio_movements(): void {
     $me = require_role(['admin', 'supervisor', 'coordinator']); $b = radio_payload();
     $ids = array_values(array_unique(array_filter(array_map('intval', is_array($b['assignment_ids'] ?? null) ? $b['assignment_ids'] : []))));
     $action = $b['action'] ?? ''; $targetId = (int)($b['target_user_id'] ?? 0); $comments = mb_substr(trim($b['comments'] ?? ''), 0, 1000) ?: null;
-    if (!$ids || !in_array($action, ['return','reassign'], true)) json_error('Seleccione radios y la acción a registrar.', 422);
+    $targetGroup = mb_substr(trim((string)($b['target_group_id'] ?? '')), 0, 40);
+    $targetLocation = mb_substr(trim((string)($b['target_location'] ?? '')), 0, 150);
+    $targetNave = mb_substr(trim((string)($b['target_nave'] ?? '')), 0, 150);
+    if (!$ids || !in_array($action, ['return','reassign','relocate'], true)) json_error('Seleccione radios y la acción a registrar.', 422);
     if ($action === 'return' && $targetId) { $check = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role='coordinator'"); $check->execute([$targetId]); if (!$check->fetchColumn()) json_error('Seleccione un coordinador activo para recibir la devolución en Tool Room.', 422); }
     $marks = implode(',', array_fill(0, count($ids), '?')); $stmt = db()->prepare("SELECT * FROM radio_assignments WHERE id IN ($marks) AND returned_at IS NULL"); $stmt->execute($ids); $rows = $stmt->fetchAll();
     if (count($rows) !== count($ids)) json_error('Uno de los radios ya fue devuelto o no existe.', 422);
     foreach ($rows as $row) if ($me['role'] === 'supervisor' && (int)($row['current_supervisor_id'] ?: $row['supervisor_id']) !== (int)$me['id']) json_error('Solo puede gestionar radios bajo su responsabilidad.', 403);
+    if ($action === 'relocate') {
+        if (!$targetGroup || !$targetLocation || !$targetId) json_error('Seleccione una ubicación con responsable activo.', 422);
+        $sourceGroup = $rows[0]['delivery_group'] ?: ('legacy-' . $rows[0]['id']);
+        if ($targetGroup === $sourceGroup) json_error('Seleccione una ubicación distinta a la actual.', 422);
+        $target = db()->prepare("SELECT 1 FROM radio_assignments WHERE returned_at IS NULL AND COALESCE(delivery_group, CONCAT('legacy-', id))=? AND COALESCE(location,'')=? AND COALESCE(nave,'')=? AND COALESCE(current_supervisor_id,supervisor_id)=? LIMIT 1");
+        $target->execute([$targetGroup, $targetLocation, $targetNave, $targetId]);
+        if (!$target->fetchColumn()) json_error('La ubicación o su responsable actual ya no están disponibles.', 422);
+    }
     $photo = save_radio_photo('movement_photo'); $pdo=db(); $pdo->beginTransaction();
     try {
       $movement=$pdo->prepare('INSERT INTO radio_assignment_movements (radio_assignment_id,action,from_user_id,to_user_id,work_date,turno,comments,photo_path) VALUES (?,?,?,?,?,?,?,?)');
       if ($action === 'return') { $update=$pdo->prepare('UPDATE radio_assignments SET returned_at=NOW(), returned_by=?, return_comments=?, return_photo_path=?, current_supervisor_id=NULL, current_work_date=NULL, current_turno=NULL WHERE id=?'); foreach($rows as $row){$from=(int)($row['current_supervisor_id']?:$row['supervisor_id']);$movement->execute([$row['id'],'return',$from,$targetId ?: null,$row['current_work_date']?:$row['work_date'],$row['current_turno']?:$row['turno'],$comments,$photo]);$update->execute([$me['id'],$comments,$photo,$row['id']]);} }
-      else { if(!$targetId) json_error('Seleccione al responsable del siguiente turno.',422); $check=$pdo->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $check->execute([$targetId]); if(!$check->fetchColumn()) json_error('El supervisor o coordinador seleccionado no existe o está inactivo.',422); foreach($rows as $row){if((int)($row['current_supervisor_id']?:$row['supervisor_id'])===$targetId) json_error('No puede reasignar un radio al mismo responsable actual.',422);} $first=$rows[0];$nextDate=$first['current_turno']==='noche'?date('Y-m-d',strtotime($first['current_work_date'].' +1 day')):$first['current_work_date'];$nextTurno=$first['current_turno']==='noche'?'dia':'noche';$update=$pdo->prepare('UPDATE radio_assignments SET current_supervisor_id=?, current_work_date=?, current_turno=? WHERE id=?');foreach($rows as $row){$from=(int)($row['current_supervisor_id']?:$row['supervisor_id']);$movement->execute([$row['id'],'reassign',$from,$targetId,$row['current_work_date']?:$row['work_date'],$row['current_turno']?:$row['turno'],$comments,$photo]);$update->execute([$targetId,$nextDate,$nextTurno,$row['id']]);} }
+      elseif ($action === 'reassign') { if(!$targetId) json_error('Seleccione al responsable del siguiente turno.',422); $check=$pdo->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $check->execute([$targetId]); if(!$check->fetchColumn()) json_error('El supervisor o coordinador seleccionado no existe o está inactivo.',422); foreach($rows as $row){if((int)($row['current_supervisor_id']?:$row['supervisor_id'])===$targetId) json_error('No puede relevar un radio al mismo responsable actual.',422);} $first=$rows[0];$nextDate=$first['current_turno']==='noche'?date('Y-m-d',strtotime($first['current_work_date'].' +1 day')):$first['current_work_date'];$nextTurno=$first['current_turno']==='noche'?'dia':'noche';$update=$pdo->prepare('UPDATE radio_assignments SET current_supervisor_id=?, current_work_date=?, current_turno=? WHERE id=?');foreach($rows as $row){$from=(int)($row['current_supervisor_id']?:$row['supervisor_id']);$movement->execute([$row['id'],'reassign',$from,$targetId,$row['current_work_date']?:$row['work_date'],$row['current_turno']?:$row['turno'],$comments,$photo]);$update->execute([$targetId,$nextDate,$nextTurno,$row['id']]);} }
+      else { $update=$pdo->prepare('UPDATE radio_assignments SET delivery_group=?, location=?, nave=?, current_supervisor_id=? WHERE id=?'); foreach($rows as $row){$from=(int)($row['current_supervisor_id']?:$row['supervisor_id']);$movement->execute([$row['id'],'relocate',$from,$targetId,$row['current_work_date']?:$row['work_date'],$row['current_turno']?:$row['turno'],$comments,$photo]);$update->execute([$targetGroup,$targetLocation,$targetNave ?: null,$targetId,$row['id']]);} }
       $pdo->commit();
     } catch(Throwable $e){$pdo->rollBack();throw $e;}
     json_response(['ok'=>true,'moved'=>count($rows)]);
@@ -470,8 +482,12 @@ function radio_daily_report(string $date, string $turno): array {
                 $record['current_supervisor_name'] = $last['to_name'] ?: 'Tool Room';
                 $record['returned_by_name'] = $last['from_name'];
                 $record['final_location'] = 'TOOLROOM';
+            } elseif ($last['action'] === 'relocate') {
+                $record['movement'] = 'Reasignación a otra ubicación';
+                $record['current_supervisor_id'] = $last['to_user_id'] ? (int)$last['to_user_id'] : $record['current_supervisor_id'];
+                $record['current_supervisor_name'] = $last['to_name'] ?: $record['current_supervisor_name'];
             } else {
-                $record['movement'] = 'Reasignado';
+                $record['movement'] = 'Relevado al siguiente turno';
                 $record['current_supervisor_id'] = $last['to_user_id'] ? (int)$last['to_user_id'] : $record['current_supervisor_id'];
                 $record['current_supervisor_name'] = $last['to_name'] ?: $record['current_supervisor_name'];
             }

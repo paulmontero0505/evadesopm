@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS radio_assignments (
 CREATE TABLE IF NOT EXISTS radio_assignment_movements (
   id INT AUTO_INCREMENT PRIMARY KEY,
   radio_assignment_id INT NOT NULL,
-  action ENUM('return','reassign') NOT NULL,
+  action ENUM('return','reassign','relocate') NOT NULL,
   from_user_id INT NOT NULL,
   to_user_id INT NULL,
   work_date DATE NOT NULL,
