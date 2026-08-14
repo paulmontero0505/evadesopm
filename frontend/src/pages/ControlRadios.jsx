@@ -1841,7 +1841,12 @@ function FlexibleGroupedReliefPanel({
             .map((puesto) => ({ value: puesto, label: puesto }));
           const candidates = allOpms
             .filter((opm) => !selectedPuesto || opm.puesto === selectedPuesto)
-            .map((opm) => ({ ...opm, id: opm.opm_id }));
+            .map((opm) => ({ ...opm, id: opm.opm_id }))
+            .sort(
+              (a, b) =>
+                Number(b.in_turn) - Number(a.in_turn) ||
+                a.full_name.localeCompare(b.full_name),
+            );
           return (
             <article className="radio-record relief-record" key={record.id}>
               <div className="radio-record-head">
@@ -1913,7 +1918,10 @@ function FlexibleGroupedReliefPanel({
                     `${opm.code} ${opm.full_name} ${opm.puesto || ""}`
                   }
                   statusOf={(opm) =>
-                    Number(opm.in_turn) ? "" : "Fuera de turno"
+                    Number(opm.in_turn) ? "En turno" : "Fuera de turno"
+                  }
+                  statusClassOf={(opm) =>
+                    Number(opm.in_turn) ? "is-in-turn" : "is-off-turn"
                   }
                   placeholder="Buscar por nombre o código"
                 />
