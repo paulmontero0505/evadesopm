@@ -526,6 +526,8 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .search-picker-input .input { margin: 0; padding-left: 38px; }
 .search-picker-menu { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0; max-height: 230px; overflow-y: auto; background: var(--card); border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: var(--shadow-md); }
 .search-picker-menu button { display: block; width: 100%; padding: 10px 12px; border: 0; background: transparent; text-align: left; color: var(--text); font-size: 13px; cursor: pointer; }
+.search-picker-menu .search-picker-option { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.search-picker-option-status { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
 .search-picker-menu button:hover, .search-picker-menu button:focus-visible { background: #f0f6ff; color: var(--navy); outline: none; }
 .search-picker-menu button:disabled { cursor: not-allowed; color: #8b98aa; background: #f7f8fa; }
 .search-picker-menu button:disabled:hover { color: #8b98aa; background: #f7f8fa; }

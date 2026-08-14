@@ -1766,9 +1766,7 @@ function FlexibleGroupedReliefPanel({
           ]
             .sort()
             .map((puesto) => ({ value: puesto, label: puesto }));
-          const candidates = allOpms
-            .filter((opm) => opm.puesto === record.assigned_puesto)
-            .map((opm) => ({ ...opm, id: opm.opm_id }));
+          const candidates = allOpms.map((opm) => ({ ...opm, id: opm.opm_id }));
           return (
             <article className="radio-record relief-record" key={record.id}>
               <div className="radio-record-head">
@@ -1809,13 +1807,22 @@ function FlexibleGroupedReliefPanel({
                   items={candidates}
                   value={record.collaborator_id || ""}
                   onSelect={(opmId) => {
-                    if (opmId) updateAssignment(record, { opm_id: opmId });
+                    const collaborator = candidates.find(
+                      (opm) => Number(opm.id) === Number(opmId),
+                    );
+                    if (collaborator) {
+                      updateAssignment(record, {
+                        opm_id: opmId,
+                        puesto: collaborator.puesto || record.assigned_puesto,
+                      });
+                    }
                   }}
-                  labelOf={(opm) =>
-                    `${opm.full_name} · ${opm.code}${Number(opm.in_turn) ? " · En turno" : " · Fuera de turno"}`
-                  }
+                  labelOf={(opm) => opm.full_name}
                   searchOf={(opm) =>
                     `${opm.code} ${opm.full_name} ${opm.puesto || ""}`
+                  }
+                  statusOf={(opm) =>
+                    Number(opm.in_turn) ? "" : "Fuera de turno"
                   }
                   placeholder="Buscar por nombre o código"
                 />
