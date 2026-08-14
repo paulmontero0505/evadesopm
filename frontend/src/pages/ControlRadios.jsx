@@ -133,13 +133,20 @@ export default function ControlRadios() {
     setLoading(true);
     setError("");
     try {
-      const [context, overview] = await Promise.all([
+      const [context, overview, shiftTeam] = await Promise.all([
         api.radioContext(shift.date, shift.turno),
         api.radioOverview(),
+        api.shiftTeam(shift.date, shift.turno),
       ]);
       setData({
         ...context,
         relief_records: (overview.records || []).filter((record) => !record.returned_at),
+        in_turn_supervisor_ids: (shiftTeam.members || [])
+          .filter((member) =>
+            Number(member.in_turn) &&
+            ["supervisor", "coordinator"].includes(member.person_type),
+          )
+          .map((member) => member.person_id),
       });
     } catch (err) {
       setError(err.message);
@@ -809,6 +816,7 @@ export default function ControlRadios() {
               ...(data.supervisors || [])
                 .filter((supervisor) => Number(supervisor.in_turn))
                 .map((supervisor) => supervisor.user_id),
+              ...(data.in_turn_supervisor_ids || []),
             ]}
             onReload={load}
             detailOpen={reliefDetailOpen}
