@@ -1562,6 +1562,7 @@ function FlexibleGroupedReliefPanel({
   const [savingId, setSavingId] = useState(null);
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState("");
+  const [puestoOverrides, setPuestoOverrides] = useState({});
   const visible = records;
   const groups = useMemo(
     () =>
@@ -1613,6 +1614,11 @@ function FlexibleGroupedReliefPanel({
         payload.puesto || "",
       );
       await onReload();
+      setPuestoOverrides((current) => {
+        const next = { ...current };
+        delete next[record.id];
+        return next;
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1761,12 +1767,16 @@ function FlexibleGroupedReliefPanel({
           </div>
         )}
         <div className="relief-record-list">{activeRecords.map((record) => {
+          const selectedPuesto =
+            puestoOverrides[record.id] ?? record.assigned_puesto;
           const puestoOptions = [
             ...new Set([record.assigned_puesto, ...puestos].filter(Boolean)),
           ]
             .sort()
             .map((puesto) => ({ value: puesto, label: puesto }));
-          const candidates = allOpms.map((opm) => ({ ...opm, id: opm.opm_id }));
+          const candidates = allOpms
+            .filter((opm) => !selectedPuesto || opm.puesto === selectedPuesto)
+            .map((opm) => ({ ...opm, id: opm.opm_id }));
           return (
             <article className="radio-record relief-record" key={record.id}>
               <div className="radio-record-head">
@@ -1789,11 +1799,20 @@ function FlexibleGroupedReliefPanel({
                 <div>
                   <label>Puesto</label>
                   <SearchSelect
-                    value={record.assigned_puesto || ""}
-                    onChange={(puesto) => updateAssignment(record, { puesto })}
+                    value={selectedPuesto || ""}
+                    onChange={(puesto) => {
+                      if (!puesto) {
+                        setPuestoOverrides((current) => ({
+                          ...current,
+                          [record.id]: "",
+                        }));
+                      } else {
+                        updateAssignment(record, { puesto });
+                      }
+                    }}
                     options={puestoOptions}
                     placeholder="Buscar y seleccionar puesto"
-                    emptyLabel="Seleccione puesto"
+                    emptyLabel="Todos los puestos"
                   />
                 </div>
                 <span>
@@ -1813,7 +1832,7 @@ function FlexibleGroupedReliefPanel({
                     if (collaborator) {
                       updateAssignment(record, {
                         opm_id: opmId,
-                        puesto: collaborator.puesto || record.assigned_puesto,
+                        puesto: collaborator.puesto || selectedPuesto,
                       });
                     }
                   }}
