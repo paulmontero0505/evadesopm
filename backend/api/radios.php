@@ -22,7 +22,7 @@ function radio_attach_movements(array $records): array {
     if (!$records) return $records;
     $ids = array_values(array_unique(array_map('intval', array_column($records, 'id'))));
     $marks = implode(',', array_fill(0, count($ids), '?'));
-    $stmt = db()->prepare("SELECT m.radio_assignment_id, m.action, m.from_user_id, m.to_user_id, m.registered_by, m.comments, m.created_at, from_u.full_name AS from_name, to_u.full_name AS to_name, reg_u.full_name AS registered_by_name, reg_u.role AS registered_by_role FROM radio_assignment_movements m LEFT JOIN users from_u ON from_u.id=m.from_user_id LEFT JOIN users to_u ON to_u.id=m.to_user_id LEFT JOIN users reg_u ON reg_u.id=m.registered_by WHERE m.radio_assignment_id IN ($marks) ORDER BY m.radio_assignment_id, m.created_at ASC, m.id ASC");
+    $stmt = db()->prepare("SELECT m.radio_assignment_id, m.action, m.from_user_id, m.to_user_id, m.registered_by, m.work_date, m.turno, m.comments, m.created_at, from_u.full_name AS from_name, to_u.full_name AS to_name, reg_u.full_name AS registered_by_name, reg_u.role AS registered_by_role FROM radio_assignment_movements m LEFT JOIN users from_u ON from_u.id=m.from_user_id LEFT JOIN users to_u ON to_u.id=m.to_user_id LEFT JOIN users reg_u ON reg_u.id=m.registered_by WHERE m.radio_assignment_id IN ($marks) ORDER BY m.radio_assignment_id, m.created_at ASC, m.id ASC");
     $stmt->execute($ids);
     $byAssignment = [];
     foreach ($stmt->fetchAll() as $row) {
@@ -33,6 +33,8 @@ function radio_attach_movements(array $records): array {
             'to_name' => $row['to_name'] ?: 'Tool Room',
             'registered_by_name' => $row['registered_by_name'],
             'registered_by_role' => $row['registered_by_role'],
+            'work_date' => $row['work_date'],
+            'turno' => $row['turno'],
             'comments' => $row['comments'],
             'created_at' => $row['created_at'],
         ];

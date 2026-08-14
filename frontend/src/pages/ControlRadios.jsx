@@ -1417,111 +1417,44 @@ function DeliveryReports({
               </div>
               {expanded && (
                 <>
-                  <div className="delivery-report-meta">
-                    <span>
-                      <b>Responsable que asigna</b>
-                      {first.registered_by_name}
-                    </span>
-                    <span>
-                      <b>Asignado a</b>
-                      {first.supervisor_name}
-                    </span>
-                    <span>
-                      <b>Fecha de asignación</b>
-                      {first.created_at || first.work_date} ·{" "}
-                      {turnoLabel(first.turno || turno)}
-                    </span>
-                    <span>
-                      <b>Ubicación</b>
-                      {first.location || "TOOLROOM"}
-                      {first.nave ? ` · ${first.nave}` : ""}
-                    </span>
-                    {first.comments && (
+                  <div className="delivery-report-return delivery-report-creation">
+                    <div className="delivery-report-return-title">
+                      <Radio size={14} /> Creación de la entrega
+                    </div>
+                    <div className="delivery-report-meta">
                       <span>
-                        <b>Comentarios</b>
-                        {first.comments}
+                        <b>Creada por</b>
+                        {first.registered_by_name || "—"}
                       </span>
-                    )}
+                      <span>
+                        <b>Asignada a</b>
+                        {first.supervisor_name}
+                      </span>
+                      <span>
+                        <b>Fecha y turno</b>
+                        {first.created_at || first.work_date} ·{" "}
+                        {turnoLabel(first.turno || turno)}
+                      </span>
+                      <span>
+                        <b>Ubicación</b>
+                        {first.location || "TOOLROOM"}
+                        {first.nave ? ` · ${first.nave}` : ""}
+                      </span>
+                      <span>
+                        <b>Estado</b>
+                        {radios.length} entregada{radios.length === 1 ? "" : "s"}
+                        {radios.filter((radio) => radio.returned_at).length > 0
+                          ? ` · ${radios.filter((radio) => radio.returned_at).length} devuelta${radios.filter((radio) => radio.returned_at).length === 1 ? "" : "s"}`
+                          : ""}
+                      </span>
+                      {first.comments && (
+                        <span>
+                          <b>Comentarios</b>
+                          {first.comments}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {radios.some((radio) => radio.returned_at) && (
-                    <div className="delivery-report-return">
-                      <div className="delivery-report-return-title">
-                        <Undo2 size={14} /> Devolución
-                      </div>
-                      <div className="delivery-report-meta">
-                        <span>
-                          <b>Estado</b>
-                          {radios.filter((radio) => radio.returned_at)
-                            .length === radios.length
-                            ? `Devuelto (${radios.length} radio${radios.length === 1 ? "" : "s"})`
-                            : `Parcial (${radios.filter((radio) => radio.returned_at).length} de ${radios.length} radio${radios.length === 1 ? "" : "s"})`}
-                        </span>
-                        <span>
-                          <b>Fecha</b>
-                          {
-                            radios.find((radio) => radio.returned_at)
-                              ?.returned_at
-                          }
-                        </span>
-                        <span>
-                          <b>Devuelto por</b>
-                          {radios.find((radio) => radio.returned_at)
-                            ?.returned_by_name ||
-                            first.returned_by_name ||
-                            "—"}
-                        </span>
-                        {radios.find((radio) => radio.returned_at)
-                          ?.return_comments && (
-                          <span>
-                            <b>Comentarios</b>
-                            {
-                              radios.find((radio) => radio.returned_at)
-                                ?.return_comments
-                            }
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {radios.some((radio) => recordState(radio) === "Reasignado") && (
-                    <div className="delivery-report-return">
-                      <div className="delivery-report-return-title">
-                        <RefreshCw size={14} /> Reasignación
-                      </div>
-                      <div className="delivery-report-meta">
-                        <span>
-                          <b>Estado</b>
-                          {radios.filter((radio) => recordState(radio) === "Reasignado")
-                            .length} radio
-                          {radios.filter((radio) => recordState(radio) === "Reasignado")
-                            .length === 1
-                            ? ""
-                            : "s"}{" "}
-                          reasignada
-                          {radios.filter((radio) => recordState(radio) === "Reasignado")
-                            .length === 1
-                            ? ""
-                            : "s"}
-                        </span>
-                        <span>
-                          <b>Última actualización</b>
-                          {
-                            radios.find(
-                              (radio) => recordState(radio) === "Reasignado",
-                            )?.state_at
-                          }
-                        </span>
-                        <span>
-                          <b>Responsable actual</b>
-                          {
-                            radios.find(
-                              (radio) => recordState(radio) === "Reasignado",
-                            )?.current_supervisor_name
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  )}
                   {traceRows.length > 0 && (
                     <div className="delivery-report-trace">
                       <div className="delivery-report-return-title">
@@ -1529,24 +1462,39 @@ function DeliveryReports({
                       </div>
                       <div className="delivery-report-trace-head">
                         <span>Movimiento</span>
-                        <span>De → A</span>
                         <span>Registró</span>
-                        <span>Fecha</span>
-                        <span>Radios</span>
+                        <span>Asignado a</span>
+                        <span>Fecha y turno</span>
+                        <span>Estado</span>
                       </div>
-                      {traceRows.map((mv, index) => (
-                        <div className="delivery-report-trace-row" key={index}>
-                          <strong>{mv.action_label}</strong>
-                          <span>
-                            {mv.from_name} → {mv.to_name}
-                          </span>
-                          <span>{mv.registered_by_name || "—"}</span>
-                          <span>{mv.created_at}</span>
-                          <span>
-                            {mv.codes.length} · {mv.codes.join(", ")}
-                          </span>
-                        </div>
-                      ))}
+                      {traceRows.map((mv, index) => {
+                        const noun =
+                          mv.action === "return"
+                            ? ["devuelta", "devueltas"]
+                            : mv.action === "relocate"
+                              ? ["reasignada de ubicación", "reasignadas de ubicación"]
+                              : ["relevada", "relevadas"];
+                        return (
+                          <div className="delivery-report-trace-row" key={index}>
+                            <strong>{mv.action_label}</strong>
+                            <span>{mv.registered_by_name || "—"}</span>
+                            <span>
+                              {mv.from_name} → {mv.to_name}
+                            </span>
+                            <span>
+                              {mv.created_at}
+                              {mv.turno ? ` · ${turnoLabel(mv.turno)}` : ""}
+                            </span>
+                            <span>
+                              {mv.codes.length}{" "}
+                              {mv.codes.length === 1 ? noun[0] : noun[1]}
+                              <small className="trace-codes">
+                                {mv.codes.join(", ")}
+                              </small>
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   <div className="delivery-report-radios">
