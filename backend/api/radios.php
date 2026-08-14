@@ -355,15 +355,14 @@ function handle_radio_assignment_group_update(): void {
     $stmt = db()->prepare('SELECT * FROM radio_assignments WHERE delivery_group=? ORDER BY id'); $stmt->execute([$group]); $records = $stmt->fetchAll();
     if (!$records) json_error('No se encontró la entrega agrupada.', 404);
     foreach ($records as $record) radio_assignment_for_update((int)$record['id'], $me);
+    // Las radios ya devueltas se preservan como historia y no participan del diff:
+    // el frontend edita solo las abiertas, así que compararlas contra la lista
+    // enviada haría que aparezcan como "quitadas" aunque el usuario no las tocó.
     $recordsByRadio = [];
-    foreach ($records as $record) $recordsByRadio[(int)$record['radio_id']] = $record;
+    foreach ($records as $record) if (!$record['returned_at']) $recordsByRadio[(int)$record['radio_id']] = $record;
     $storedRadioIds = array_keys($recordsByRadio); $requestedRadioIds = $radioIds;
     $addedRadioIds = array_values(array_diff($requestedRadioIds, $storedRadioIds));
     $removedRadioIds = array_values(array_diff($storedRadioIds, $requestedRadioIds));
-    if ($removedRadioIds) {
-        $removedReturned = array_filter($records, fn($record) => in_array((int)$record['radio_id'], $removedRadioIds, true) && $record['returned_at']);
-        if ($removedReturned) json_error('No se puede quitar un radio que ya fue devuelto. Puede agregar radios nuevos a esta entrega, pero las devoluciones registradas se conservan.', 409);
-    }
     $supervisor = db()->prepare("SELECT 1 FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $supervisor->execute([$supervisorId]);
     if (!$supervisor->fetchColumn()) json_error('Seleccione un supervisor o coordinador activo.', 422);
     foreach ($radioIds as $radioId) if (!in_array($statuses[(string)$radioId] ?? $statuses[$radioId] ?? '', RADIO_CONDITIONS, true)) json_error('Seleccione un estado válido para cada radio.', 422);
@@ -378,7 +377,7 @@ function handle_radio_assignment_group_update(): void {
     try {
         $update = $pdo->prepare('UPDATE radio_assignments SET supervisor_id=?, current_supervisor_id=CASE WHEN current_supervisor_id=? THEN ? ELSE current_supervisor_id END, nave=?, location=?, assigned_puesto=?, condition_status=?, comments=?, photo_path=? WHERE id=?');
         $insert = $pdo->prepare('INSERT INTO radio_assignments (delivery_group,radio_id,supervisor_id,current_supervisor_id,work_date,current_work_date,turno,current_turno,nave,location,assigned_puesto,condition_status,comments,photo_path,registered_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        if ($removedRadioIds) { $marks = implode(',', array_fill(0, count($removedRadioIds), '?')); $delete = $pdo->prepare("DELETE FROM radio_assignments WHERE delivery_group=? AND radio_id IN ($marks)"); $delete->execute([$group, ...$removedRadioIds]); }
+        if ($removedRadioIds) { $marks = implode(',', array_fill(0, count($removedRadioIds), '?')); $delete = $pdo->prepare("DELETE FROM radio_assignments WHERE delivery_group=? AND returned_at IS NULL AND radio_id IN ($marks)"); $delete->execute([$group, ...$removedRadioIds]); }
         foreach ($radioIds as $index => $radioId) {
             $record = $recordsByRadio[$radioId] ?? null;
             $condition = $statuses[(string)$radioId] ?? $statuses[$radioId];
