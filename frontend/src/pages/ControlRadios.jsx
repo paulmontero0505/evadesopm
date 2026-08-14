@@ -1374,7 +1374,10 @@ function DeliveryReports({
                   }
                   aria-expanded={expanded}
                 >
-                  <strong>Entrega a {first.supervisor_name}</strong>
+                  <strong>
+                    Responsable Actual:{" "}
+                    {first.current_supervisor_name || first.supervisor_name}
+                  </strong>
                   <span>
                     {radios.length} radio{radios.length === 1 ? "" : "s"}{" "}
                     asignado{radios.length === 1 ? "" : "s"} ·{" "}
@@ -1457,44 +1460,50 @@ function DeliveryReports({
                   </div>
                   {traceRows.length > 0 && (
                     <div className="delivery-report-trace">
-                      <div className="delivery-report-return-title">
+                      <div className="delivery-report-section-title">
                         <RefreshCw size={14} /> Trazabilidad de movimientos
                       </div>
-                      <div className="delivery-report-trace-head">
-                        <span>Movimiento</span>
-                        <span>Registró</span>
-                        <span>Asignado a</span>
-                        <span>Fecha y turno</span>
-                        <span>Estado</span>
+                      <div className="delivery-report-trace-table">
+                        <div className="delivery-report-trace-head">
+                          <span>Movimiento</span>
+                          <span>Registró</span>
+                          <span>Asignado a</span>
+                          <span>Fecha y turno</span>
+                          <span>Estado</span>
+                        </div>
+                        {traceRows.map((mv, index) => {
+                          const noun =
+                            mv.action === "return"
+                              ? ["devuelta", "devueltas"]
+                              : mv.action === "relocate"
+                                ? ["reasignada de ubicación", "reasignadas de ubicación"]
+                                : ["relevada", "relevadas"];
+                          return (
+                            <div className="delivery-report-trace-row" key={index}>
+                              <strong>{mv.action_label}</strong>
+                              <span>{mv.registered_by_name || "—"}</span>
+                              <span className="trace-people">
+                                <b>{mv.from_name}</b>
+                                <span className="trace-arrow">→</span>
+                                <b>{mv.to_name}</b>
+                              </span>
+                              <span>
+                                {mv.created_at}
+                                {mv.turno ? ` · ${turnoLabel(mv.turno)}` : ""}
+                              </span>
+                              <span>
+                                <span className={`trace-badge trace-badge-${mv.action}`}>
+                                  {mv.codes.length}{" "}
+                                  {mv.codes.length === 1 ? noun[0] : noun[1]}
+                                </span>
+                                <small className="trace-codes">
+                                  {mv.codes.join(", ")}
+                                </small>
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
-                      {traceRows.map((mv, index) => {
-                        const noun =
-                          mv.action === "return"
-                            ? ["devuelta", "devueltas"]
-                            : mv.action === "relocate"
-                              ? ["reasignada de ubicación", "reasignadas de ubicación"]
-                              : ["relevada", "relevadas"];
-                        return (
-                          <div className="delivery-report-trace-row" key={index}>
-                            <strong>{mv.action_label}</strong>
-                            <span>{mv.registered_by_name || "—"}</span>
-                            <span>
-                              {mv.from_name} → {mv.to_name}
-                            </span>
-                            <span>
-                              {mv.created_at}
-                              {mv.turno ? ` · ${turnoLabel(mv.turno)}` : ""}
-                            </span>
-                            <span>
-                              {mv.codes.length}{" "}
-                              {mv.codes.length === 1 ? noun[0] : noun[1]}
-                              <small className="trace-codes">
-                                {mv.codes.join(", ")}
-                              </small>
-                            </span>
-                          </div>
-                        );
-                      })}
                     </div>
                   )}
                   <div className="delivery-report-radios">
