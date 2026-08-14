@@ -1604,6 +1604,7 @@ function FlexibleGroupedReliefPanel({
   const targetGroup = groups.find((group) => group.key === targetGroupKey);
   const isSupervisorInTurn = (item) =>
     Number(item.in_turn) ||
+    (action === "relief" && Number(item.in_next_turn)) ||
     inTurnSupervisorIds.some((id) => Number(id) === Number(item.user_id));
   const visibleRecords = activeRecords.filter((record) => {
     const query = radioSearch.trim().toLowerCase();
