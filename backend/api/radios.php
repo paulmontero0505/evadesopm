@@ -252,7 +252,7 @@ function handle_radio_assignment_collaborator(int $id): void {
     if (!$record) json_error('No se encontró la entrega del radio.', 404);
     if ($me['role'] === 'supervisor' && (int)($record['current_supervisor_id'] ?: $record['supervisor_id']) !== (int)$me['id']) json_error('Solo puede gestionar radios bajo su responsabilidad.', 403);
     $puesto = $puesto ?: $record['assigned_puesto'];
-    if (!$opmId && $puesto === $record['assigned_puesto']) json_error('Seleccione un puesto o colaborador para actualizar.', 422);
+    if (!$opmId && $puesto === $record['assigned_puesto']) { json_response(['ok' => true]); return; }
     $validPuesto = db()->prepare('SELECT 1 FROM opms WHERE active=1 AND puesto=? LIMIT 1'); $validPuesto->execute([$puesto]);
     if (!$validPuesto->fetchColumn()) json_error('Seleccione un puesto registrado.', 422);
     if ($puesto !== $record['assigned_puesto']) {

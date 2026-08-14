@@ -1801,11 +1801,18 @@ function FlexibleGroupedReliefPanel({
                   <SearchSelect
                     value={selectedPuesto || ""}
                     onChange={(puesto) => {
+                      setError("");
                       if (!puesto) {
                         setPuestoOverrides((current) => ({
                           ...current,
                           [record.id]: "",
                         }));
+                      } else if (puesto === record.assigned_puesto) {
+                        setPuestoOverrides((current) => {
+                          const next = { ...current };
+                          delete next[record.id];
+                          return next;
+                        });
                       } else {
                         updateAssignment(record, { puesto });
                       }
