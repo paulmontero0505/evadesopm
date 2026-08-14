@@ -1962,9 +1962,12 @@ function FlexibleGroupedReliefPanel({
                 value={targetUserId}
                 onSelect={setTargetUserId}
                 labelOf={(item) =>
-                  `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"} · ${Number(item.in_turn) ? "En turno" : "Fuera de turno"}`
+                  `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"}`
                 }
                 searchOf={(item) => `${item.full_name} ${item.role}`}
+                statusOf={(item) =>
+                  Number(item.in_turn) ? "En turno" : "Fuera de turno"
+                }
                 placeholder={action === "return" ? "Buscar coordinador" : "Buscar supervisor o coordinador"}
               />
             </>
