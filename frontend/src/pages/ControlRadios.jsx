@@ -1449,6 +1449,14 @@ function DeliveryReports({
                         {radios.filter((radio) => radio.returned_at).length > 0
                           ? ` · ${radios.filter((radio) => radio.returned_at).length} devuelta${radios.filter((radio) => radio.returned_at).length === 1 ? "" : "s"}`
                           : ""}
+                        {radios.filter((radio) => !radio.returned_at).length > 0 && (
+                          <strong className="pending-return">
+                            {radios.filter((radio) => !radio.returned_at).length}{" "}
+                            pendiente
+                            {radios.filter((radio) => !radio.returned_at).length === 1 ? "" : "s"}{" "}
+                            de devolución
+                          </strong>
+                        )}
                       </span>
                       {first.comments && (
                         <span>
