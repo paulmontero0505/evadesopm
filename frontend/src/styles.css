@@ -610,7 +610,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .relief-delivery-list { display: grid; gap: 10px; }
 .relief-select-all { display: inline-flex; align-items: center; gap: 8px; margin: -2px 0 10px; color: var(--navy); font-size: 12px; font-weight: 700; cursor: pointer; }
 .relief-select-all input { width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
-.relief-record-list { max-height: 50vh; overflow-y: auto; padding-right: 2px; }
+.relief-record-list { max-height: 80vh; overflow-y: auto; padding-right: 2px; }
 .relief-record-list .relief-record { margin-bottom: 7px; padding: 11px 13px; }
 .relief-record-list .radio-record-grid { margin-top: 10px; gap: 7px 14px; }
 .relief-record-list .relief-person { margin-top: 10px; padding-top: 9px; }
