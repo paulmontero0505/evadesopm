@@ -1563,6 +1563,7 @@ function FlexibleGroupedReliefPanel({
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState("");
   const [puestoOverrides, setPuestoOverrides] = useState({});
+  const [radioSearch, setRadioSearch] = useState("");
   const visible = records;
   const groups = useMemo(
     () =>
@@ -1578,6 +1579,10 @@ function FlexibleGroupedReliefPanel({
   );
   const activeGroup = groups.find((group) => group.key === activeGroupKey);
   const activeRecords = activeGroup?.records || [];
+  const visibleRecords = activeRecords.filter((record) => {
+    const query = radioSearch.trim().toLowerCase();
+    return !query || `${record.radio_code} ${record.model} ${record.imei}`.toLowerCase().includes(query);
+  });
 
   useEffect(() => {
     if (activeGroupKey && !activeGroup) {
@@ -1590,6 +1595,7 @@ function FlexibleGroupedReliefPanel({
       setActiveGroupKey("");
       setSelectedIds([]);
       setError("");
+      setRadioSearch("");
     }
   }, [detailOpen]);
   function toggle(id) {
@@ -1600,9 +1606,13 @@ function FlexibleGroupedReliefPanel({
     );
   }
   function toggleAll() {
-    setSelectedIds((current) =>
-      current.length === activeRecords.length ? [] : activeRecords.map((record) => record.id),
-    );
+    const visibleIds = visibleRecords.map((record) => record.id);
+    setSelectedIds((current) => {
+      const allVisibleSelected = visibleIds.every((id) => current.includes(id));
+      return allVisibleSelected
+        ? current.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...current, ...visibleIds])];
+    });
   }
   async function updateAssignment(record, payload) {
     setSavingId(record.id);
@@ -1738,13 +1748,14 @@ function FlexibleGroupedReliefPanel({
           setActiveGroupKey("");
           setSelectedIds([]);
           setError("");
+          setRadioSearch("");
           onDetailChange(false);
         }}
       >
         <Undo2 size={16} /> Ver todas las entregas
       </button>
       <section className="assignment-list">
-        <div className="assignment-list-heading">
+        <div className="assignment-list-heading relief-detail-heading">
           <div>
             <h2>
               {activeGroup.first.location || "TOOLROOM"}
@@ -1760,13 +1771,34 @@ function FlexibleGroupedReliefPanel({
             <Radio size={14} /> {activeRecords.length}
           </span>
         </div>
-        <label className="relief-select-all"><input type="checkbox" checked={activeRecords.length > 0 && selectedIds.length === activeRecords.length} onChange={toggleAll} /><span>Seleccionar todas las radios ({activeRecords.length})</span></label>
+        <div className="relief-toolbar">
+          <label className="relief-select-all">
+            <input
+              type="checkbox"
+              checked={visibleRecords.length > 0 && visibleRecords.every((record) => selectedIds.includes(record.id))}
+              onChange={toggleAll}
+            />
+            <span>
+              {radioSearch ? `Seleccionar radios mostradas (${visibleRecords.length})` : `Seleccionar todas las radios (${activeRecords.length})`}
+            </span>
+          </label>
+          <div className="relief-radio-search">
+            <Search size={16} />
+            <input
+              className="input"
+              value={radioSearch}
+              onChange={(event) => setRadioSearch(event.target.value)}
+              placeholder="Buscar radio, modelo o IMEI"
+              aria-label="Buscar radio en esta entrega"
+            />
+          </div>
+        </div>
         {error && (
           <div className="error" role="alert">
             {error}
           </div>
         )}
-        <div className="relief-record-list">{activeRecords.map((record) => {
+        <div className="relief-record-list">{visibleRecords.map((record) => {
           const selectedPuesto =
             puestoOverrides[record.id] ?? record.assigned_puesto;
           const puestoOptions = [
@@ -1866,7 +1898,9 @@ function FlexibleGroupedReliefPanel({
               </div>
             </article>
           );
-        })}</div>
+        })}{visibleRecords.length === 0 && (
+          <div className="relief-search-empty">No se encontró ninguna radio en esta entrega.</div>
+        )}</div>
       </section>
       <section className="card">
         <h3>Registrar movimiento de radios</h3>
