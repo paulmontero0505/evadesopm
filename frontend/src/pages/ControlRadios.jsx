@@ -804,7 +804,12 @@ export default function ControlRadios() {
             user={user}
             nextSupervisors={data.next_supervisors || []}
             nextShift={data.next_shift}
-            inTurnSupervisorIds={shift.selectedSupervisors || []}
+            inTurnSupervisorIds={[
+              ...(shift.selectedSupervisors || []),
+              ...(data.supervisors || [])
+                .filter((supervisor) => Number(supervisor.in_turn))
+                .map((supervisor) => supervisor.user_id),
+            ]}
             onReload={load}
             detailOpen={reliefDetailOpen}
             onDetailChange={setReliefDetailOpen}
