@@ -627,7 +627,19 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .trace-badge-relocate { background: #efeafb; color: #6b3fc0; }
 .delivery-report-creation { background: #F0F4FB; border-color: #C9D6EC; }
 .delivery-report-creation .delivery-report-return-title { color: #06275d; }
-.pending-return { display: block; margin-top: 4px; color: #C0272D; font-size: 15px; font-weight: 800; letter-spacing: .01em; }
+.delivery-report-cards { margin-top: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.delivery-kpi { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.delivery-kpi-num { font-size: 26px; font-weight: 800; line-height: 1; }
+.delivery-kpi-label { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.delivery-kpi.kpi-blue { background: #eef4fc; border-color: #cadcf3; }
+.delivery-kpi.kpi-blue .delivery-kpi-num { color: #1666b8; }
+.delivery-kpi.kpi-green { background: #edf7f0; border-color: #c9e3d2; }
+.delivery-kpi.kpi-green .delivery-kpi-num { color: #1E7B34; }
+.delivery-kpi.kpi-purple { background: #f2effb; border-color: #d9cef3; }
+.delivery-kpi.kpi-purple .delivery-kpi-num { color: #6b3fc0; }
+.delivery-kpi.kpi-red { background: #fbecec; border-color: #f0c4c4; }
+.delivery-kpi.kpi-red .delivery-kpi-num { color: #C0272D; }
+@media (max-width: 640px) { .delivery-report-cards { grid-template-columns: repeat(2, 1fr); } }
 .delivery-report-actions { display: flex; gap: 6px; }
 .relief-back { margin: 0 0 16px; }
 .relief-delivery-list { display: grid; gap: 10px; }
@@ -1035,8 +1047,10 @@ body.login-bg, body.login-bg .app { background: #fff; }
   .delivery-report.print-selected .trace-badge { padding: 1px 5px; font-size: 7pt; background: transparent; color: #06275d; }
   .delivery-report.print-selected .trace-arrow { color: #06275d; }
   .delivery-report.print-selected .delivery-report-creation { background: #eef2f8; }
-  .delivery-report.print-selected .pending-return { color: #C0272D; font-size: 11pt; font-weight: 800; }
-  .delivery-report.print-selected::after { content: "Firma del responsable de entrega                                      Firma del responsable que recibe"; display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid #111; font-size: 8.5pt; text-align: center; white-space: pre; }
+  .delivery-report.print-selected .delivery-report-cards { margin-top: 12px; gap: 8px; break-inside: avoid; }
+  .delivery-report.print-selected .delivery-kpi { padding: 8px 10px; border-radius: 0; }
+  .delivery-report.print-selected .delivery-kpi-num { font-size: 15pt; }
+  .delivery-report.print-selected .delivery-kpi-label { font-size: 6.8pt; }
   tr, .ph-obs, .ph-alert { break-inside: avoid; }
   @page { size: A4 landscape; margin: 10mm; }
 }

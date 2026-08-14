@@ -1449,14 +1449,6 @@ function DeliveryReports({
                         {radios.filter((radio) => radio.returned_at).length > 0
                           ? ` · ${radios.filter((radio) => radio.returned_at).length} devuelta${radios.filter((radio) => radio.returned_at).length === 1 ? "" : "s"}`
                           : ""}
-                        {radios.filter((radio) => !radio.returned_at).length > 0 && (
-                          <strong className="pending-return">
-                            {radios.filter((radio) => !radio.returned_at).length}{" "}
-                            pendiente
-                            {radios.filter((radio) => !radio.returned_at).length === 1 ? "" : "s"}{" "}
-                            de devolución
-                          </strong>
-                        )}
                       </span>
                       {first.comments && (
                         <span>
@@ -1547,6 +1539,32 @@ function DeliveryReports({
                         </span>
                       </div>
                     ))}
+                  </div>
+                  <div className="delivery-report-cards">
+                    <div className="delivery-kpi kpi-blue">
+                      <span className="delivery-kpi-num">{radios.length}</span>
+                      <span className="delivery-kpi-label">Entregadas / relevadas</span>
+                    </div>
+                    <div className="delivery-kpi kpi-green">
+                      <span className="delivery-kpi-num">
+                        {radios.filter((radio) => radio.returned_at).length}
+                      </span>
+                      <span className="delivery-kpi-label">Devueltas</span>
+                    </div>
+                    <div className="delivery-kpi kpi-purple">
+                      <span className="delivery-kpi-num">
+                        {radios.filter((radio) =>
+                          (radio.movements || []).some((mv) => mv.action === "relocate"),
+                        ).length}
+                      </span>
+                      <span className="delivery-kpi-label">Reasignadas de ubicación</span>
+                    </div>
+                    <div className="delivery-kpi kpi-red">
+                      <span className="delivery-kpi-num">
+                        {radios.filter((radio) => !radio.returned_at).length}
+                      </span>
+                      <span className="delivery-kpi-label">Pendientes de devolución</span>
+                    </div>
                   </div>
                 </>
               )}
