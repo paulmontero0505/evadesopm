@@ -607,6 +607,14 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .delivery-report-return { margin-top: 14px; padding: 12px 14px; background: #F0F7F2; border: 1px solid #C9E3D2; border-radius: var(--radius); }
 .delivery-report-return-title { display: flex; align-items: center; gap: 6px; color: #1E7B34; font-weight: 700; font-size: 12.5px; }
 .delivery-report-return .delivery-report-meta { margin-top: 8px; }
+.delivery-report-trace { margin-top: 14px; overflow-x: auto; }
+.delivery-report-trace-head, .delivery-report-trace-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.3fr) minmax(140px, 1fr) minmax(120px, .9fr) minmax(120px, 1fr); min-width: 760px; }
+.delivery-report-trace-head { margin-top: 8px; background: #f4f7fb; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.delivery-report-trace-head span, .delivery-report-trace-row > * { padding: 8px 9px; }
+.delivery-report-trace-row { color: var(--muted); font-size: 12px; }
+.delivery-report-trace-row + .delivery-report-trace-row { border-top: 1px solid var(--border); }
+.delivery-report-trace-row strong { color: var(--navy); }
+.delivery-report-trace-row:nth-child(even) { background: #f8fbff; }
 .delivery-report-actions { display: flex; gap: 6px; }
 .relief-back { margin: 0 0 16px; }
 .relief-delivery-list { display: grid; gap: 10px; }
@@ -1002,6 +1010,12 @@ body.login-bg, body.login-bg .app { background: #fff; }
   .delivery-report.print-selected .delivery-report-radio-row:nth-child(odd) { background: #e9f0f8; }
   .delivery-report.print-selected .delivery-report-radio-row + .delivery-report-radio-row { border-top: 1px solid #c5ccd6; }
   .delivery-report.print-selected .delivery-report-return { margin: 10px 0 0; border: 1px solid #8290a4; border-radius: 0; background: #f4f7fa; }
+  .delivery-report.print-selected .delivery-report-trace-head, .delivery-report.print-selected .delivery-report-trace-row { grid-template-columns: minmax(90px, 1.1fr) minmax(120px, 1.4fr) minmax(90px, 1fr) minmax(80px, .9fr) minmax(80px, 1fr); min-width: 0; }
+  .delivery-report.print-selected .delivery-report-trace-head { background: #06275d; color: #fff; font-size: 7pt; }
+  .delivery-report.print-selected .delivery-report-trace-head span, .delivery-report.print-selected .delivery-report-trace-row > * { padding: 5px; border-right: 1px solid #c5ccd6; }
+  .delivery-report.print-selected .delivery-report-trace-row { color: #111; font-size: 7.5pt; }
+  .delivery-report.print-selected .delivery-report-trace-row strong { color: #06275d; }
+  .delivery-report.print-selected .delivery-report-trace-row:nth-child(even) { background: #e9f0f8; }
   .delivery-report.print-selected::after { content: "Firma del responsable de entrega                                      Firma del responsable que recibe"; display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid #111; font-size: 8.5pt; text-align: center; white-space: pre; }
   tr, .ph-obs, .ph-alert { break-inside: avoid; }
   @page { size: A4 landscape; margin: 10mm; }

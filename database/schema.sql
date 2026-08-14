@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS radio_assignment_movements (
   action ENUM('return','reassign','relocate') NOT NULL,
   from_user_id INT NOT NULL,
   to_user_id INT NULL,
+  registered_by INT NULL,
   work_date DATE NOT NULL,
   turno ENUM('dia','noche') NOT NULL,
   comments VARCHAR(1000) NULL,
@@ -132,6 +133,7 @@ CREATE TABLE IF NOT EXISTS radio_assignment_movements (
   CONSTRAINT fk_radio_movement_assignment FOREIGN KEY (radio_assignment_id) REFERENCES radio_assignments(id) ON DELETE CASCADE,
   CONSTRAINT fk_radio_movement_from FOREIGN KEY (from_user_id) REFERENCES users(id),
   CONSTRAINT fk_radio_movement_to FOREIGN KEY (to_user_id) REFERENCES users(id),
+  CONSTRAINT fk_radio_movement_registered_by FOREIGN KEY (registered_by) REFERENCES users(id),
   INDEX idx_radio_movement_assignment (radio_assignment_id)
 ) ENGINE=InnoDB;
 

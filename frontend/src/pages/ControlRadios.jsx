@@ -1348,6 +1348,16 @@ function DeliveryReports({
           const { first, records: radios } = group;
           const expanded =
             expandedGroup === group.key || printGroup === group.key;
+          const traceRows = Object.values(
+            radios.reduce((acc, radio) => {
+              (radio.movements || []).forEach((mv) => {
+                const key = `${mv.action}|${mv.from_name}|${mv.to_name}|${mv.registered_by_name || ""}|${mv.created_at}`;
+                if (!acc[key]) acc[key] = { ...mv, codes: [] };
+                acc[key].codes.push(radio.radio_code);
+              });
+              return acc;
+            }, {}),
+          ).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
           return (
             <article
               className={`delivery-report ${printGroup === group.key ? "print-selected" : ""}`}
@@ -1510,6 +1520,33 @@ function DeliveryReports({
                           }
                         </span>
                       </div>
+                    </div>
+                  )}
+                  {traceRows.length > 0 && (
+                    <div className="delivery-report-trace">
+                      <div className="delivery-report-return-title">
+                        <RefreshCw size={14} /> Trazabilidad de movimientos
+                      </div>
+                      <div className="delivery-report-trace-head">
+                        <span>Movimiento</span>
+                        <span>De → A</span>
+                        <span>Registró</span>
+                        <span>Fecha</span>
+                        <span>Radios</span>
+                      </div>
+                      {traceRows.map((mv, index) => (
+                        <div className="delivery-report-trace-row" key={index}>
+                          <strong>{mv.action_label}</strong>
+                          <span>
+                            {mv.from_name} → {mv.to_name}
+                          </span>
+                          <span>{mv.registered_by_name || "—"}</span>
+                          <span>{mv.created_at}</span>
+                          <span>
+                            {mv.codes.length} · {mv.codes.join(", ")}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
                   <div className="delivery-report-radios">
