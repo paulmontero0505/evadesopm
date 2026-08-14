@@ -567,7 +567,7 @@ export default function ControlRadios() {
                       }
                       options={data.supervisors.map((item) => ({
                         value: String(item.user_id),
-                        label: `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"} · ${Number(item.in_turn) || (data.in_turn_supervisor_ids || []).some((id) => Number(id) === Number(item.user_id)) ? "En turno" : "No está en turno"}`,
+                        label: `${item.full_name} · ${item.role === "coordinator" ? "Coordinador" : "Supervisor"} · ${Number(item.in_turn) || (data.in_turn_supervisor_ids || []).some((id) => Number(id) === Number(item.user_id)) || (shift.selectedSupervisors || []).some((id) => Number(id) === Number(item.user_id)) ? "En turno" : "No está en turno"}`,
                       }))}
                       placeholder="Seleccione responsable"
                       emptyLabel="Seleccione responsable"
