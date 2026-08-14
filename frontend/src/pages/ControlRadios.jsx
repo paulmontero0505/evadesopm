@@ -804,6 +804,7 @@ export default function ControlRadios() {
             user={user}
             nextSupervisors={data.next_supervisors || []}
             nextShift={data.next_shift}
+            inTurnSupervisorIds={shift.selectedSupervisors || []}
             onReload={load}
             detailOpen={reliefDetailOpen}
             onDetailChange={setReliefDetailOpen}
@@ -1550,6 +1551,7 @@ function FlexibleGroupedReliefPanel({
   user,
   nextSupervisors,
   nextShift,
+  inTurnSupervisorIds,
   onReload,
   detailOpen,
   onDetailChange,
@@ -1587,6 +1589,9 @@ function FlexibleGroupedReliefPanel({
       label: `${group.first.location || "TOOLROOM"}${group.first.nave ? ` · ${group.first.nave}` : ""} · ${group.first.current_supervisor_name || group.first.supervisor_name}`,
     }));
   const targetGroup = groups.find((group) => group.key === targetGroupKey);
+  const isSupervisorInTurn = (item) =>
+    Number(item.in_turn) ||
+    inTurnSupervisorIds.some((id) => Number(id) === Number(item.user_id));
   const visibleRecords = activeRecords.filter((record) => {
     const query = radioSearch.trim().toLowerCase();
     return !query || `${record.radio_code} ${record.model} ${record.imei}`.toLowerCase().includes(query);
@@ -1955,10 +1960,10 @@ function FlexibleGroupedReliefPanel({
             <>
               <label>{action === "return" ? "Coordinador que recibe en Tool Room" : "Responsable del siguiente turno"}</label>
               <SearchablePicker
-                items={nextSupervisors.filter((item) => (action !== "return" || item.role === "coordinator") && (action !== "reassign" || Number(item.user_id) !== Number(activeGroup.first.current_supervisor_id || activeGroup.first.supervisor_id))).map((item) => ({
-                  ...item,
-                  id: item.user_id,
-                }))}
+                items={nextSupervisors
+                  .filter((item) => (action !== "return" || item.role === "coordinator") && (action !== "reassign" || Number(item.user_id) !== Number(activeGroup.first.current_supervisor_id || activeGroup.first.supervisor_id)))
+                  .sort((a, b) => Number(isSupervisorInTurn(b)) - Number(isSupervisorInTurn(a)) || a.full_name.localeCompare(b.full_name))
+                  .map((item) => ({ ...item, id: item.user_id }))}
                 value={targetUserId}
                 onSelect={setTargetUserId}
                 labelOf={(item) =>
@@ -1966,7 +1971,7 @@ function FlexibleGroupedReliefPanel({
                 }
                 searchOf={(item) => `${item.full_name} ${item.role}`}
                 statusOf={(item) =>
-                  Number(item.in_turn) ? "En turno" : "Fuera de turno"
+                  isSupervisorInTurn(item) ? "En turno" : "Fuera de turno"
                 }
                 placeholder={action === "return" ? "Buscar coordinador" : "Buscar supervisor o coordinador"}
               />
