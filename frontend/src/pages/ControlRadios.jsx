@@ -361,7 +361,14 @@ export default function ControlRadios() {
     }
   }
   function startEditGroup(group) {
-    const { first, records } = group;
+    // Los radios devueltos son parte del historial de la entrega. No deben
+    // reaparecer como seleccionados al editar los radios que siguen abiertos.
+    const records = group.records.filter((record) => !record.returned_at);
+    if (!records.length) {
+      setError("Esta entrega ya no tiene radios pendientes por editar.");
+      return;
+    }
+    const first = records[0];
     const isKnownLocation = locationOptions.includes(first.location);
     const counts = records.reduce(
       (current, record) => ({

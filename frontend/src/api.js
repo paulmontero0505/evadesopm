@@ -24,6 +24,9 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    // La asignación puede cambiar inmediatamente después de una devolución
+    // o edición; nunca reutilizar una respuesta GET almacenada por el navegador.
+    cache: 'no-store',
   })
 
   let data = null
