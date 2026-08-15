@@ -1353,6 +1353,8 @@ function DeliveryReports({
       {loading || !groups.length ? (loading ? null : <div className="assignment-empty"><Radio size={25} /><div><strong>{period === "pendientes" ? "No hay radios pendientes" : period === "completadas" ? "No hay radios completadas" : "Aún no hay entregas registradas"}</strong><span>{period === "turno" ? "Las radios agrupadas por supervisor aparecerán como un único reporte." : "A una entrega solo se la considera completada cuando todas sus radios fueron devueltas al Tool Room."}</span></div></div>) : (
         groups.map((group) => {
           const { first, records: radios } = group;
+          const openRadios = radios.filter((radio) => !radio.returned_at);
+          const returnedRadios = radios.filter((radio) => radio.returned_at);
           const expanded =
             expandedGroup === group.key || printGroup === group.key;
           const traceRows = Object.values(
@@ -1386,8 +1388,12 @@ function DeliveryReports({
                     {first.current_supervisor_name || first.supervisor_name}
                   </strong>
                   <span>
-                    {radios.length} radio{radios.length === 1 ? "" : "s"}{" "}
-                    asignado{radios.length === 1 ? "" : "s"} ·{" "}
+                    {openRadios.length} radio{openRadios.length === 1 ? "" : "s"}{" "}
+                    asignado{openRadios.length === 1 ? "" : "s"}
+                    {returnedRadios.length > 0
+                      ? ` · ${returnedRadios.length} devuelta${returnedRadios.length === 1 ? "" : "s"} (historial)`
+                      : ""}{" "}
+                    ·{" "}
                     {first.location || "TOOLROOM"}
                     {first.nave ? ` · ${first.nave}` : ""}
                   </span>
@@ -1452,9 +1458,9 @@ function DeliveryReports({
                       </span>
                       <span>
                         <b>Estado</b>
-                        {radios.length} entregada{radios.length === 1 ? "" : "s"}
-                        {radios.filter((radio) => radio.returned_at).length > 0
-                          ? ` · ${radios.filter((radio) => radio.returned_at).length} devuelta${radios.filter((radio) => radio.returned_at).length === 1 ? "" : "s"}`
+                        {openRadios.length} activa{openRadios.length === 1 ? "" : "s"}
+                        {returnedRadios.length > 0
+                          ? ` · ${returnedRadios.length} devuelta${returnedRadios.length === 1 ? "" : "s"} (historial)`
                           : ""}
                       </span>
                       {first.comments && (
