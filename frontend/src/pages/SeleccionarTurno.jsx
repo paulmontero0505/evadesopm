@@ -99,7 +99,7 @@ export default function SeleccionarTurno() {
       const selectedOpms = members.filter((member) => member.person_type === 'opm' && selected.has(memberKey(member))).map((member) => member.person_id)
       const selectedSupervisors = members.filter((member) => member.person_type !== 'opm' && selected.has(memberKey(member))).map((member) => member.person_id)
       setShift({ date, turno, selectedOpms, selectedSupervisors })
-      nav('/')
+      nav(user.role === 'labor' ? '/asignaciones' : '/')
     } catch (err) { setError(err.message || 'No se pudo guardar la selección del turno.') } finally { setSaving(false) }
   }
   async function salir() { clearShift(); await logout(); nav('/login') }

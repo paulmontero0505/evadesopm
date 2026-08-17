@@ -1124,3 +1124,13 @@ body.login-bg, body.login-bg .app { background: #fff; }
 .audit-detail-toggle { padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--blue); font-size: 11.5px; font-weight: 600; cursor: pointer; }
 .audit-detail-toggle:hover { background: #f0f6ff; }
 .audit-detail { margin: 0 12px 12px; padding: 10px 12px; background: #0f172a; color: #e2e8f0; border-radius: 8px; font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; overflow-x: auto; }
+
+/* Confirmacion de turno antes de importar asignaciones */
+.turno-confirm-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.turno-confirm { background: #fff; border-radius: 14px; padding: 22px; width: 100%; max-width: 360px; box-shadow: var(--shadow-md); }
+.turno-confirm h3 { margin: 0 0 6px; font-size: 16px; }
+.turno-confirm p { margin: 0 0 16px; font-size: 13.5px; }
+.turno-confirm-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; }
+.turno-confirm-info span { font-size: 11.5px; color: var(--muted, #64748b); text-transform: uppercase; letter-spacing: .4px; }
+.turno-confirm-info strong { font-size: 14px; text-align: right; }
+.turno-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }

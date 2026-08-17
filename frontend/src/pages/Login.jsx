@@ -32,7 +32,7 @@ export default function Login() {
     try {
       const user = await login(emp.trim(), pass)
       clearShift()
-      nav(user.password_change_required ? '/cambiar-clave' : '/')
+      nav(user.password_change_required ? '/cambiar-clave' : (user.role === 'labor' ? '/asignaciones' : '/'))
     } catch (e) {
       setErr(e.message || 'No se pudo iniciar sesión')
     } finally {
