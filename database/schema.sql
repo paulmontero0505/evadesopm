@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS radio_assignments (
   nave VARCHAR(150) NULL,
   location VARCHAR(150) NULL,
   assigned_puesto VARCHAR(150) NULL,
+  collaborator_unknown TINYINT(1) NOT NULL DEFAULT 0,
   condition_status ENUM('Pantalla Rota','Excelente Estado','Botones Dañados') NOT NULL,
   comments VARCHAR(1000) NULL,
   photo_path VARCHAR(255) NULL,

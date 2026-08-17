@@ -47,6 +47,11 @@ const addDays = (dateStr, days) => {
   return d.toISOString().slice(0, 10);
 };
 const EMPTY = { supervisor_id: "", nave: "", comments: "" };
+const UNKNOWN_COLLABORATOR_OPTION = {
+  id: "unknown",
+  full_name: "NO SE ENCONTRÓ RADIO EN EL TURNO",
+  isExtra: true,
+};
 
 function dateTimeLabel(value) {
   if (!value) return "Sin registro";
@@ -1535,7 +1540,13 @@ function DeliveryReports({
                           {radio.model} · {radio.imei}
                         </span>
                         <span>
-                          {radio.collaborator_name || radio.assigned_puesto}
+                          {radio.collaborator_unknown ? (
+                            <span className="report-unknown-collaborator">
+                              NO SE ENCONTRÓ RADIO EN EL TURNO
+                            </span>
+                          ) : (
+                            radio.collaborator_name || radio.assigned_puesto
+                          )}
                         </span>
                         <span>{radio.collaborator_puesto || "—"}</span>
                         <span>
@@ -1682,6 +1693,7 @@ function FlexibleGroupedReliefPanel({
         record.id,
         payload.opm_id || "",
         payload.puesto || "",
+        Boolean(payload.unknown),
       );
       await onReload();
       setPuestoOverrides((current) => {
@@ -1934,8 +1946,17 @@ function FlexibleGroupedReliefPanel({
                 <label>Colaborador que recibe este radio</label>
                 <SearchablePicker
                   items={candidates}
-                  value={record.collaborator_id || ""}
+                  extraItems={[UNKNOWN_COLLABORATOR_OPTION]}
+                  value={
+                    record.collaborator_unknown
+                      ? UNKNOWN_COLLABORATOR_OPTION.id
+                      : record.collaborator_id || ""
+                  }
                   onSelect={(opmId) => {
+                    if (opmId === UNKNOWN_COLLABORATOR_OPTION.id) {
+                      updateAssignment(record, { unknown: true });
+                      return;
+                    }
                     const collaborator = candidates.find(
                       (opm) => Number(opm.id) === Number(opmId),
                     );
@@ -1960,6 +1981,10 @@ function FlexibleGroupedReliefPanel({
                 />
                 {savingId === record.id ? (
                   <span className="field-help">Actualizando asignación…</span>
+                ) : record.collaborator_unknown ? (
+                  <span className="field-help field-help-alert">
+                    No se encontró radio en el turno.
+                  </span>
                 ) : record.collaborator_name ? (
                   <span className="field-help">
                     Asignado a: {record.collaborator_name}
@@ -2279,8 +2304,14 @@ function DailyRadioReport({ date, turno, user }) {
                       ) : null}
                     </td>
                     <td>
-                      {record.collaborator_name || (
-                        <span className="muted">Sin colaborador que recibe</span>
+                      {record.collaborator_unknown ? (
+                        <span className="report-unknown-collaborator">
+                          NO SE ENCONTRÓ RADIO EN EL TURNO
+                        </span>
+                      ) : (
+                        record.collaborator_name || (
+                          <span className="muted">Sin colaborador que recibe</span>
+                        )
                       )}
                     </td>
                     <td>{record.final_location || "TOOLROOM"}</td>

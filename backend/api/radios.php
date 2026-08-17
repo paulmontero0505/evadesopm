@@ -289,17 +289,22 @@ function handle_radio_movements(): void {
 }
 
 function handle_radio_assignment_collaborator(int $id): void {
-    $me = require_role(['admin', 'supervisor', 'coordinator']); $b = json_body(); $opmId = (int)($b['opm_id'] ?? 0); $puesto = mb_substr(trim((string)($b['puesto'] ?? '')), 0, 150);
+    $me = require_role(['admin', 'supervisor', 'coordinator']); $b = json_body(); $opmId = (int)($b['opm_id'] ?? 0); $unknown = !empty($b['unknown']); $puesto = mb_substr(trim((string)($b['puesto'] ?? '')), 0, 150);
     $stmt = db()->prepare('SELECT * FROM radio_assignments WHERE id=?'); $stmt->execute([$id]); $record = $stmt->fetch();
     if (!$record) json_error('No se encontró la entrega del radio.', 404);
     if ($me['role'] === 'supervisor' && (int)($record['current_supervisor_id'] ?: $record['supervisor_id']) !== (int)$me['id']) json_error('Solo puede gestionar radios bajo su responsabilidad.', 403);
     $puesto = $puesto ?: $record['assigned_puesto'];
-    if (!$opmId && $puesto === $record['assigned_puesto']) { json_response(['ok' => true]); return; }
+    if (!$opmId && !$unknown && $puesto === $record['assigned_puesto']) { json_response(['ok' => true]); return; }
     $validPuesto = db()->prepare('SELECT 1 FROM opms WHERE active=1 AND puesto=? LIMIT 1'); $validPuesto->execute([$puesto]);
     if (!$validPuesto->fetchColumn()) json_error('Seleccione un puesto registrado.', 422);
     if ($puesto !== $record['assigned_puesto']) {
         db()->prepare('UPDATE radio_assignments SET assigned_puesto=? WHERE id=?')->execute([$puesto, $id]);
         db()->prepare('DELETE FROM radio_assignment_collaborators WHERE radio_assignment_id=?')->execute([$id]);
+    }
+    if ($unknown) {
+        db()->prepare('DELETE FROM radio_assignment_collaborators WHERE radio_assignment_id=?')->execute([$id]);
+        db()->prepare('UPDATE radio_assignments SET collaborator_unknown=1 WHERE id=?')->execute([$id]);
+        json_response(['ok' => true]); return;
     }
     if (!$opmId) { json_response(['ok' => true]); return; }
     $opm = db()->prepare('SELECT 1 FROM opms WHERE id=? AND active=1 AND puesto=?'); $opm->execute([$opmId, $puesto]);
@@ -313,6 +318,7 @@ function handle_radio_assignment_collaborator(int $id): void {
     }
     db()->prepare('DELETE FROM radio_assignment_collaborators WHERE radio_assignment_id=?')->execute([$id]);
     db()->prepare('INSERT INTO radio_assignment_collaborators (radio_assignment_id,opm_id) VALUES (?,?)')->execute([$id, $opmId]);
+    db()->prepare('UPDATE radio_assignments SET collaborator_unknown=0 WHERE id=?')->execute([$id]);
     json_response(['ok' => true]);
 }
 

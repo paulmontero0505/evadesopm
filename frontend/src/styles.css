@@ -532,6 +532,10 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 5px
 .search-picker-option-status.is-off-turn { color: var(--muted); }
 .search-picker-menu button:hover, .search-picker-menu button:focus-visible { background: #f0f6ff; color: var(--navy); outline: none; }
 .search-picker-menu button:disabled { cursor: not-allowed; color: #8b98aa; background: #f7f8fa; }
+.search-picker-menu .search-picker-option-unknown { color: var(--red); font-weight: 600; border-top: 1px solid #f1d5d5; }
+.search-picker-menu .search-picker-option-unknown:hover, .search-picker-menu .search-picker-option-unknown:focus-visible { background: #fdecec; color: var(--red); }
+.field-help-alert { color: var(--red) !important; font-weight: 600; }
+.report-unknown-collaborator { color: var(--red) !important; font-weight: 700; }
 .search-picker-menu button:disabled:hover { color: #8b98aa; background: #f7f8fa; }
 .search-picker-empty { padding: 12px; color: var(--muted); font-size: 13px; }
 .assignment-person-data { margin-top: 2px; }
