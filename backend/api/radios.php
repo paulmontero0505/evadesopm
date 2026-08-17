@@ -305,8 +305,12 @@ function handle_radio_assignment_collaborator(int $id): void {
     $opm = db()->prepare('SELECT 1 FROM opms WHERE id=? AND active=1 AND puesto=?'); $opm->execute([$opmId, $puesto]);
     if (!$opm->fetchColumn()) json_error('El colaborador debe pertenecer al puesto seleccionado.', 422);
     $group = $record['delivery_group'] ?: ('legacy-' . $record['id']);
-    $used = db()->prepare("SELECT 1 FROM radio_assignment_collaborators rac JOIN radio_assignments ra ON ra.id=rac.radio_assignment_id WHERE COALESCE(ra.delivery_group, CONCAT('legacy-',ra.id))=? AND rac.opm_id=? AND rac.radio_assignment_id<>?"); $used->execute([$group, $opmId, $id]);
-    if ($used->fetchColumn()) json_error('Este colaborador ya recibió otra radio de esta entrega.', 422);
+    $used = db()->prepare("SELECT r.code, r.model, r.imei, ra.location FROM radio_assignment_collaborators rac JOIN radio_assignments ra ON ra.id=rac.radio_assignment_id JOIN radios r ON r.id=ra.radio_id WHERE COALESCE(ra.delivery_group, CONCAT('legacy-',ra.id))=? AND rac.opm_id=? AND rac.radio_assignment_id<>? LIMIT 1"); $used->execute([$group, $opmId, $id]);
+    if ($usedRow = $used->fetch()) {
+        $radioLabel = trim(($usedRow['code'] ? '#' . $usedRow['code'] . ' ' : '') . $usedRow['model'] . ' · IMEI ' . $usedRow['imei']);
+        $locationLabel = $usedRow['location'] ?: 'sin ubicación registrada';
+        json_error("Este colaborador ya recibió otra radio de esta entrega: $radioLabel ($locationLabel).", 422);
+    }
     db()->prepare('DELETE FROM radio_assignment_collaborators WHERE radio_assignment_id=?')->execute([$id]);
     db()->prepare('INSERT INTO radio_assignment_collaborators (radio_assignment_id,opm_id) VALUES (?,?)')->execute([$id, $opmId]);
     json_response(['ok' => true]);
