@@ -88,7 +88,7 @@ export default function Asignaciones() {
     } catch (err) { setError(err.message) } finally { setSaving(false) }
   }
 
-  return <><TopBar title={t.asignacionesTitulo} to="/admin" /><main className="content assignment-page">
+  return <><TopBar title={t.asignacionesTitulo} to="/turno" /><main className="content assignment-page">
     <Toast message={toast} onDone={() => setToast('')} />
     {error && <div className="error" role="alert">{error}</div>}{message && <div className="success">{message}</div>}
     <section className="card assignment-setup"><h3>{t.cargarAsignaciones}</h3><p className="muted assignment-copy">Importe una sola plantilla con colaboradores, supervisores y coordinadores. Solo se actualizan las personas incluidas.</p>
