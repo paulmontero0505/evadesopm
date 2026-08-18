@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { ClipboardCheck, Users, Award, ShieldCheck, LogOut, ChevronLeft, Languages, Radio } from 'lucide-react'
+import { ClipboardCheck, Users, Award, ShieldCheck, LogOut, ChevronLeft, Languages, Radio, Sparkles } from 'lucide-react'
 import { useAuth } from '../auth.jsx'
 import { useShift } from '../shift.jsx'
 import { T, useLang, turnoText } from '../i18n.js'
@@ -13,9 +13,15 @@ export default function Home() {
   const nav = useNavigate()
   const t = T[lang]
   const items = user.role === 'labor'
-    ? [{ to: '/admin', i: ShieldCheck, t: t.modAdmin, d: 'Colaboradores y asignación de funciones', c: '#7A5195' }]
+    ? [
+        { to: '/admin', i: ShieldCheck, t: t.modAdmin, d: 'Colaboradores y asignación de funciones', c: '#7A5195' },
+        { to: '/limpieza', i: Sparkles, t: 'Cuidado y limpieza de instalaciones', d: 'Encuesta de percepción del plan de sensibilización', c: '#1E7B34' },
+      ]
     : user.role === 'coordinator'
-    ? [{ to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Registrar y consultar entregas del turno', c: '#EF7D00' }]
+    ? [
+        { to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Registrar y consultar entregas del turno', c: '#EF7D00' },
+        { to: '/limpieza', i: Sparkles, t: 'Cuidado y limpieza de instalaciones', d: 'Encuesta, inspección de relevo y hallazgos', c: '#1E7B34' },
+      ]
     : user.role === 'admin'
       ? [
           { to: '/evaluacion-opm', i: ClipboardCheck, t: t.modEval, d: t.modEvalD, c: '#0060A9' },
@@ -23,12 +29,14 @@ export default function Home() {
           { to: '/control', i: Users, t: t.modControl, d: t.modControlD, c: '#002E6D' },
           { to: '/evaluar', i: Award, t: t.modEvaluar, d: t.modEvaluarD, c: '#EF7D00' },
           { to: '/admin', i: ShieldCheck, t: t.modAdmin, d: t.modAdminD, c: '#7A5195' },
+          { to: '/limpieza', i: Sparkles, t: 'Cuidado y limpieza de instalaciones', d: 'Encuesta, inspección de relevo y hallazgos', c: '#1E7B34' },
         ]
       : [
           { to: '/evaluacion-opm', i: ClipboardCheck, t: 'Supervisar OPM', d: 'Registrar evaluaciones del turno', c: '#0060A9' },
           { to: '/radios', i: Radio, t: 'Trazabilidad de equipos / radios', d: 'Consultar y gestionar relevo de radios', c: '#EF7D00' },
           { to: '/control', i: Users, t: t.modControl, d: t.modControlD, c: '#002E6D' },
           { to: '/evaluar', i: Award, t: t.modEvaluar, d: t.modEvaluarD, c: '#EF7D00' },
+          { to: '/limpieza', i: Sparkles, t: 'Cuidado y limpieza de instalaciones', d: 'Encuesta, inspección de relevo y hallazgos', c: '#1E7B34' },
         ]
 
   const rolLabel = user.role === 'admin' ? t.rolAdmin : user.role === 'coordinator' ? t.rolCoordinador : user.role === 'labor' ? t.rolLabor : t.rolSupervisor

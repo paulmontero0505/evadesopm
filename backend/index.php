@@ -26,6 +26,7 @@ require_once __DIR__ . '/api/evaluations.php';
 require_once __DIR__ . '/api/users.php';
 require_once __DIR__ . '/api/assignments.php';
 require_once __DIR__ . '/api/radios.php';
+require_once __DIR__ . '/api/limpieza.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -153,6 +154,17 @@ switch ($r0) {
 
     case 'turno-team':
         if ($r1 === '' && $method === 'GET') return handle_shift_team_list();
+        break;
+
+    case 'limpieza':
+        if ($r1 === 'encuestas' && $method === 'GET')  return handle_limpieza_encuestas_list();
+        if ($r1 === 'encuestas' && $method === 'POST') return handle_limpieza_encuesta_create();
+        if ($r1 === 'inspecciones' && $r2 === '' && $method === 'GET')  return handle_limpieza_inspecciones_list();
+        if ($r1 === 'inspecciones' && $r2 === '' && $method === 'POST') return handle_limpieza_inspeccion_create();
+        if ($r1 === 'inspecciones' && $r2 !== '' && $method === 'GET')  return handle_limpieza_inspeccion_get((int)$r2);
+        if ($r1 === 'hallazgos' && $r2 === '' && $method === 'GET')  return handle_limpieza_hallazgos_list();
+        if ($r1 === 'hallazgos' && $r2 === '' && $method === 'POST') return handle_limpieza_hallazgo_create();
+        if ($r1 === 'hallazgos' && $r2 !== '' && $method === 'POST') return handle_limpieza_hallazgo_update((int)$r2);
         break;
 
     case 'audit':

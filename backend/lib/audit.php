@@ -105,6 +105,7 @@ function audit_describe(string $method, string $path): array
         'evaluations' => 'Evaluaciones',
         'auth' => 'Sesión',
         'turno-team' => 'Cuadrilla',
+        'limpieza' => 'Cuidado y limpieza',
     ];
     $module = $modules[$r0] ?? ($r0 ?: '—');
 
@@ -134,6 +135,11 @@ function audit_action_label(string $method, array $seg): string
         if ($r1 === 'login') return 'Inicio de sesión';
         if ($r1 === 'logout') return 'Cierre de sesión';
         if ($r1 === 'change-password') return 'Cambio de contraseña';
+    }
+    if ($r0 === 'limpieza') {
+        if ($r1 === 'encuestas') return 'Responder encuesta de percepción';
+        if ($r1 === 'inspecciones') return 'Registrar inspección cruzada de relevo';
+        if ($r1 === 'hallazgos') return ctype_digit((string)$r2) ? 'Actualizar estado de hallazgo' : 'Registrar hallazgo';
     }
     if ($r1 === 'import') return 'Importar ' . strtolower(audit_describe($method, $seg)[0]);
     if ($r1 === 'individual') return 'Agregar individual';

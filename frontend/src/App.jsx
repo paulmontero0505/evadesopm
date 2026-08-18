@@ -20,6 +20,14 @@ import Asignaciones from './pages/Asignaciones.jsx'
 import ControlRadios from './pages/ControlRadios.jsx'
 import RadiosCatalogo from './pages/RadiosCatalogo.jsx'
 import Auditoria from './pages/Auditoria.jsx'
+import LimpiezaInicio from './pages/limpieza/Inicio.jsx'
+import LimpiezaEncuesta from './pages/limpieza/Encuesta.jsx'
+import LimpiezaInspeccion from './pages/limpieza/Inspeccion.jsx'
+import LimpiezaInspeccionForm from './pages/limpieza/InspeccionForm.jsx'
+import LimpiezaInspeccionDetalle from './pages/limpieza/InspeccionDetalle.jsx'
+import LimpiezaHallazgos from './pages/limpieza/Hallazgos.jsx'
+import LimpiezaHallazgoForm from './pages/limpieza/HallazgoForm.jsx'
+import LimpiezaResumen from './pages/limpieza/Resumen.jsx'
 import AppErrorBoundary from './components/AppErrorBoundary.jsx'
 
 function Protected({ children, roles, needShift = true }) {
@@ -58,6 +66,16 @@ export default function App() {
         <Route path="/radios" element={<Protected roles={['admin','supervisor','coordinator']}><ControlRadios /></Protected>} />
         <Route path="/registrar-radios" element={<Protected roles={['admin']}><RadiosCatalogo /></Protected>} />
         <Route path="/auditoria" element={<Protected roles={['admin']} needShift={false}><Auditoria /></Protected>} />
+
+        {/* Cuidado y limpieza de instalaciones (Plan OPS-SEN-001) */}
+        <Route path="/limpieza" element={<Protected><LimpiezaInicio /></Protected>} />
+        <Route path="/limpieza/encuesta" element={<Protected><LimpiezaEncuesta /></Protected>} />
+        <Route path="/limpieza/inspeccion" element={<Protected roles={['admin','supervisor','coordinator']}><LimpiezaInspeccion /></Protected>} />
+        <Route path="/limpieza/inspeccion/nueva/:instalacion" element={<Protected roles={['admin','supervisor','coordinator']}><LimpiezaInspeccionForm /></Protected>} />
+        <Route path="/limpieza/inspeccion/:id" element={<Protected roles={['admin','supervisor','coordinator']} needShift={false}><LimpiezaInspeccionDetalle /></Protected>} />
+        <Route path="/limpieza/hallazgos" element={<Protected roles={['admin','supervisor','coordinator']}><LimpiezaHallazgos /></Protected>} />
+        <Route path="/limpieza/hallazgos/nuevo" element={<Protected roles={['admin','supervisor','coordinator']}><LimpiezaHallazgoForm /></Protected>} />
+        <Route path="/limpieza/resumen" element={<Protected roles={['admin']} needShift={false}><LimpiezaResumen /></Protected>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </AppErrorBoundary>

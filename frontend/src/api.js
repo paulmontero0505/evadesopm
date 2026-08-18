@@ -204,6 +204,17 @@ export const api = {
   deleteRadioAssignment: (id) => request(`/radios/assignments/${id}`, { method: 'DELETE' }),
   assignRadioCollaborator: (id, opm_id, puesto = '', unknown = false) => request(`/radios/assignments/${id}/collaborator`, { method: 'POST', body: { opm_id, puesto, unknown } }),
   moveRadioAssignments: (payload, photo) => { const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); if (photo) fd.append('movement_photo', photo); return upload('/radios/movements', fd) },
+  // --- Cuidado y limpieza de instalaciones (Plan OPS-SEN-001) ---
+  limpiezaEncuestas: () => request('/limpieza/encuestas'),
+  createLimpiezaEncuesta: (payload) => request('/limpieza/encuestas', { method: 'POST', body: payload }),
+  limpiezaInspecciones: () => request('/limpieza/inspecciones'),
+  limpiezaInspeccion: (id) => request(`/limpieza/inspecciones/${id}`),
+  createLimpiezaInspeccion: (payload) => request('/limpieza/inspecciones', { method: 'POST', body: payload }),
+  limpiezaHallazgos: ({ instalacion = '', estado = '', turno = '' } = {}) =>
+    request(`/limpieza/hallazgos?instalacion=${encodeURIComponent(instalacion)}&estado=${encodeURIComponent(estado)}&turno=${encodeURIComponent(turno)}`),
+  createLimpiezaHallazgo: (payload) => request('/limpieza/hallazgos', { method: 'POST', body: payload }),
+  updateLimpiezaHallazgo: (id, payload) => request(`/limpieza/hallazgos/${id}`, { method: 'POST', body: payload }),
+
   audit: ({ from = '', to = '', user_id = '', module = '', q = '', limit = 300 } = {}) =>
     request(`/audit?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&user_id=${encodeURIComponent(user_id)}&module=${encodeURIComponent(module)}&q=${encodeURIComponent(q)}&limit=${limit}`),
   returnRadioAssignments: (payload, photo) => {
