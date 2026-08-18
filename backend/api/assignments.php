@@ -51,7 +51,7 @@ function handle_shift_team_list(): void
         $stmt = db()->prepare(
             "SELECT o.id AS person_id, 'opm' AS person_type, o.code, o.dni, o.full_name, o.fecha_nacimiento, o.puesto,
                     current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
-                    current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
+                    current_assignment.zona_1, current_assignment.zona_2, current_assignment.nave, current_assignment.nave_2,
                     CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
                     CASE WHEN previous_assignment.id IS NULL THEN 0 ELSE 1 END AS worked_previous_turn
                FROM opms o
@@ -61,7 +61,7 @@ function handle_shift_team_list(): void
              UNION ALL
              SELECT u.id AS person_id, u.role AS person_type, u.employee_number AS code, u.dni, u.full_name, NULL AS fecha_nacimiento, COALESCE(current_assignment.puesto, u.puesto) AS puesto,
                     current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
-                    current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
+                    current_assignment.zona_1, current_assignment.zona_2, current_assignment.nave, current_assignment.nave_2,
                     CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
                     CASE WHEN previous_assignment.id IS NULL THEN 0 ELSE 1 END AS worked_previous_turn
                FROM users u
@@ -80,7 +80,7 @@ function handle_shift_team_list(): void
             "SELECT o.id AS person_id, o.code, o.full_name,
                     COALESCE(current_assignment.puesto, o.puesto) AS puesto,
                     current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
-                    current_assignment.zona_1, current_assignment.nave, current_assignment.nave_2,
+                    current_assignment.zona_1, current_assignment.zona_2, current_assignment.nave, current_assignment.nave_2,
                     CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
                     CASE WHEN previous_assignment.id IS NULL THEN 0 ELSE 1 END AS worked_previous_turn
                FROM opms o
@@ -95,7 +95,7 @@ function handle_shift_team_list(): void
         $stmt = db()->prepare(
             "SELECT u.id AS person_id, u.employee_number AS code, u.full_name, u.role,
                     current_assignment.id AS assignment_id, current_assignment.funcion_1, current_assignment.funcion_2,
-                    current_assignment.zona_1, current_assignment.puesto, current_assignment.nave, current_assignment.nave_2,
+                    current_assignment.zona_1, current_assignment.zona_2, current_assignment.puesto, current_assignment.nave, current_assignment.nave_2,
                     CASE WHEN current_assignment.id IS NULL THEN 0 ELSE 1 END AS in_turn,
                     CASE WHEN previous_assignment.id IS NULL THEN 0 ELSE 1 END AS worked_previous_turn
                FROM users u
@@ -123,7 +123,7 @@ function handle_assignments_list(): void
         json_error('Fecha y turno válidos son obligatorios', 422);
     }
     $stmt = db()->prepare(
-        'SELECT a.id, a.work_date, a.turno, a.funcion_1, a.funcion_2, a.zona_1, a.puesto, a.nave, a.nave_2,
+        'SELECT a.id, a.work_date, a.turno, a.funcion_1, a.funcion_2, a.zona_1, a.zona_2, a.puesto, a.nave, a.nave_2,
                 o.id AS opm_id, o.code AS opm_code, o.full_name AS opm_name
            FROM opm_assignments a JOIN opms o ON o.id = a.opm_id
           WHERE a.work_date = ? AND a.turno = ? AND o.active = 1
@@ -205,10 +205,10 @@ function handle_assignments_import(): void
 
     $pdo = db(); $pdo->beginTransaction();
     try {
-        $opmInsert = $pdo->prepare('INSERT INTO opm_assignments (opm_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)');
-        $userInsert = $pdo->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)');
+        $opmInsert = $pdo->prepare('INSERT INTO opm_assignments (opm_id,work_date,turno,funcion_1,funcion_2,zona_1,zona_2,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),zona_2=VALUES(zona_2),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)');
+        $userInsert = $pdo->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,zona_2,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),zona_2=VALUES(zona_2),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)');
         foreach ($valid as $row) {
-            $values = [(int)$row['person']['id'], $row['date'], $turno, mb_substr(trim($row['funcion_1']), 0, 150) ?: null, mb_substr(trim($row['funcion_2']), 0, 150) ?: null, mb_substr(trim($row['zona_1']), 0, 150) ?: null, mb_substr(trim($row['puesto']), 0, 150) ?: ($row['person']['puesto'] ?: null), mb_substr(trim($row['nave']), 0, 150) ?: null, mb_substr(trim($row['nave_2']), 0, 150) ?: null, $user['id']];
+            $values = [(int)$row['person']['id'], $row['date'], $turno, mb_substr(trim($row['funcion_1']), 0, 150) ?: null, mb_substr(trim($row['funcion_2']), 0, 150) ?: null, mb_substr(trim($row['zona_1']), 0, 150) ?: null, mb_substr(trim($row['zona_2']), 0, 150) ?: null, mb_substr(trim($row['puesto']), 0, 150) ?: ($row['person']['puesto'] ?: null), mb_substr(trim($row['nave']), 0, 150) ?: null, mb_substr(trim($row['nave_2']), 0, 150) ?: null, $user['id']];
             ($row['person_type'] === 'opm' ? $opmInsert : $userInsert)->execute($values);
         }
         $pdo->commit();
@@ -226,7 +226,7 @@ function handle_assignment_create_individual(): void
     if (!$exists->fetchColumn()) json_error('El colaborador no está disponible.', 422);
     if (opm_worked_previous_shift($opmId, $date, $turno)) json_error('El colaborador cubrio el turno anterior y debe descansar antes de otro turno.', 422);
     $values = [];
-    foreach (['funcion_1','funcion_2','zona_1','puesto','nave','nave_2'] as $field) $values[$field] = mb_substr(trim($b[$field] ?? ''), 0, 150) ?: null;
-    db()->prepare('INSERT INTO opm_assignments (opm_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)')->execute([$opmId,$date,$turno,$values['funcion_1'],$values['funcion_2'],$values['zona_1'],$values['puesto'],$values['nave'],$values['nave_2'],$user['id']]);
+    foreach (['funcion_1','funcion_2','zona_1','zona_2','puesto','nave','nave_2'] as $field) $values[$field] = mb_substr(trim($b[$field] ?? ''), 0, 150) ?: null;
+    db()->prepare('INSERT INTO opm_assignments (opm_id,work_date,turno,funcion_1,funcion_2,zona_1,zona_2,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),zona_2=VALUES(zona_2),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)')->execute([$opmId,$date,$turno,$values['funcion_1'],$values['funcion_2'],$values['zona_1'],$values['zona_2'],$values['puesto'],$values['nave'],$values['nave_2'],$user['id']]);
     json_response(['ok'=>true]);
 }

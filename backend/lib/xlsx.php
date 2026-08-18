@@ -132,12 +132,27 @@ function xlsx_build_assignments_template_legacy(): string
  * función, zona, puesto y naves; las demás columnas se mantienen para que el
  * libro pueda seguir usándose en la operación sin alterar el resultado web.
  */
+/** Índice 0-based a letra de columna de Excel: 0 => A, 25 => Z, 26 => AA. */
+function xlsx_column_letter(int $index): string
+{
+    $letter = '';
+    for ($n = $index; $n >= 0; $n = intdiv($n, 26) - 1) {
+        $letter = chr(65 + $n % 26) . $letter;
+    }
+    return $letter;
+}
+
 function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?array $customHeaders = null, ?array $customWidths = null, ?array $dataRows = null, bool $tableRows = false): string
 {
-    $headers = ['FICHA DE INGRESO', 'APELLIDOS Y NOMBRES', 'DESIGNADO FUNCIÓN 1', 'ZONA 1', 'PUESTO', 'NAVE', 'NAVE 2', 'TIPO DE NAVE', 'TEAMS', 'TURNO', 'FECHA', 'HOOPER', 'ANTIGÜEDAD', 'LICENCIA DE CONDUCIR'];
+    $headers = ['FICHA DE INGRESO', 'APELLIDOS Y NOMBRES', 'DESIGNADO FUNCIÓN 1', 'DESIGNADO FUNCIÓN 2', 'ZONA 1', 'ZONA 2', 'PUESTO', 'NAVE', 'NAVE 2', 'TIPO DE NAVE', 'TEAMS', 'TURNO', 'FECHA', 'HOOPER', 'ANTIGÜEDAD', 'LICENCIA DE CONDUCIR'];
     $headers = $customHeaders ?: $headers;
-    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
-    $widths = $customWidths ?: [18, 34, 26, 18, 32, 22, 22, 18, 16, 14, 16, 14, 24, 24];
+    $widths = $customWidths ?: [18, 34, 26, 26, 18, 18, 32, 22, 22, 18, 16, 14, 16, 14, 24, 24];
+    // Las letras se derivan del número de columnas: agregar un encabezado no
+    // obliga a mantener la lista a mano (era la causa de que se desbordara).
+    $cols = [];
+    for ($i = 0, $n = max(count($headers), count($widths)); $i < $n; $i++) {
+        $cols[] = xlsx_column_letter($i);
+    }
 
     $headerCells = '';
     foreach ($headers as $i => $header) {
@@ -419,6 +434,7 @@ function xlsx_read_assignments(string $path): array
         elseif (strpos($u, 'FUNCI') !== false && strpos($u, '1') !== false && !isset($cols['funcion_1'])) $cols['funcion_1'] = $col;
         elseif (strpos($u, 'FUNCI') !== false && strpos($u, '2') !== false && !isset($cols['funcion_2'])) $cols['funcion_2'] = $col;
         elseif (strpos($u, 'ZONA') !== false && strpos($u, '1') !== false && !isset($cols['zona_1'])) $cols['zona_1'] = $col;
+        elseif (strpos($u, 'ZONA') !== false && strpos($u, '2') !== false && !isset($cols['zona_2'])) $cols['zona_2'] = $col;
         elseif (strpos($u, 'NAVE') !== false && preg_match('/(?:^|\s)2(?:\s|$)/', $u)) $cols['nave_2'] = $col;
         elseif (strpos($u, 'PUESTO') !== false && !isset($cols['puesto'])) $cols['puesto'] = $col;
         elseif (strpos($u, 'TIPO') !== false && strpos($u, 'NAVE') !== false) continue;
@@ -433,6 +449,7 @@ function xlsx_read_assignments(string $path): array
         $out[] = ['row' => $i + 1, 'date' => null, 'name' => $name,
             'funcion_1' => $rows[$i][$cols['funcion_1'] ?? ''] ?? '', 'funcion_2' => $rows[$i][$cols['funcion_2'] ?? ''] ?? '',
             'zona_1' => $rows[$i][$cols['zona_1'] ?? ''] ?? '',
+            'zona_2' => $rows[$i][$cols['zona_2'] ?? ''] ?? '',
             'puesto' => $rows[$i][$cols['puesto'] ?? ''] ?? '', 'nave' => $rows[$i][$cols['nave'] ?? ''] ?? '',
             'nave_2' => $rows[$i][$cols['nave_2'] ?? ''] ?? ''];
     }

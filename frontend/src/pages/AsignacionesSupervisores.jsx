@@ -6,7 +6,7 @@ import TopBar from '../components/TopBar.jsx'
 import { AssignmentFields, SearchablePicker } from './Asignaciones.jsx'
 
 const today = () => new Date().toISOString().slice(0, 10)
-const EMPTY = { user_id: '', funcion_1: '', funcion_2: '', zona_1: '', puesto: '', nave: '', nave_2: '' }
+const EMPTY = { user_id: '', funcion_1: '', funcion_2: '', zona_1: '', zona_2: '', puesto: '', nave: '', nave_2: '' }
 const turnoLabel = (turno) => turno === 'noche' ? 'Noche · 19:00 - 07:00' : 'Día · 07:00 - 19:00'
 
 export default function AsignacionesSupervisores() {

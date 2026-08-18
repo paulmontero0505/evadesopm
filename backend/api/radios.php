@@ -76,8 +76,8 @@ function handle_supervisor_assignments_import(): void {
     $by=[]; foreach($users as $u) $by[mb_strtoupper(trim($u['full_name']))]=(int)$u['id'];
     $pdo=db(); $pdo->beginTransaction(); $valid=0;
     try { $delete=$pdo->prepare('DELETE a FROM supervisor_assignments a JOIN users u ON u.id=a.user_id WHERE a.work_date=? AND a.turno=? AND u.puesto=?'); $delete->execute([$date,$turno,$puesto]);
-      $insert=$pdo->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?)');
-      foreach($rows as $r){$id=$by[mb_strtoupper(trim($r['name']??''))]??null;if(!$id || supervisor_worked_previous_shift((int)$id,$date,$turno))continue;$insert->execute([$id,$date,$turno,$r['funcion_1']?:null,$r['funcion_2']?:null,$r['zona_1']?:null,$puesto,$r['nave']?:null,$r['nave_2']?:null,$me['id']]);$valid++;}
+      $insert=$pdo->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,zona_2,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+      foreach($rows as $r){$id=$by[mb_strtoupper(trim($r['name']??''))]??null;if(!$id || supervisor_worked_previous_shift((int)$id,$date,$turno))continue;$insert->execute([$id,$date,$turno,$r['funcion_1']?:null,$r['funcion_2']?:null,$r['zona_1']?:null,$r['zona_2']?:null,$puesto,$r['nave']?:null,$r['nave_2']?:null,$me['id']]);$valid++;}
       $pdo->commit(); } catch(Throwable $e){$pdo->rollBack();throw $e;}
     json_response(['ok'=>true,'imported'=>$valid]);
 }
@@ -86,8 +86,8 @@ function handle_supervisor_assignment_create_individual(): void {
     if(!$userId || !radio_shift_is_valid($date,$turno)) json_error('Seleccione supervisor o coordinador, fecha y turno válidos.',422);
     $user=db()->prepare("SELECT id FROM users WHERE id=? AND active=1 AND role IN ('supervisor','coordinator')"); $user->execute([$userId]); if(!$user->fetchColumn()) json_error('El usuario no es un supervisor o coordinador activo.',422);
     if(supervisor_worked_previous_shift($userId,$date,$turno)) json_error('El supervisor o coordinador cubrio el turno anterior y debe descansar antes de otro turno.',422);
-    $values=[]; foreach(['funcion_1','funcion_2','zona_1','puesto','nave','nave_2'] as $field)$values[$field]=mb_substr(trim($b[$field]??''),0,150)?:null;
-    db()->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)')->execute([$userId,$date,$turno,$values['funcion_1'],$values['funcion_2'],$values['zona_1'],$values['puesto'],$values['nave'],$values['nave_2'],$me['id']]);
+    $values=[]; foreach(['funcion_1','funcion_2','zona_1','zona_2','puesto','nave','nave_2'] as $field)$values[$field]=mb_substr(trim($b[$field]??''),0,150)?:null;
+    db()->prepare('INSERT INTO supervisor_assignments (user_id,work_date,turno,funcion_1,funcion_2,zona_1,zona_2,puesto,nave,nave_2,imported_by) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE funcion_1=VALUES(funcion_1),funcion_2=VALUES(funcion_2),zona_1=VALUES(zona_1),zona_2=VALUES(zona_2),puesto=VALUES(puesto),nave=VALUES(nave),nave_2=VALUES(nave_2),imported_by=VALUES(imported_by)')->execute([$userId,$date,$turno,$values['funcion_1'],$values['funcion_2'],$values['zona_1'],$values['zona_2'],$values['puesto'],$values['nave'],$values['nave_2'],$me['id']]);
     json_response(['ok'=>true]);
 }
 function handle_supervisor_assignment_delete(int $id): void {
@@ -186,7 +186,7 @@ function handle_radio_context(): void {
     if(!radio_shift_is_valid($date,$turno)) json_error('Fecha o turno inválido.',422);
     $columns = db()->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='radio_assignments' AND COLUMN_NAME IN ('delivery_group','current_supervisor_id','current_work_date','current_turno')")->fetchAll(PDO::FETCH_COLUMN);
     if (count($columns) < 4) json_error('Actualizacion pendiente: importe migration_grupos_entrega_radios.sql y migration_custodia_radios.sql en phpMyAdmin.', 422);
-    $opm=db()->prepare('SELECT a.id, o.id AS opm_id, o.code, o.full_name, a.funcion_1, a.puesto, a.zona_1, a.nave, a.nave_2 FROM opm_assignments a JOIN opms o ON o.id=a.opm_id WHERE a.work_date=? AND a.turno=? ORDER BY o.full_name'); $opm->execute([$date,$turno]);
+    $opm=db()->prepare('SELECT a.id, o.id AS opm_id, o.code, o.full_name, a.funcion_1, a.funcion_2, a.puesto, a.zona_1, a.zona_2, a.nave, a.nave_2 FROM opm_assignments a JOIN opms o ON o.id=a.opm_id WHERE a.work_date=? AND a.turno=? ORDER BY o.full_name'); $opm->execute([$date,$turno]);
     $allOpm = db()->prepare('SELECT o.id AS opm_id, o.code, o.full_name, o.puesto, CASE WHEN a.id IS NULL THEN 0 ELSE 1 END AS in_turn FROM opms o LEFT JOIN opm_assignments a ON a.opm_id=o.id AND a.work_date=? AND a.turno=? WHERE o.active=1 ORDER BY o.full_name'); $allOpm->execute([$date, $turno]);
     $puestos = db()->query("SELECT DISTINCT puesto FROM opms WHERE active=1 AND puesto IS NOT NULL AND TRIM(puesto)<>'' ORDER BY puesto")->fetchAll(PDO::FETCH_COLUMN);
     $team=db()->prepare("SELECT u.id AS user_id, u.full_name, u.role, a.funcion_1, a.puesto, a.nave, a.nave_2, CASE WHEN a.id IS NOT NULL OR EXISTS (SELECT 1 FROM opm_assignments oa JOIN opms o ON o.id=oa.opm_id WHERE o.active=1 AND TRIM(o.full_name)=TRIM(u.full_name) AND oa.work_date=? AND oa.turno=?) THEN 1 ELSE 0 END AS in_turn FROM users u LEFT JOIN supervisor_assignments a ON a.user_id=u.id AND a.work_date=? AND a.turno=? WHERE u.active=1 AND u.role IN ('supervisor','coordinator') ORDER BY in_turn DESC, u.full_name"); $team->execute([$date,$turno,$date,$turno]);
