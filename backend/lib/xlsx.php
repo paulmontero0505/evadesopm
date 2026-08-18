@@ -124,13 +124,20 @@ function xlsx_build_assignments_template_legacy(): string
     );
 }
 
-/** Plantilla de asignaciÃ³n con encabezados y filtros listos para completar. */
+/**
+ * Plantilla de asignación con encabezados y filtros listos para completar.
+ *
+ * La plantilla operativa conserva sus columnas de control (ficha, team,
+ * antigüedad, etc.). La importación de asignaciones solo utiliza nombre,
+ * función, zona, puesto y naves; las demás columnas se mantienen para que el
+ * libro pueda seguir usándose en la operación sin alterar el resultado web.
+ */
 function xlsx_build_assignments_template(string $sheetName = 'ASIGNACION', ?array $customHeaders = null, ?array $customWidths = null, ?array $dataRows = null, bool $tableRows = false): string
 {
-    $headers = ['APELLIDOS Y NOMBRES', 'FUNCIÓN 1', 'FUNCIÓN 2', 'ZONA 1', 'PUESTO', 'NAVE', 'NAVE 2'];
+    $headers = ['FICHA DE INGRESO', 'APELLIDOS Y NOMBRES', 'DESIGNADO FUNCIÓN 1', 'ZONA 1', 'PUESTO', 'NAVE', 'NAVE 2', 'TIPO DE NAVE', 'TEAMS', 'TURNO', 'FECHA', 'HOOPER', 'ANTIGÜEDAD', 'LICENCIA DE CONDUCIR'];
     $headers = $customHeaders ?: $headers;
-    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    $widths = $customWidths ?: [31, 24, 24, 20, 22, 20, 20];
+    $cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'];
+    $widths = $customWidths ?: [18, 34, 26, 18, 32, 22, 22, 18, 16, 14, 16, 14, 24, 24];
 
     $headerCells = '';
     foreach ($headers as $i => $header) {
@@ -366,7 +373,7 @@ function xlsx_read_opms(string $path): array
     return $out;
 }
 
-/** Lee la plantilla ASIGNACION y devuelve las filas con los campos operativos. */
+/** Lee la plantilla ASIGNACION y devuelve únicamente los campos operativos. */
 function xlsx_read_assignments(string $path): array
 {
     if (!class_exists('ZipArchive')) throw new RuntimeException('La extensión ZIP de PHP no está disponible en el servidor.');
@@ -406,30 +413,24 @@ function xlsx_read_assignments(string $path): array
     $cols = [];
     foreach ($rows[0] as $col => $txt) {
         $u = mb_strtoupper(preg_replace('/\s+/u', ' ', $txt));
-        if (strpos($u, 'FECHA') !== false) $cols['date'] = $col;
-        elseif (strpos($u, 'APELLIDOS') !== false || strpos($u, 'NOMBRES') !== false) $cols['name'] = $col;
-        elseif (strpos($u, 'FUNCI') !== false && strpos($u, '1') !== false) $cols['funcion_1'] = $col;
-        elseif (strpos($u, 'FUNCI') !== false && strpos($u, '2') !== false) $cols['funcion_2'] = $col;
-        elseif (strpos($u, 'ZONA') !== false && strpos($u, '1') !== false) $cols['zona_1'] = $col;
+        // Las fechas y turnos de la plantilla son datos de referencia. La fecha
+        // y el turno aplicados a la asignación siempre son los elegidos en el módulo.
+        if ((strpos($u, 'APELLIDOS') !== false || strpos($u, 'NOMBRES') !== false) && !isset($cols['name'])) $cols['name'] = $col;
+        elseif (strpos($u, 'FUNCI') !== false && strpos($u, '1') !== false && !isset($cols['funcion_1'])) $cols['funcion_1'] = $col;
+        elseif (strpos($u, 'FUNCI') !== false && strpos($u, '2') !== false && !isset($cols['funcion_2'])) $cols['funcion_2'] = $col;
+        elseif (strpos($u, 'ZONA') !== false && strpos($u, '1') !== false && !isset($cols['zona_1'])) $cols['zona_1'] = $col;
         elseif (strpos($u, 'NAVE') !== false && preg_match('/(?:^|\s)2(?:\s|$)/', $u)) $cols['nave_2'] = $col;
-        elseif (strpos($u, 'PUESTO') !== false) $cols['puesto'] = $col;
-        elseif (strpos($u, 'NAVE') !== false) $cols['nave'] = $col;
+        elseif (strpos($u, 'PUESTO') !== false && !isset($cols['puesto'])) $cols['puesto'] = $col;
+        elseif (strpos($u, 'TIPO') !== false && strpos($u, 'NAVE') !== false) continue;
+        elseif (strpos($u, 'NAVE') !== false && !isset($cols['nave'])) $cols['nave'] = $col;
     }
     if (empty($cols['name'])) throw new RuntimeException('La plantilla debe incluir la columna APELLIDOS Y NOMBRES.');
 
     $out = [];
     for ($i = 1; $i < count($rows); $i++) {
-        $rawDate = $rows[$i][$cols['date'] ?? ''] ?? ''; $name = trim($rows[$i][$cols['name']] ?? '');
+        $name = trim($rows[$i][$cols['name']] ?? '');
         if ($name === '') continue;
-        $date = null;
-        if (is_numeric($rawDate)) $date = date('Y-m-d', (((int)$rawDate) - 25569) * 86400);
-        else {
-            foreach (['Y-m-d', 'd/m/Y', 'd-m-Y'] as $format) {
-                $d = DateTime::createFromFormat('!' . $format, trim($rawDate));
-                if ($d && $d->format($format) === trim($rawDate)) { $date = $d->format('Y-m-d'); break; }
-            }
-        }
-        $out[] = ['row' => $i + 1, 'date' => $date, 'name' => $name,
+        $out[] = ['row' => $i + 1, 'date' => null, 'name' => $name,
             'funcion_1' => $rows[$i][$cols['funcion_1'] ?? ''] ?? '', 'funcion_2' => $rows[$i][$cols['funcion_2'] ?? ''] ?? '',
             'zona_1' => $rows[$i][$cols['zona_1'] ?? ''] ?? '',
             'puesto' => $rows[$i][$cols['puesto'] ?? ''] ?? '', 'nave' => $rows[$i][$cols['nave'] ?? ''] ?? '',
