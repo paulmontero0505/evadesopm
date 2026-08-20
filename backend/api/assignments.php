@@ -191,7 +191,7 @@ function handle_assignments_import(): void
 
     $opmByName = []; $userByName = [];
     foreach (db()->query('SELECT id, full_name, puesto FROM opms WHERE active=1')->fetchAll() as $opm) $opmByName[assignment_name_key($opm['full_name'])] = $opm;
-    foreach (db()->query("SELECT id, full_name, puesto FROM users WHERE active=1 AND role IN ('supervisor','coordinator')")->fetchAll() as $user) $userByName[assignment_name_key($user['full_name'])] = $user;
+    foreach (db()->query("SELECT id, full_name, puesto FROM users WHERE active=1 AND role IN ('supervisor','coordinator')")->fetchAll() as $supervisorRow) $userByName[assignment_name_key($supervisorRow['full_name'])] = $supervisorRow;
     $valid = []; $errors = [];
     foreach ($rows as $row) {
         $row['date'] = $row['date'] ?: $selectedDate;
